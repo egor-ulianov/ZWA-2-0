@@ -1,4 +1,5 @@
 import React from 'react';
+import { Analytics } from "@vercel/analytics/next"
 
 function formatDateInput(date) {
   const y = date.getFullYear();
@@ -398,6 +399,8 @@ export default function AttendancePage() {
           </section>
         </>
       )}
+
+      <Analytics />
     </main>
   );
 }

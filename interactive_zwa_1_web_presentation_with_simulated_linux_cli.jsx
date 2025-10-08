@@ -3,6 +3,7 @@ import portraitImg from "./src/interactive-zwa-1/assets/portrait.png";
 import discordLogo from "./src/interactive-zwa-1/assets/discord-logo.png";
 import telegramQr from "./src/interactive-zwa-1/assets/telegram-qr.png";
 import semestralMeme from "./src/interactive-zwa-1/assets/semestral-meme.png";
+import { Analytics } from "@vercel/analytics/react"
 
 // Interactive ZWA-1 presentation with a built-in simulated Linux CLI (no external libs)
 // Tailwind is available in canvas preview. All code is self-contained.
@@ -371,6 +372,75 @@ const slides = [
     ],
   },
   {
+    id: "theory",
+    title: "TEORIE: Síť pro web",
+    sections: [
+      {
+        icon: "🌐",
+        title: "DNS – překládání jmen",
+        points: [
+          "DNS je telefonní seznam internetu: převádí jména (např. fel.cvut.cz) na IP adresy, opačně PTR vrací jméno pro IP.",
+          "Záznamy: A/AAAA = adresa serveru, CNAME = alias na jiné jméno, NS = který server je autoritativní, TXT = libovolný text (např. SPF).",
+          "Cesta dotazu: váš stroj → rekurzivní resolver (často od ISP) → autoritativní servery (hierarchie: root → TLD → doména).",
+          "Výsledky se cachují podle TTL (čas života), existuje i negativní cache pro neexistující jména.",
+          "Protokol používá UDP/53 pro většinu dotazů (rychlé, malé), TCP/53 pro větší odpovědi a přenos zón; DNSSEC přidává kryptografické podpisy."
+        ]
+      },
+      {
+        icon: "🔢",
+        title: "IP adresy – jak se zařízení najdou",
+        points: [
+          "IPv4 má 4 oktety (např. 192.168.1.57). Maska sítě (např. /24) určuje, které adresy jsou „moje síť“ a které jsou mimo.",
+          "Privátní rozsahy (10.x, 172.16–31.x, 192.168.x) nejsou přímo routované do internetu; 127.0.0.1 je loopback (sám k sobě).",
+          "Default gateway je výchozí router do dalších sítí; broadcast je poslední adresa v síti a slouží k doručení všem v segmentu.",
+          "DHCP přiděluje IP, masku, gateway i DNS automaticky. NAT (typicky PAT) překládá více privátních zařízení na jednu veřejnou IP.",
+          "K nalezení MAC v lokální síti se používá ARP; mimo lokální síť paket putuje přes směrovače (routers)."
+        ]
+      },
+      {
+        icon: "🔗",
+        title: "TCP – spolehlivý přenos",
+        points: [
+          "Porty identifikují službu na stroji (HTTP 80, HTTPS 443). Jedna IP může mít desítky služeb díky portům.",
+          "Připojení se navazuje 3-krokově: SYN → SYN-ACK → ACK. Ukončení spojení probíhá přes FIN/ACK nebo nouzově RST.",
+          "Spolehlivost: pořadí a doručení dat hlídají sekvenční čísla a potvrzení (ACK). Při ztrátě paketů probíhají retransmise.",
+          "Řízení toku (window, window scaling) brání zahlcení příjemce, řízení zahlcení (např. CUBIC) chrání síť před přetížením.",
+          "UDP je alternativa bez záruk a bez navázání spojení (hodí se pro DNS, video/hraní). TLS šifruje nad TCP."
+        ]
+      },
+      {
+        icon: "📄",
+        title: "HTTP – jazyk webu",
+        points: [
+          "Požadavek obsahuje metodu (GET/POST…), cestu (/api), hlavičky (Headers) a volitelné tělo (Body). Odpověď má status (200/404/500…), hlavičky a tělo.",
+          "Idempotentní metody (GET, PUT) lze opakovat bez změny stavu; POST obvykle vytváří/změňuje. HEAD/OPTIONS slouží pro metadata a možnosti.",
+          "Cachování: ETag/If-None-Match a Last-Modified/If-Modified-Since, řídí se také Cache-Control a max-age.",
+          "Obsah a formát se domlouvá přes Content-Type a Accept (JSON, HTML…). Hostitel je v hlavičce Host (SNI v TLS).",
+          "Autentizace: Authorization (např. Bearer token), nebo cookies (Set-Cookie, SameSite, HttpOnly, Secure). Trvalá spojení udržuje keep-alive; HTTP/2 multiplexuje více požadavků."
+        ]
+      },
+      {
+        icon: "🔒",
+        title: "HTTPS – šifrované HTTP",
+        points: [
+          "TLS poskytuje šifrování, integritu a ověření serveru pomocí certifikátu podepsaného důvěryhodnou CA (řetězec důvěry).",
+          "Handshake vyjedná šifry a klíče; moderní TLS (1.2/1.3) používá dopředné utajení (Forward Secrecy). SNI zajistí správný certifikát pro více domén na jedné IP.",
+          "Standardní port je 443. HSTS nutí prohlížeč používat jen HTTPS. Let's Encrypt přes ACME automatizuje vydání a obnovu certifikátů."
+        ]
+      },
+      {
+        icon: "🧪",
+        title: "Jak to souvisí s úlohami",
+        points: [
+          "host / nslookup → zobrazíte A/NS/TXT a pochopíte, odkud se jména berou.",
+          "ifconfig / ping → ověříte IP, masku, MAC a základní konektivitu/latenci.",
+          "traceroute → uvidíte jednotlivé hopy (směrovače), kde může vznikat zpoždění.",
+          "telnet host 80 → pošlete ručně GET / a uvidíte syrovou HTTP/1.1 odpověď; pro HTTPS by byl nutný TLS handshake."
+        ]
+      }
+    ]
+  },
+  {
     id: "tasks-net",
     title: "Úlohy – síť (v terminálu vpravo)",
     body: `Na této stránce si vyzkoušíte základní síťové příkazy. Terminál vpravo je simulovaný – nevytváří skutečná síťová spojení, ale ukazuje typické výstupy, které uvidíte na reálném Linuxu. Využijte ho k pochopení principů DNS, směrování a TCP/HTTP.`,
@@ -401,17 +471,20 @@ const slides = [
 
 function SlideCard({ slide }) {
   const hasSteps = Array.isArray(slide.steps) && slide.steps.length > 0;
+  const hasSections = Array.isArray(slide.sections) && slide.sections.length > 0;
   const [stepIndex, setStepIndex] = useState(0);
   useEffect(() => {
     setStepIndex(0);
   }, [slide]);
   const totalSteps = hasSteps ? slide.steps.length : 0;
   const currentStep = hasSteps ? slide.steps[stepIndex] : null;
+  const totalSections = hasSections ? slide.sections.length : 0;
+  const currentSection = hasSections ? slide.sections[stepIndex] : null;
   return (
     <div className="p-6 rounded-2xl shadow bg-white/70 dark:bg-zinc-900/60 backdrop-blur border border-zinc-200/60 dark:border-zinc-800">
       <h2 className="text-2xl font-bold mb-2">{slide.title}</h2>
       {slide.subtitle && <p className="text-zinc-500 mb-3">{slide.subtitle}</p>}
-      {slide.body && (
+      {slide.body && !hasSections && (
         <div className={clsx(slide.id === "about-me" ? "grid grid-cols-1 sm:grid-cols-[1fr,180px] gap-4 items-start" : "")}> 
           <pre className="whitespace-pre-wrap leading-relaxed">{slide.body}</pre>
           {slide.id === "about-me" && (
@@ -423,6 +496,55 @@ function SlideCard({ slide }) {
               />
             </div>
           )}
+        </div>
+      )}
+      {hasSections && currentSection && (
+        <div className="mt-4">
+          <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">Krok {stepIndex + 1} / {totalSections}</span>
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xl" aria-hidden>{currentSection.icon}</span>
+              <div className="font-semibold">{currentSection.title}</div>
+            </div>
+            {Array.isArray(currentSection.points) && (
+              <ul className="list-disc pl-5 space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
+                {currentSection.points.map((p, i) => (
+                  <li key={i}>{p}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              className="px-3 py-1.5 text-sm rounded-lg border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 disabled:opacity-50"
+              onClick={() => setStepIndex((i) => Math.max(0, i - 1))}
+              disabled={stepIndex === 0}
+            >
+              Předchozí
+            </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalSections }).map((_, i) => (
+                <button
+                  key={i}
+                  className={clsx(
+                    "h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700",
+                    i === stepIndex ? "bg-sky-500" : "bg-zinc-200 dark:bg-zinc-800"
+                  )}
+                  onClick={() => setStepIndex(i)}
+                  aria-label={`Přejít na krok ${i + 1}`}
+                />
+              ))}
+            </div>
+            <button
+              className="px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white disabled:opacity-50"
+              onClick={() => setStepIndex((i) => Math.min(totalSections - 1, i + 1))}
+              disabled={stepIndex === totalSections - 1}
+            >
+              Další
+            </button>
+          </div>
         </div>
       )}
       {slide.bullets && !hasSteps && (
@@ -765,6 +887,7 @@ export default function App() {
         <footer className="mt-8 text-sm text-zinc-500">
           © 2025 ZWA – Interactive demo for teaching (Egor Ulianov)
         </footer>
+        <Analytics />
       </div>
     </div>
   );

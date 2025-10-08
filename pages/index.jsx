@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { Analytics } from "@vercel/analytics/next"
 
 export default function Home() {
   return (
@@ -20,6 +21,7 @@ export default function Home() {
           </Link>
         </li>
       </ul>
+      <Analytics />
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Analytics } from "@vercel/analytics/next"
 
 export default function StudentProgress() {
   const [data, setData] = React.useState(null);
@@ -120,6 +121,7 @@ export default function StudentProgress() {
           © 2025 ZWA – Student view
         </footer>
       </div>
+      <Analytics />
     </div>
   );
 }
