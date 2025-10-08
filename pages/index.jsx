@@ -14,6 +14,11 @@ export default function Home() {
             Interactive ZWA‑1: Web Presentation with Simulated Linux CLI
           </Link>
         </li>
+        <li>
+          <Link prefetch={false} className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/attendance">
+            Attendance (protected)
+          </Link>
+        </li>
       </ul>
     </main>
   );
