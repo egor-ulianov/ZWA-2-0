@@ -15,6 +15,14 @@ function clsx(...xs) {
   return xs.filter(Boolean).join(" ");
 }
 
+function Code({ children }) {
+  return (
+    <code className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[90%]">
+      {children}
+    </code>
+  );
+}
+
 // Simple virtual filesystem
 class VFS {
   constructor() {
@@ -331,7 +339,7 @@ Content-Length: 32\n\n<html><body>Hello ZWA!</body></html>`;
 const slides = [
   {
     id: "title",
-    title: "Základy webových aplikací – 1. cvičení",
+    title: "Základy webových aplikací – 3. cvičení",
     subtitle: "FEL ČVUT, DCGI – 8. 10. 2025",
     body: `Bc. Egor Ulianov`,
   },
@@ -469,7 +477,7 @@ const slides = [
   },
 ];
 
-function SlideCard({ slide }) {
+function SlideCard({ slide, commandLog }) {
   const hasSteps = Array.isArray(slide.steps) && slide.steps.length > 0;
   const hasSections = Array.isArray(slide.sections) && slide.sections.length > 0;
   const [stepIndex, setStepIndex] = useState(0);
@@ -496,6 +504,22 @@ function SlideCard({ slide }) {
               />
             </div>
           )}
+        </div>
+      )}
+      {slide.id === "theory" && (
+        <div className="mt-2 text-sm text-zinc-700 dark:text-zinc-300 space-y-2">
+          <p>
+            Tento blok shrnuje síťové základy, na kterých web stojí. Cílem není jen vědět, jaké
+            příkazy existují, ale chápat, co se děje „pod kapotou“. Když zadáte adresu do prohlížeče,
+            proběhne překlad jména (DNS), naváže se připojení (TCP/TLS) a odešle se HTTP požadavek.
+            Každý krok má typické symptomy při potížích a jde zkoumat nástroji níže.
+          </p>
+          <p>
+            V praktických úlohách si vyzkoušíte, jak DNS vrací různé typy záznamů, jak ověřit svoji
+            IP konfiguraci a konektivitu, jak se paket dostane přes několik směrovačů až na cílový
+            server a jak vypadá syrová HTTP odpověď bez prohlížeče. Tyto dovednosti jsou klíčové k
+            diagnostice problémů v praxi.
+          </p>
         </div>
       )}
       {hasSections && currentSection && (
@@ -556,6 +580,28 @@ function SlideCard({ slide }) {
       )}
       {slide.id === "quiz-html" && (
         <QuizHtmlBasics />
+      )}
+      {slide.id === "tasks-net" && (
+        <SectionTabs
+          theory={
+            <div className="text-sm text-zinc-700 dark:text-zinc-300 space-y-2">
+              <p>
+                Terminál vpravo je simulátor: příkazy nic neodesílají do sítě, ale vrací typické
+                výstupy. Zaměřte se na porozumění – co znamená A/NS/TXT v DNS, co je <em>mask of
+                network</em>, proč má traceroute více <em>hopů</em>, a proč u HTTPS nejde jen poslat
+                <Code>GET /</Code> jako v čistém TCP.
+              </p>
+              <p>
+                Doporučený postup: nejprve si přečtěte teoretické snímky, projděte příklady a až
+                potom plňte úkoly. U každého úkolu zkuste vysvětlit vlastními slovy, co daný výstup
+                znamená.
+              </p>
+            </div>
+          }
+          examples={<TaskHints />}
+          tryContent={<div className="text-sm text-zinc-700 dark:text-zinc-300">Použijte terminál vpravo. Začněte příkazy <Code>host cvut.cz</Code>, <Code>ifconfig</Code>, <Code>traceroute fel.cvut.cz</Code>.</div>}
+          task={<TaskChecklist commandLog={commandLog} />}
+        />
       )}
       {hasSteps && currentStep && (
         <div className="mt-4">
@@ -803,18 +849,81 @@ function QuizHtmlBasics() {
 
 // Media is embedded per-slide instead of a global gallery
 
+function SectionTabs({ theory, examples, tryContent, task }) {
+  const [tab, setTab] = useState("theory");
+  return (
+    <div className="mt-4">
+      <div className="mb-2 flex flex-wrap gap-2">
+        {[
+          { id: "theory", label: "Teorie" },
+          { id: "examples", label: "Příklady" },
+          { id: "try", label: "Vyzkoušet" },
+          { id: "task", label: "Úkol" },
+        ].map((t) => (
+          <button
+            key={t.id}
+            className={clsx(
+              "px-2 py-1 rounded border text-xs",
+              tab === t.id
+                ? "bg-sky-600 text-white border-sky-600"
+                : "bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800"
+            )}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {tab === "theory" && <div>{theory}</div>}
+      {tab === "examples" && <div>{examples}</div>}
+      {tab === "try" && <div>{tryContent}</div>}
+      {tab === "task" && <div>{task}</div>}
+    </div>
+  );
+}
+
+function TaskChecklist({ commandLog }) {
+  const reqs = [
+    { id: "dns", label: "Proveďte DNS dotaz (host/nslookup) pro cvut.cz", test: (log) => /^(host|nslookup)\s+.*cvut\.cz/i.test(log) },
+    { id: "ifconfig", label: "Zobrazte konfiguraci rozhraní (ifconfig)", test: (log) => /^ifconfig/i.test(log) || /^ipconfig/i.test(log) },
+    { id: "traceroute", label: "Proveďte traceroute na fel.cvut.cz", test: (log) => /^traceroute\s+.*fel\.cvut\.cz/i.test(log) },
+    { id: "telnet", label: "Vyzkoušejte telnet na port 80 (GET /)", test: (log) => /^telnet\s+.+\s+80/i.test(log) },
+  ];
+  const last = commandLog[commandLog.length - 1] || "";
+  return (
+    <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4 text-sm">
+      <div className="font-semibold mb-2">Kontrolní seznam</div>
+      <ul className="space-y-1">
+        {reqs.map((r) => {
+          const ok = commandLog.some((c) => r.test(c));
+          return (
+            <li key={r.id} className="flex items-center gap-2">
+              <span className={clsx("h-2.5 w-2.5 rounded-full border", ok ? "bg-emerald-500 border-emerald-500" : "bg-zinc-300 border-zinc-400")} />
+              <span>{r.label}</span>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="mt-2 text-xs text-zinc-500">Poslední příkaz: {last || "(zatím nic)"}</div>
+    </div>
+  );
+}
+
 export default function App() {
   const { run } = useInterpreter();
   const [clearKey, setClearKey] = useState(0);
   const [active, setActive] = useState(slides[0].id);
+  const [commandLog, setCommandLog] = useState([]);
 
   async function handleCommand(cmd) {
     const out = await run(cmd);
     if (out === "__CLEAR__") {
       // trigger terminal remount to clear history
       setClearKey((k) => k + 1);
+      setCommandLog([]);
       return "";
     }
+    setCommandLog((logs) => [...logs, cmd].slice(-50));
     return out;
   }
 
@@ -854,7 +963,7 @@ export default function App() {
               ))}
             </nav>
 
-            <SlideCard slide={current} />
+            <SlideCard slide={current} commandLog={commandLog} />
             {current.id === "tasks-net" && <TaskHints />}
           </div>
 

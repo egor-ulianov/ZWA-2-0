@@ -16,6 +16,21 @@ export default function Home() {
           </Link>
         </li>
         <li>
+          <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-1-html5">
+            Interactive ZWA‑1 (HTML5): HTML5 Presentation with Live Playground
+          </Link>
+        </li>
+        <li>
+          <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-2">
+            Interactive ZWA‑2: CSS Presentation with Live Playground
+          </Link>
+        </li>
+        <li>
+          <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-2-forms">
+            Interactive ZWA‑2 (Forms): Client-side Forms and HTML5 Inputs
+          </Link>
+        </li>
+        <li>
           <Link prefetch={false} className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/attendance">
             Attendance (protected)
           </Link>
