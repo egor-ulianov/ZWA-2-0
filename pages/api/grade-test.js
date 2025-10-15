@@ -38,7 +38,7 @@ async function callOpenAIVision({ images, maxPoints, criteriaText }) {
     throw new Error('OPENAI_API_KEY not set');
   }
   const content = [];
-  content.push({ type: 'text', text: `You are grading a student test. Each task is for 3 points, there are 4 tasks. Give sum of points for all tasks. If there is something at least meaningful, give 1 point. If it is overall ok, but missing some details, give 2 points. If it is ideal, including small syntax errors, give 3 points. If there is an answer which does not make any sense, give 0 points. Score overall from 0 to ${maxPoints}. Respond ONLY as strict JSON with keys: points (integer 0..${maxPoints}), reasoning (concise explanation for each task evaluation as plain text in Czech).` });
+  content.push({ type: 'text', text: `You are grading a student test. Each task is for 3 points, there are 4 tasks. Give sum of points for all tasks. If there is something at least meaningful, give 1 point. If it is overall ok, but missing some details, give 2 points. If it is ideal, including small syntax errors, give 3 points. If there is an answer which does not make any sense, give 0 points. Score overall from 0 to ${maxPoints}. Respond ONLY as strict JSON with keys: points (integer 0..${maxPoints}), reasoning (concise explanation for each task evaluation with list of mistakes, ideally with right answer in bold as markdown text in Czech, not json).` });
   if (criteriaText && typeof criteriaText === 'string' && criteriaText.trim()) {
     content.push({ type: 'text', text: `Grading criteria: ${criteriaText.trim()}` });
   }
@@ -53,7 +53,7 @@ async function callOpenAIVision({ images, maxPoints, criteriaText }) {
       'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5',
       temperature: 0,
       response_format: { type: 'json_object' },
       messages: [
@@ -75,7 +75,20 @@ async function callOpenAIVision({ images, maxPoints, criteriaText }) {
     parsed = {};
   }
   const points = clampPoints(Number(parsed.points), maxPoints);
-  const reasoning = String(JSON.stringify(parsed.reasoning) || '').slice(0, 20000);
+  // Normalize reasoning to plain markdown string (avoid JSON-stringified content)
+  let reasoning = '';
+  if (typeof parsed.reasoning === 'string') {
+    reasoning = parsed.reasoning;
+  } else if (Array.isArray(parsed.reasoning)) {
+    reasoning = parsed.reasoning
+      .map((item) => (typeof item === 'string' ? `- ${item}` : `- ${JSON.stringify(item)}`))
+      .join('\n');
+  } else if (parsed.reasoning && typeof parsed.reasoning === 'object') {
+    reasoning = Object.entries(parsed.reasoning)
+      .map(([k, v]) => `- ${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
+      .join('\n');
+  }
+  reasoning = String(reasoning).slice(0, 20000);
   return { points, reasoning };
 }
 

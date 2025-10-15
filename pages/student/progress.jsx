@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Analytics } from "@vercel/analytics/next"
 
 export default function StudentProgress() {
@@ -104,7 +105,9 @@ export default function StudentProgress() {
                       {g.reasoning ? (
                         <div className="mt-1">
                           <div className="text-xs uppercase tracking-wide text-zinc-500">AI reasoning</div>
-                          <div className="text-sm whitespace-pre-wrap text-zinc-800 dark:text-zinc-200">{g.reasoning}</div>
+                          <div className="prose prose-sm dark:prose-invert max-w-none">
+                            <ReactMarkdown>{g.reasoning}</ReactMarkdown>
+                          </div>
                         </div>
                       ) : null}
                       {g.teacher_comment ? (

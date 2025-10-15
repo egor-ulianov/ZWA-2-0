@@ -30,7 +30,29 @@ export default async function handler(req, res) {
       order by test_number, graded_at desc
     `, [username]);
     const byTest = {};
-    for (const r of rows) byTest[r.test_number] = r;
+    for (const r of rows) {
+      // Normalize legacy reasoning that might have been JSON-stringified
+      if (r && typeof r.reasoning === 'string') {
+        const trimmed = r.reasoning.trim();
+        if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith('{') || trimmed.startsWith('['))) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (typeof parsed === 'string') {
+              r.reasoning = parsed;
+            } else if (Array.isArray(parsed)) {
+              r.reasoning = parsed.map((x) => (typeof x === 'string' ? `- ${x}` : `- ${JSON.stringify(x)}`)).join('\n');
+            } else if (parsed && typeof parsed === 'object') {
+              r.reasoning = Object.entries(parsed)
+                .map(([k, v]) => `- ${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
+                .join('\n');
+            }
+          } catch (_) {
+            // keep as-is if not valid JSON
+          }
+        }
+      }
+      byTest[r.test_number] = r;
+    }
     return res.status(200).json({ username, grades: byTest });
   } catch (e) {
     return res.status(500).json({ error: 'Failed', details: String(e) });
