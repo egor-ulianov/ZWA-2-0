@@ -400,12 +400,62 @@ export default function AttendancePage() {
                                     ) : (
                                       <div className="space-y-1">
                                         <div><span className="font-semibold">Points:</span> {g.points != null ? g.points : '—'}</div>
-                                        {g.reasoning ? (
-                                          <div>
-                                            <div className="font-semibold">Reasoning:</div>
-                                            <div className="whitespace-pre-wrap text-zinc-700">{g.reasoning}</div>
-                                          </div>
-                                        ) : null}
+                                        <div>
+                                          <div className="font-semibold">Reasoning:</div>
+                                          {!g.editing ? (
+                                            <div>
+                                              {g.reasoning ? (
+                                                <div className="whitespace-pre-wrap text-zinc-700">{g.reasoning}</div>
+                                              ) : (
+                                                <div className="text-zinc-500">—</div>
+                                              )}
+                                              <div className="mt-1 flex items-center gap-2">
+                                                <button type="button" className="px-2 py-0.5 rounded bg-zinc-200" onClick={() => {
+                                                  setGrades(prev => ({
+                                                    ...prev,
+                                                    [key]: { ...(prev[key] || {}), editing: true, draft: prev[key]?.reasoning || '' }
+                                                  }));
+                                                }}>Edit</button>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <div className="space-y-2">
+                                              <textarea className="border rounded p-2 w-full h-28" value={g.draft || ''} onChange={e => {
+                                                const value = e.target.value;
+                                                setGrades(prev => ({ ...prev, [key]: { ...(prev[key] || {}), draft: value } }));
+                                              }} />
+                                              <div className="flex items-center gap-2">
+                                                <button type="button" disabled={!!g.saving} className="px-3 py-1 rounded bg-sky-600 text-white disabled:opacity-50" onClick={async () => {
+                                                  const draft = (grades[key]?.draft || '').trim();
+                                                  setGrades(prev => ({ ...prev, [key]: { ...(prev[key] || {}), saving: true } }));
+                                                  try {
+                                                    const resp = await fetch('/api/grade-test', {
+                                                      method: 'PUT',
+                                                      headers: { 'Content-Type': 'application/json' },
+                                                      body: JSON.stringify({ username: s.username, testNumber: tn, reasoning: draft })
+                                                    });
+                                                    if (!resp.ok) {
+                                                      const dj = await resp.json().catch(() => ({}));
+                                                      throw new Error(dj.error || 'Update failed');
+                                                    }
+                                                    setGrades(prev => ({
+                                                      ...prev,
+                                                      [key]: { ...(prev[key] || {}), reasoning: draft, editing: false, saving: false }
+                                                    }));
+                                                  } catch (err) {
+                                                    setGrades(prev => ({ ...prev, [key]: { ...(prev[key] || {}), saving: false, error: err.message || 'Update failed' } }));
+                                                  }
+                                                }}>Save</button>
+                                                <button type="button" disabled={!!g.saving} className="px-3 py-1 rounded bg-zinc-200" onClick={() => {
+                                                  setGrades(prev => ({
+                                                    ...prev,
+                                                    [key]: { ...(prev[key] || {}), editing: false, draft: prev[key]?.reasoning || '' }
+                                                  }));
+                                                }}>Cancel</button>
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
                                     )}
                                   </div>

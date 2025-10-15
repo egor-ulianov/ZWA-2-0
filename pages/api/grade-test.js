@@ -53,7 +53,7 @@ async function callOpenAIVision({ images, maxPoints, criteriaText }) {
       'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
     },
     body: JSON.stringify({
-      model: 'gpt-5',
+      model: 'gpt-4.1',
       temperature: 0,
       response_format: { type: 'json_object' },
       messages: [
@@ -159,6 +159,53 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, points, reasoning });
     } catch (e) {
       return res.status(500).json({ error: 'Grade failed', details: String(e) });
+    }
+  }
+
+  if (req.method === 'PUT') {
+    // Teacher-only: update latest reasoning for a user's test
+    try {
+      const cookie = req.headers.cookie || '';
+      const match = cookie.match(/(?:^|; )teacher_session=([^;]+)/);
+      const token = match ? decodeURIComponent(match[1]) : '';
+      // lightweight verify copied from teacher/me.js (no import to keep simple)
+      const crypto = await import('crypto');
+      function verify(t) {
+        const secret = process.env.TEACHER_COOKIE_SECRET || 'dev-secret-teacher';
+        if (!t) return null;
+        const idx = t.lastIndexOf('.');
+        if (idx <= 0) return null;
+        const value = t.slice(0, idx);
+        const sig = t.slice(idx + 1);
+        const h = crypto.createHmac('sha256', secret).update(value).digest('hex');
+        if (h !== sig) return null;
+        return value;
+      }
+      const teacher = verify(token);
+      if (!teacher) return res.status(401).json({ error: 'Unauthorized' });
+
+      const { username, testNumber, reasoning } = req.body || {};
+      const u = String(username || '').trim();
+      const tn = Number(testNumber);
+      const text = String(reasoning || '').slice(0, 20000);
+      if (!u) return res.status(400).json({ error: 'username required' });
+      if (![1,2,3,4].includes(tn)) return res.status(400).json({ error: 'testNumber must be 1..4' });
+
+      // update the latest row for this test
+      const rows = await sql(`
+        update test_grades tg set reasoning = $1
+        where tg.id = (
+          select id from test_grades
+          where username = $2 and test_number = $3
+          order by graded_at desc
+          limit 1
+        )
+        returning username, test_number, points, reasoning, teacher_comment, images_count, graded_at
+      `, [text, u, tn]);
+      if (!rows || rows.length === 0) return res.status(404).json({ error: 'Grade not found' });
+      return res.status(200).json({ ok: true, item: rows[0] });
+    } catch (e) {
+      return res.status(500).json({ error: 'Update failed', details: String(e) });
     }
   }
 
