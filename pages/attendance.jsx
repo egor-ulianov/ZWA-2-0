@@ -419,6 +419,9 @@ export default function AttendancePage() {
                             checked={!!progress[s.username]?.assignment_task_checked}
                             onChange={e => saveProgress(s.username, { assignment_task_checked: e.target.checked })} /> Task checked
                         </label>
+                        <input className="border rounded px-2 py-1 col-span-2" type="text" placeholder="Semestral topic"
+                          value={(progress[s.username]?.assignment_topic ?? '')}
+                          onChange={e => saveProgress(s.username, { assignment_topic: e.target.value || null })} />
                         <label className="inline-flex items-center gap-2 col-span-2">
                           <input type="checkbox"
                             checked={!!progress[s.username]?.assignment_midterm_ok}
@@ -495,6 +498,51 @@ export default function AttendancePage() {
                           );
                         })}
                         <td className="text-center px-3 py-2 font-semibold">{total}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="mt-8">
+            <h2 className="text-xl font-bold mb-3">Overall results – tests & semestral work</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm bg-white rounded-xl shadow">
+                <thead className="bg-zinc-100">
+                  <tr>
+                    <th className="text-left px-3 py-2">First name</th>
+                    <th className="text-left px-3 py-2">Surname</th>
+                    <th className="text-left px-3 py-2">Username</th>
+                    <th className="text-center px-3 py-2">T1</th>
+                    <th className="text-center px-3 py-2">T2</th>
+                    <th className="text-center px-3 py-2">T3</th>
+                    <th className="text-center px-3 py-2">T4</th>
+                    <th className="text-left px-3 py-2">Topic</th>
+                    <th className="text-center px-3 py-2">Task</th>
+                    <th className="text-center px-3 py-2">Mid-term</th>
+                    <th className="text-left px-3 py-2">Partner</th>
+                    <th className="text-center px-3 py-2">Final pts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map(s => {
+                    const p = progress[s.username] || {};
+                    return (
+                      <tr key={s.username} className="border-t">
+                        <td className="px-3 py-2 whitespace-nowrap">{s.firstName}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{s.lastName}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{s.username}</td>
+                        <td className="px-3 py-2 text-center whitespace-nowrap">{p.test1 ?? '—'}</td>
+                        <td className="px-3 py-2 text-center whitespace-nowrap">{p.test2 ?? '—'}</td>
+                        <td className="px-3 py-2 text-center whitespace-nowrap">{p.test3 ?? '—'}</td>
+                        <td className="px-3 py-2 text-center whitespace-nowrap">{p.test4 ?? '—'}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{p.assignment_topic || '—'}</td>
+                        <td className="px-3 py-2 text-center whitespace-nowrap">{p.assignment_task_checked ? '✓' : '—'}</td>
+                        <td className="px-3 py-2 text-center whitespace-nowrap">{p.assignment_midterm_ok ? 'OK' : '—'}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{p.assignment_partner || '—'}</td>
+                        <td className="px-3 py-2 text-center whitespace-nowrap">{p.assignment_final_points ?? '—'}</td>
                       </tr>
                     );
                   })}

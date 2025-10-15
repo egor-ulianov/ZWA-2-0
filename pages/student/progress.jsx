@@ -5,6 +5,7 @@ export default function StudentProgress() {
   const [data, setData] = React.useState(null);
   const [error, setError] = React.useState('');
   const [attendance, setAttendance] = React.useState({});
+  const [grades, setGrades] = React.useState({});
   React.useEffect(() => {
     let mounted = true;
     async function load() {
@@ -18,6 +19,11 @@ export default function StudentProgress() {
         if (a.ok) {
           const at = await a.json();
           if (mounted) setAttendance(at.attendance || {});
+        }
+        const g = await fetch('/api/student/grades');
+        if (g.ok) {
+          const gj = await g.json();
+          if (mounted) setGrades(gj.grades || {});
         }
       } catch (e) {
         if (mounted) setError('Unauthorized');
@@ -86,6 +92,30 @@ export default function StudentProgress() {
                 <DataItem label="Mid‑term" value={p.assignment_midterm_ok ? 'OK' : '—'} />
                 <DataItem label="Partner" value={p.assignment_partner || '—'} className="col-span-2" />
                 <DataItem label="Final points" value={p.assignment_final_points ?? '—'} className="col-span-2" />
+              </div>
+              <div className="mt-4 space-y-3">
+                {[1,2,3,4].map(tn => {
+                  const g = grades[tn] || null;
+                  if (!g) return null;
+                  return (
+                    <div key={tn} className="rounded-lg border border-zinc-200/60 dark:border-zinc-800 p-3 bg-white/60 dark:bg-zinc-900/40">
+                      <div className="text-sm font-semibold mb-1">Evaluation – Test {tn}</div>
+                      <div className="text-sm"><span className="font-medium">Points:</span> {g.points ?? '—'}</div>
+                      {g.reasoning ? (
+                        <div className="mt-1">
+                          <div className="text-xs uppercase tracking-wide text-zinc-500">AI reasoning</div>
+                          <div className="text-sm whitespace-pre-wrap text-zinc-800 dark:text-zinc-200">{g.reasoning}</div>
+                        </div>
+                      ) : null}
+                      {g.teacher_comment ? (
+                        <div className="mt-2">
+                          <div className="text-xs uppercase tracking-wide text-zinc-500">Teacher comment</div>
+                          <div className="text-sm whitespace-pre-wrap text-zinc-800 dark:text-zinc-200">{g.teacher_comment}</div>
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>

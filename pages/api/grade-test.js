@@ -14,6 +14,7 @@ async function ensureSchema() {
       graded_at timestamptz default now()
     );
   `);
+  await sql(`alter table test_grades add column if not exists teacher_comment text;`);
 }
 
 function clampPoints(value, maxPoints) {
@@ -92,7 +93,7 @@ export default async function handler(req, res) {
     try {
       if (testNumber && [1,2,3,4].includes(testNumber)) {
         const rows = await sql(`
-          select username, test_number, points, reasoning, images_count, graded_at
+          select username, test_number, points, reasoning, teacher_comment, images_count, graded_at
           from test_grades
           where username = $1 and test_number = $2
           order by graded_at desc
@@ -101,7 +102,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ item: rows[0] || null });
       }
       const rows = await sql(`
-        select distinct on (test_number) username, test_number, points, reasoning, images_count, graded_at
+        select distinct on (test_number) username, test_number, points, reasoning, teacher_comment, images_count, graded_at
         from test_grades
         where username = $1
         order by test_number, graded_at desc
