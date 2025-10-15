@@ -19,6 +19,7 @@ export default function AttendancePage() {
   const [progress, setProgress] = React.useState({}); // username -> progress object
   const [teacher, setTeacher] = React.useState(null);
   const [loginError, setLoginError] = React.useState('');
+  const [grades, setGrades] = React.useState({}); // key: `${username}:${testNumber}` -> { points, reasoning, loading, error }
 
   React.useEffect(() => {
     let isMounted = true;
@@ -181,6 +182,66 @@ export default function AttendancePage() {
     setProgress(prev => ({ ...prev, [username]: payload }));
   }
 
+  function gradeKey(username, testNumber) {
+    return `${username}:${testNumber}`;
+  }
+
+  function readFilesAsDataUrls(fileList) {
+    const files = Array.from(fileList || []);
+    const readers = files.map(f => new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result || ''));
+      r.onerror = reject;
+      r.readAsDataURL(f);
+    }));
+    return Promise.all(readers);
+  }
+
+  async function loadLastAiResult(username, testNumber) {
+    const key = gradeKey(username, testNumber);
+    setGrades(prev => ({ ...prev, [key]: { ...(prev[key] || {}), loading: true, error: '' } }));
+    try {
+      const res = await fetch(`/api/grade-test?username=${encodeURIComponent(username)}&testNumber=${encodeURIComponent(testNumber)}`);
+      if (!res.ok) throw new Error('Failed to load result');
+      const data = await res.json();
+      const item = data.item || null;
+      setGrades(prev => ({
+        ...prev,
+        [key]: item ? { points: item.points, reasoning: item.reasoning, loading: false } : { points: null, reasoning: '', loading: false }
+      }));
+    } catch (e) {
+      setGrades(prev => ({ ...prev, [key]: { ...(prev[key] || {}), loading: false, error: 'Failed to load result' } }));
+    }
+  }
+
+  async function handleAiGrade(username, testNumber, fileList, maxPoints, criteria) {
+    const key = gradeKey(username, testNumber);
+    setGrades(prev => ({ ...prev, [key]: { ...(prev[key] || {}), loading: true, error: '' } }));
+    try {
+      const images = await readFilesAsDataUrls(fileList);
+      if (images.length === 0) throw new Error('No images');
+      const res = await fetch('/api/grade-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, testNumber, images, maxPoints, criteria })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Grade failed');
+      }
+      const data = await res.json();
+      const points = data.points ?? null;
+      const reasoning = data.reasoning || '';
+      setGrades(prev => ({ ...prev, [key]: { points, reasoning, loading: false, error: '' } }));
+      if (points != null) {
+        const field = testNumber === 1 ? 'test1' : testNumber === 2 ? 'test2' : testNumber === 3 ? 'test3' : 'test4';
+        await saveProgress(username, { [field]: points });
+      }
+    } catch (e) {
+      setGrades(prev => ({ ...prev, [key]: { ...(prev[key] || {}), loading: false, error: e.message || 'Grade failed' } }));
+    }
+  }
+
   function buildMailto(student) {
     const username = student.username;
     const code = progress[username]?.auth_code || '';
@@ -309,6 +370,50 @@ export default function AttendancePage() {
                         <input className="border rounded px-2 py-1" type="number" placeholder="Test 4"
                           value={(progress[s.username]?.test4 ?? '')}
                           onChange={e => saveProgress(s.username, { test4: e.target.value === '' ? null : Number(e.target.value) })} />
+                        {[1,2,3,4].map(tn => (
+                          <div key={tn} className="col-span-2 border rounded p-2">
+                            <div className="font-semibold mb-1">AI grade: Test {tn}</div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <input type="file" accept="image/*" multiple className="border rounded px-2 py-1 col-span-2" onChange={() => { /* handled on button click by reading input ref below */ }} ref={el => { (s._aiRefs = s._aiRefs || {})[tn] = el; }} />
+                              <input type="number" className="border rounded px-2 py-1" placeholder="Max points" defaultValue={10} min={0} max={1000} ref={el => { (s._aiRefs = s._aiRefs || {} )[`max_${tn}`] = el; }} />
+                              <input type="text" className="border rounded px-2 py-1" placeholder="Criteria (optional)" ref={el => { (s._aiRefs = s._aiRefs || {} )[`crit_${tn}`] = el; }} />
+                              <div className="col-span-2 flex items-center gap-2">
+                                <button type="button" className="px-3 py-1 rounded bg-zinc-200" onClick={() => {
+                                  const files = (s._aiRefs && s._aiRefs[tn] && s._aiRefs[tn].files) || [];
+                                  const maxEl = s._aiRefs && s._aiRefs[`max_${tn}`];
+                                  const critEl = s._aiRefs && s._aiRefs[`crit_${tn}`];
+                                  const maxPoints = maxEl && maxEl.value !== '' ? Number(maxEl.value) : 10;
+                                  const criteria = critEl ? String(critEl.value || '') : '';
+                                  handleAiGrade(s.username, tn, files, maxPoints, criteria);
+                                }}>Grade</button>
+                                <button type="button" className="px-3 py-1 rounded bg-zinc-200" onClick={() => loadLastAiResult(s.username, tn)}>Load last result</button>
+                              </div>
+                              {(() => {
+                                const g = grades[gradeKey(s.username, tn)];
+                                if (!g) return null;
+                                return (
+                                  <div className="col-span-2 text-sm">
+                                    {g.loading ? (
+                                      <span className="text-zinc-600">Grading…</span>
+                                    ) : g.error ? (
+                                      <span className="text-red-600">{g.error}</span>
+                                    ) : (
+                                      <div className="space-y-1">
+                                        <div><span className="font-semibold">Points:</span> {g.points != null ? g.points : '—'}</div>
+                                        {g.reasoning ? (
+                                          <div>
+                                            <div className="font-semibold">Reasoning:</div>
+                                            <div className="whitespace-pre-wrap text-zinc-700">{g.reasoning}</div>
+                                          </div>
+                                        ) : null}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        ))}
                         <label className="inline-flex items-center gap-2 col-span-2">
                           <input type="checkbox"
                             checked={!!progress[s.username]?.assignment_task_checked}

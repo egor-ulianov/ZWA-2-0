@@ -11,23 +11,23 @@ export default function Home() {
       </header>
       <ul className="space-y-3">
         <li>
-          <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-1/">
-            Interactive ZWA‑1: Web Presentation with Simulated Linux CLI
-          </Link>
-        </li>
-        <li>
           <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-1-html5">
-            Interactive ZWA‑1 (HTML5): HTML5 Presentation with Live Playground
-          </Link>
-        </li>
-        <li>
-          <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-2">
-            Interactive ZWA‑2: CSS Presentation with Live Playground
+            1) ZWA‑1 (HTML5): HTML5 Presentation with Live Playground
           </Link>
         </li>
         <li>
           <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-2-forms">
-            Interactive ZWA‑2 (Forms): Client-side Forms and HTML5 Inputs
+            2) ZWA‑2 (Forms): Client-side Forms and HTML5 Inputs
+          </Link>
+        </li>
+        <li>
+          <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-1/">
+            3) ZWA‑3 (Network): Web Presentation with Simulated Linux CLI
+          </Link>
+        </li>
+        <li>
+          <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-2">
+            4) ZWA‑4: CSS Presentation with Live Playground
           </Link>
         </li>
         <li>
