@@ -38,7 +38,7 @@ async function callOpenAIVision({ images, maxPoints, criteriaText }) {
     throw new Error('OPENAI_API_KEY not set');
   }
   const content = [];
-  content.push({ type: 'text', text: `You are grading a student test. Score from 0 to ${maxPoints}. Respond ONLY as strict JSON with keys: points (integer 0..${maxPoints}), reasoning (concise explanation).` });
+  content.push({ type: 'text', text: `You are grading a student test. Each task is for 3 points, there are 4 tasks. Give sum of points for all tasks. If there is something at least meaningful, give 1 point. If it is overall ok, but missing some details, give 2 points. If it is ideal, including small syntax errors, give 3 points. If there is an answer which does not make any sense, give 0 points. Score overall from 0 to ${maxPoints}. Respond ONLY as strict JSON with keys: points (integer 0..${maxPoints}), reasoning (concise explanation for each task evaluation as plain text in Czech).` });
   if (criteriaText && typeof criteriaText === 'string' && criteriaText.trim()) {
     content.push({ type: 'text', text: `Grading criteria: ${criteriaText.trim()}` });
   }
@@ -75,7 +75,7 @@ async function callOpenAIVision({ images, maxPoints, criteriaText }) {
     parsed = {};
   }
   const points = clampPoints(Number(parsed.points), maxPoints);
-  const reasoning = String(parsed.reasoning || '').slice(0, 20000);
+  const reasoning = String(JSON.stringify(parsed.reasoning) || '').slice(0, 20000);
   return { points, reasoning };
 }
 
