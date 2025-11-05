@@ -16,11 +16,6 @@ export default function Home() {
           </Link>
         </li>
         <li>
-          <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-5-js">
-            5) ZWA‑5: JavaScript Basics with Live Playground
-          </Link>
-        </li>
-        <li>
           <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-2-forms">
             2) ZWA‑2 (Forms): Client-side Forms and HTML5 Inputs
           </Link>
@@ -38,6 +33,16 @@ export default function Home() {
         <li>
           <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-5-css-ii">
             5) ZWA‑5: CSS II – Layout, Responsivity, Print
+          </Link>
+        </li>
+        <li>
+          <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-5-js">
+            5) ZWA‑6: JavaScript Basics with Live Playground
+          </Link>
+        </li>
+        <li>
+          <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-7">
+            6) ZWA‑7: Classes and AJAX
           </Link>
         </li>
         <li>
