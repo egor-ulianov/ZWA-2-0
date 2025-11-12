@@ -37,12 +37,17 @@ export default function Home() {
         </li>
         <li>
           <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-5-js">
-            5) ZWA‑6: JavaScript Basics with Live Playground
+            6) ZWA‑6: JavaScript Basics with Live Playground
           </Link>
         </li>
         <li>
           <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-7">
-            6) ZWA‑7: Classes and AJAX
+            7) ZWA‑7: Classes and AJAX
+          </Link>
+        </li>
+        <li>
+          <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-8-php">
+            8) ZWA‑8: PHP Basics – Malý test #2
           </Link>
         </li>
         <li>
