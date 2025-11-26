@@ -56,6 +56,11 @@ export default function Home() {
           </Link>
         </li>
         <li>
+          <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-10-sessions-cookies">
+            10) ZWA‑10: Session & Cookies in PHP
+          </Link>
+        </li>
+        <li>
           <Link prefetch={false} className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/attendance">
             Attendance (protected)
           </Link>

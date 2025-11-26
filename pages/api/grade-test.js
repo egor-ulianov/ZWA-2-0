@@ -38,7 +38,7 @@ async function callOpenAIVision({ images, maxPoints, criteriaText }) {
     throw new Error('OPENAI_API_KEY not set');
   }
   const content = [];
-  content.push({ type: 'text', text: `You are grading a student test. Each task is for 3 points, there are 4 tasks. Give sum of points for all tasks. If there is something at least meaningful, give 1 point. If it is overall ok, but missing some details, give 2 points. If it is ideal, including small syntax errors, give 3 points. If there is an answer which does not make any sense, give 0 points. Score overall from 0 to ${maxPoints}. Respond ONLY as strict JSON with keys: points (integer 0..${maxPoints}), reasoning (concise explanation for each task evaluation with list of mistakes, ideally with right answer in bold as markdown text in Czech, not json).` });
+  content.push({ type: 'text', text: `You are grading a student test. Each task is for 3 points, there are 4 tasks. Give sum of points for all tasks. If there is something at least meaningful, give 1 point. If it is overall ok, but missing some details, give 2 points. If it is ideal, including small syntax errors, give 3 points. IMPORTANT: Do NOT penalize trivial formatting issues (e.g., missing/extra spaces, dots/commas), minor variable or function naming differences, or small stylistic deviations that do not affect correctness. Focus on semantic correctness and required steps/results. If there is an answer which does not make any sense, give 0 points. Score overall from 0 to ${maxPoints}. Respond ONLY as strict JSON with keys: points (integer 0..${maxPoints}), reasoning (concise explanation for each task evaluation with list of mistakes, ideally with right answer in bold as markdown text in Czech, not json).` });
   if (criteriaText && typeof criteriaText === 'string' && criteriaText.trim()) {
     content.push({ type: 'text', text: `Grading criteria: ${criteriaText.trim()}` });
   }
@@ -57,7 +57,7 @@ async function callOpenAIVision({ images, maxPoints, criteriaText }) {
       temperature: 0,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: 'You are a careful, fair grader for short-answer and calculation tests.' },
+        { role: 'system', content: 'You are a careful, fair grader for short-answer and calculation tests. Ignore superficial style issues that do not change correctness.' },
         { role: 'user', content }
       ]
     })
