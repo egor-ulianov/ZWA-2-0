@@ -61,6 +61,11 @@ export default function Home() {
           </Link>
         </li>
         <li>
+          <Link className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/interactive-zwa-11-files-json">
+            11) ZWA‑11: Files & JSON in PHP
+          </Link>
+        </li>
+        <li>
           <Link prefetch={false} className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50" href="/attendance">
             Attendance (protected)
           </Link>
