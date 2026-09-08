@@ -45,11 +45,11 @@ export default function SlideNavigation({ slides, activeSlide, onChange, idPrefi
               aria-current={isActive ? 'step' : undefined}
               tabIndex={isActive ? 0 : -1}
               className={clsx(
-                'px-3 py-1.5 rounded-full text-sm border transition-all motion-reduce:transition-none',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2',
+                'rounded px-3 py-1.5 text-sm border transition-colors motion-reduce:transition-none',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--portal-focus)]',
                 isActive
-                  ? 'bg-sky-600 text-white border-sky-600 shadow-lg'
-                  : 'bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-800',
+                  ? 'border-[var(--portal-indigo)] bg-[var(--portal-indigo)] font-semibold text-white'
+                  : 'border-[var(--portal-border)] bg-[var(--portal-panel)] text-[var(--portal-text)] hover:bg-[var(--portal-surface-muted)]',
               )}
               onClick={() => onChange(slide.id)}
               onKeyDown={(event) => handleKeyDown(event, index)}

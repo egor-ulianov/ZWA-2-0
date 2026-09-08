@@ -44,6 +44,9 @@ test.describe('public catalog and lesson navigation', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-1-html5?slide=intro');
+    await expect(page.getByRole('navigation', { name: /Course outline/i })).toBeVisible();
+    await page.getByRole('tab', { name: 'Úkoly' }).press('Home');
+    await expect(page.getByRole('tab', { name: 'Úvod' })).toHaveAttribute('aria-selected', 'true');
     const tablist = page
       .getByRole('navigation', { name: 'Navigace mezi snímky' })
       .getByRole('tablist');

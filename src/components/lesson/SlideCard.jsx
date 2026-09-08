@@ -21,20 +21,20 @@ export default function SlideCard({ slide, children, idPrefix = 'lesson' }) {
       aria-labelledby={tabId}
       tabIndex={-1}
       className={clsx(
-        'p-6 rounded-2xl shadow-lg bg-white/70 dark:bg-zinc-900/60',
-        'backdrop-blur border border-zinc-200/60 dark:border-zinc-800',
+        'portal-panel p-6',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--portal-focus)]',
       )}
     >
       <h2
         ref={headingRef}
         id={`${panelId}-heading`}
         tabIndex={-1}
-        className="text-3xl font-bold mb-3"
+        className="mb-3 text-3xl font-bold"
       >
         {slide.title}
       </h2>
       {slide.subtitle && (
-        <p className="text-xl text-sky-600 dark:text-sky-400 mb-4">{slide.subtitle}</p>
+        <p className="mb-4 text-xl text-[var(--portal-coral)]">{slide.subtitle}</p>
       )}
       {children}
     </section>
