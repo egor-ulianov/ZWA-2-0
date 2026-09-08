@@ -13,7 +13,7 @@
     --portal-border: #d8d9d6;
     --portal-indigo: #30327a;
     --portal-indigo-hover: #24265f;
-    --portal-coral: #d9685d;
+    --portal-coral: #ad4e46;
     --portal-focus: #d9685d;
   }
 
@@ -26,8 +26,8 @@
       --portal-text: #f1f1ed;
       --portal-text-muted: #b4b5b9;
       --portal-border: #42444d;
-      --portal-indigo: #9294e8;
-      --portal-indigo-hover: #b5b6ff;
+      --portal-indigo: #4f52a8;
+      --portal-indigo-hover: #5f61b7;
       --portal-coral: #f28b7e;
       --portal-focus: #f28b7e;
     }
@@ -41,8 +41,8 @@
     --portal-text: #f1f1ed;
     --portal-text-muted: #b4b5b9;
     --portal-border: #42444d;
-    --portal-indigo: #9294e8;
-    --portal-indigo-hover: #b5b6ff;
+    --portal-indigo: #4f52a8;
+    --portal-indigo-hover: #5f61b7;
     --portal-coral: #f28b7e;
     --portal-focus: #f28b7e;
   }
