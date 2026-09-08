@@ -18,10 +18,22 @@ export function useSlideNavigation(slides) {
     setActiveSlideState(nextSlide);
   }, [fallback, slides]);
 
-  useEffect(() => {
-    const validated = typeof window === "undefined" ? fallback : resolveSlideId(slides, window.location);
+  const syncFromLocation = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const validated = resolveSlideId(slides, window.location);
     setActiveSlideState((current) => current === validated ? current : validated);
-  }, [fallback, slides]);
+  }, [slides]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    syncFromLocation();
+    window.addEventListener("popstate", syncFromLocation);
+    window.addEventListener("hashchange", syncFromLocation);
+    return () => {
+      window.removeEventListener("popstate", syncFromLocation);
+      window.removeEventListener("hashchange", syncFromLocation);
+    };
+  }, [syncFromLocation]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !activeSlide) return;

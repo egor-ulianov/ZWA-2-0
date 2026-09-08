@@ -10,7 +10,7 @@ export default function SlideCard({ slide, children, idPrefix = "lesson" }) {
   const { panelId, tabId } = getSlideDomIds(slide.id, idPrefix);
 
   useEffect(() => {
-    if (mountedRef.current) headingRef.current?.focus();
+    if (mountedRef.current) headingRef.current?.focus({ preventScroll: true });
     mountedRef.current = true;
   }, [slide.id]);
 

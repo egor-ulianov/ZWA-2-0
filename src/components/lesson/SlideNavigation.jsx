@@ -42,7 +42,7 @@ export default function SlideNavigation({ slides, activeSlide, onChange, idPrefi
               aria-current={isActive ? "step" : undefined}
               tabIndex={isActive ? 0 : -1}
               className={clsx(
-                "px-3 py-1.5 rounded-full text-sm border transition-all",
+                "px-3 py-1.5 rounded-full text-sm border transition-all motion-reduce:transition-none",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2",
                 isActive
                   ? "bg-sky-600 text-white border-sky-600 shadow-lg"

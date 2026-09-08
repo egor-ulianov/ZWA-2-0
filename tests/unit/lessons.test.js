@@ -7,6 +7,10 @@ const root = join(__dirname, "..", "..");
 const catalogPath = join(root, "src", "config", "lessons.js");
 const navigationPath = join(root, "src", "components", "lesson", "navigation.js");
 
+function lessonSourcePath(lesson) {
+  return join(root, `${lesson.componentKey}.jsx`);
+}
+
 function loadCatalog() {
   assert.ok(existsSync(catalogPath), "src/config/lessons.js must exist");
   return require(catalogPath);
@@ -55,13 +59,19 @@ test("lesson catalog lookup helpers reject unknown lessons", () => {
 });
 
 test("slide deep links accept only known query or hash IDs", () => {
-  const { resolveSlideId } = loadNavigation();
+  const { buildSlideUrl, getScrollBehavior, resolveSlideId } = loadNavigation();
   const slides = [{ id: "title" }, { id: "tasks" }, { id: "summary" }];
 
   assert.equal(resolveSlideId(slides, { search: "?slide=tasks", hash: "" }), "tasks");
   assert.equal(resolveSlideId(slides, { search: "", hash: "#summary" }), "summary");
   assert.equal(resolveSlideId(slides, { search: "?slide=unknown", hash: "#also-unknown" }), "title");
   assert.equal(resolveSlideId([], { search: "?slide=tasks", hash: "#summary" }), undefined);
+  assert.equal(
+    buildSlideUrl({ pathname: "/lesson", search: "?mode=student", hash: "#old" }, "tasks"),
+    "/lesson?mode=student&slide=tasks"
+  );
+  assert.equal(getScrollBehavior(true), "auto");
+  assert.equal(getScrollBehavior(false), "smooth");
 });
 
 test("every catalog route has a checked-in lesson wrapper", () => {
@@ -71,5 +81,35 @@ test("every catalog route has a checked-in lesson wrapper", () => {
       ? join(root, "pages", "interactive-zwa-1", "index.jsx")
       : join(root, "pages", `${lesson.href.slice(1)}.jsx`);
     assert.ok(existsSync(wrapperPath), `${lesson.href} -> ${wrapperPath}`);
+  }
+});
+
+test("every catalog lesson uses the shared shell and navigation contract", () => {
+  const { lessons } = loadCatalog();
+
+  for (const lesson of lessons) {
+    const sourcePath = lessonSourcePath(lesson);
+    assert.ok(existsSync(sourcePath), `${lesson.componentKey} source must exist`);
+    const source = require("node:fs").readFileSync(sourcePath, "utf8");
+    assert.match(source, /LessonShell/, lesson.componentKey);
+    assert.match(source, /useSlideNavigation/, lesson.componentKey);
+    assert.match(source, /<LessonShell\b/, lesson.componentKey);
+    assert.match(source, /useSlideNavigation\(slides\)/, lesson.componentKey);
+  }
+});
+
+test("playground lessons keep their isolated execution adapters", () => {
+  const playgroundComponents = [
+    "interactive_zwa_1_html5_presentation",
+    "interactive_zwa_2_forms_presentation",
+    "interactive_zwa_2_css_presentation",
+    "interactive_zwa_5_css2_presentation",
+    "interactive_zwa_5_javascript_presentation",
+  ];
+
+  for (const componentKey of playgroundComponents) {
+    const source = require("node:fs").readFileSync(join(root, `${componentKey}.jsx`), "utf8");
+    assert.match(source, /src\/components\/playground\/(?:SandboxedPreview|JsSandbox)/, componentKey);
+    assert.doesNotMatch(source, /new Function\s*\(/, componentKey);
   }
 });

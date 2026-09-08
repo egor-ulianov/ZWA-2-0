@@ -4,6 +4,24 @@ function getSlideIds(slides) {
     : [];
 }
 
+function prefersReducedMotion() {
+  return typeof window !== "undefined"
+    && typeof window.matchMedia === "function"
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function getScrollBehavior(reducedMotion = prefersReducedMotion()) {
+  return reducedMotion ? "auto" : "smooth";
+}
+
+function scrollToId(id, { block = "start", inline = "nearest" } = {}) {
+  if (typeof document === "undefined") return false;
+  const element = document.getElementById(id);
+  if (!element || typeof element.scrollIntoView !== "function") return false;
+  element.scrollIntoView({ behavior: getScrollBehavior(), block, inline });
+  return true;
+}
+
 function decodeHash(hash) {
   if (typeof hash !== "string") return "";
   const value = hash.replace(/^#/, "");
@@ -48,4 +66,11 @@ function buildSlideUrl(location, slideId) {
   return `${current.pathname}${current.search}${current.hash}`;
 }
 
-module.exports = { buildSlideUrl, getSlideDomIds, resolveSlideId };
+module.exports = {
+  buildSlideUrl,
+  getScrollBehavior,
+  getSlideDomIds,
+  getSlideIds,
+  resolveSlideId,
+  scrollToId,
+};

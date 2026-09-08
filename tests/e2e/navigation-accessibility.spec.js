@@ -21,6 +21,7 @@ test("shared lesson navigation exposes semantic tabs and keyboard movement", () 
   assert.match(navigation, /Home/);
   assert.match(navigation, /End/);
   assert.match(navigation, /\.focus\(\)/);
+  assert.match(navigation, /motion-reduce:/);
 });
 
 test("lesson shell and slide card support validated deep links and focus context", () => {
@@ -31,11 +32,20 @@ test("lesson shell and slide card support validated deep links and focus context
   assert.match(shell, /resolveSlideId/);
   assert.match(shell, /history\.replaceState/);
   assert.match(shell, /window\.location/);
+  assert.match(shell, /popstate/);
+  assert.match(shell, /hashchange/);
   assert.match(card, /role="tabpanel"/);
   assert.match(card, /tabIndex=\{-1\}/);
-  assert.match(card, /\.focus\(/);
+  assert.match(card, /\.focus\(\{ preventScroll: true \}\)/);
   assert.match(home, /lessons\.map/);
   assert.doesNotMatch(home, /href="\/interactive-zwa-/);
+});
+
+test("shared navigation honors reduced motion for in-page scrolling", () => {
+  const navigation = read("src/components/lesson/navigation.js");
+  assert.match(navigation, /prefers-reduced-motion/);
+  assert.match(navigation, /scrollIntoView/);
+  assert.match(navigation, /getScrollBehavior/);
 });
 
 test("lesson sources contain no machine-specific file links", () => {

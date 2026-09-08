@@ -1,18 +1,11 @@
 import React, { useMemo, useState } from "react";
-import { Analytics } from "@vercel/analytics/react";
 import SandboxedPreview from "./src/components/playground/SandboxedPreview";
-
-function clsx(...xs) {
-  return xs.filter(Boolean).join(" ");
-}
-
-function Code({ children }) {
-  return (
-    <code className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[90%]">
-      {children}
-    </code>
-  );
-}
+import { getLessonByNumber } from "./src/config/lessons.js";
+import LessonShell, { useSlideNavigation } from "./src/components/lesson/LessonShell.jsx";
+import SharedSlideCard from "./src/components/lesson/SlideCard.jsx";
+import Code from "./src/components/lesson/Code.jsx";
+import { clsx } from "./src/components/lesson/classNames.js";
+import { scrollToId } from "./src/components/lesson/navigation.js";
 
 function SectionCard({ title, children, footer }) {
   return (
@@ -565,47 +558,41 @@ function FormsSections() {
   );
 }
 
+const slides = [
+  { id: "overview", title: "Přehled" },
+  { id: "playground", title: "Sekce" },
+  { id: "tasks", title: "Úkoly" },
+];
+
 export default function AppFormsLesson2() {
-  const [active, setActive] = useState("overview");
-  const tabs = [
-    { id: "overview", label: "Přehled" },
-    { id: "playground", label: "Sekce" },
-    { id: "tasks", label: "Úkoly" },
-  ];
+  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const currentSlide = slides.find((slide) => slide.id === activeSlide) || slides[0];
+
   function gotoSection(sectionId) {
-    setActive("playground");
+    setActiveSlide("playground");
     setTimeout(() => {
-      const el = document.getElementById(sectionId);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      scrollToId(sectionId);
     }, 50);
   }
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-      <div className="max-w-7xl mx-auto p-4 md:p-8">
-        <header className="mb-6">
-          <h1 className="text-3xl md:text-4xl font-extrabold">ZWA-2: Client-side Forms (Lesson 2)</h1>
-          <p className="text-xs md:text-sm text-zinc-500 mt-1">
-            Interaktivní přehled formulářů dle {" "}
-            <a className="underline" href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/02/start" target="_blank" rel="noreferrer noopener">kurzovního zadání</a>.
-          </p>
-        </header>
-
-        <nav className="flex flex-wrap gap-2 mb-4">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              className={clsx(
-                "px-3 py-1.5 rounded-full text-sm border",
-                active === t.id ? "bg-sky-600 text-white border-sky-600" : "bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800 hover:bg-white"
-              )}
-              onClick={() => setActive(t.id)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
-
-        {active === "overview" && (
+    <LessonShell
+      lesson={getLessonByNumber(2)}
+      slides={slides}
+      activeSlide={activeSlide}
+      onChange={setActiveSlide}
+      title="ZWA-2: Client-side Forms (Lesson 2)"
+      subtitle={(
+        <>
+          Interaktivní přehled formulářů dle{" "}
+          <a className="underline" href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/02/start" target="_blank" rel="noreferrer noopener">kurzovního zadání</a>.
+        </>
+      )}
+      footerText="© 2025 ZWA – Lesson 2 interactive forms"
+      maxWidthClass="max-w-7xl"
+    >
+      <SharedSlideCard slide={currentSlide} idPrefix="lesson-forms">
+        {activeSlide === "overview" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <SectionCard title="Standardní prvky">
               <ul className="list-disc pl-6 text-sm">
@@ -645,11 +632,11 @@ export default function AppFormsLesson2() {
           </div>
         )}
 
-        {active === "playground" && (
+        {activeSlide === "playground" && (
           <FormsSections />
         )}
 
-        {active === "tasks" && (
+        {activeSlide === "tasks" && (
           <div className="space-y-3">
             <SectionCard title="Vyberte úkol">
               <div className="flex flex-wrap gap-2">
@@ -668,10 +655,7 @@ export default function AppFormsLesson2() {
           </div>
         )}
 
-        <footer className="mt-8 text-sm text-zinc-500">© 2025 ZWA – Lesson 2 interactive forms</footer>
-        <Analytics />
-      </div>
-    </div>
+      </SharedSlideCard>
+    </LessonShell>
   );
 }
-

@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Analytics } from "@vercel/analytics/react";
 import SandboxedPreview from "./src/components/playground/SandboxedPreview";
+import { getLessonByNumber } from "./src/config/lessons.js";
+import LessonShell, { useSlideNavigation } from "./src/components/lesson/LessonShell.jsx";
+import SharedSlideCard from "./src/components/lesson/SlideCard.jsx";
 
 const {
   CSS_LAYOUT_INSPECTION,
@@ -290,16 +292,14 @@ const slides = [
   { id: "tasks", title: "Úlohy – CSS II", steps: [] },
 ];
 
-function SlideCard({ slide, stepIndex, onStepIndexChange }) {
+function Css2SlideContent({ slide, stepIndex, onStepIndexChange }) {
   const hasSteps = slide.id === "tasks";
   const hasSections = Array.isArray(slide.sections) && slide.sections.length > 0;
   const internal = useMemo(() => getTaskTemplates(0).all, []);
   const total = internal.length;
   const cur = internal[stepIndex];
   return (
-    <div className="p-6 rounded-2xl shadow bg-white/70 dark:bg-zinc-900/60 backdrop-blur border border-zinc-200/60 dark:border-zinc-800">
-      <h2 className="text-2xl font-bold mb-2">{slide.title}</h2>
-      {slide.subtitle && <p className="text-zinc-500 mb-3">{slide.subtitle}</p>}
+    <SharedSlideCard slide={slide} idPrefix="lesson-css-ii">
       {slide.bullets && (
         <ul className="list-disc pl-6 space-y-1 mt-2">{slide.bullets.map((b, i) => <li key={i}>{b}</li>)}</ul>
       )}
@@ -330,7 +330,7 @@ function SlideCard({ slide, stepIndex, onStepIndexChange }) {
           </div>
         </div>
       )}
-    </div>
+    </SharedSlideCard>
   );
 }
 
@@ -425,35 +425,30 @@ function QuizCssBasics() {
 }
 
 export default function AppCss2Lesson() {
-  const [active, setActive] = useState(slides[0].id);
+  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
   const [stepIndex, setStepIndex] = useState(0);
-  const current = slides.find((s) => s.id === active) || slides[0];
+  const current = slides.find((s) => s.id === activeSlide) || slides[0];
   const hasTasks = current.id === "tasks";
-  useEffect(() => { setStepIndex(0); }, [active]);
+  useEffect(() => { setStepIndex(0); }, [activeSlide]);
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-      <div className="max-w-7xl mx-auto p-4 md:p-8 relative">
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-          <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-sky-300/40 dark:bg-sky-500/20 blur-3xl" />
-          <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-fuchsia-300/40 dark:bg-fuchsia-500/20 blur-3xl" />
-        </div>
-        <header className="mb-6 flex items-center justify-between">
+    <LessonShell
+      lesson={getLessonByNumber(5)}
+      slides={slides}
+      activeSlide={activeSlide}
+      onChange={setActiveSlide}
+      title="ZWA-5: Interactive CSS II Presentation"
+      subtitle={(
+        <>
+          Editor vlevo, náhled vpravo. Úkoly dle{" "}
+          <a className="underline" href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/05/start" target="_blank" rel="noreferrer noopener">Cvičení 5 – CSS II</a>.
+        </>
+      )}
+      footerText="© 2025 ZWA – Interactive CSS II lesson"
+      maxWidthClass="max-w-7xl"
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">ZWA-5: Interactive CSS II Presentation</h1>
-            <p className="text-xs md:text-sm text-zinc-500 mt-1">Editor vlevo, náhled vpravo. Úkoly dle <a className="underline" href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/05/start" target="_blank" rel="noreferrer noopener">Cvičení 5 – CSS II</a>.</p>
-          </div>
-        </header>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <nav className="flex flex-wrap gap-2 mb-3">
-              {slides.map((s) => (
-                <button key={s.id} className={clsx("px-3 py-1.5 rounded-full text-sm border", s.id === active ? "bg-sky-600 text-white border-sky-600" : "bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800 hover:bg-white")} onClick={() => setActive(s.id)}>{s.title}</button>
-              ))}
-              <button className={clsx("px-3 py-1.5 rounded-full text-sm border", active === "tasks" ? "bg-sky-600 text-white border-sky-600" : "bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800 hover:bg-white")} onClick={() => setActive("tasks")}>
-                Úlohy – CSS II
-              </button>
-            </nav>
-            <SlideCard slide={current} stepIndex={stepIndex} onStepIndexChange={setStepIndex} />
+            <Css2SlideContent slide={current} stepIndex={stepIndex} onStepIndexChange={setStepIndex} />
           </div>
           <div>
             <div className="lg:sticky lg:top-8">
@@ -462,10 +457,6 @@ export default function AppCss2Lesson() {
             </div>
           </div>
         </div>
-        <footer className="mt-8 text-sm text-zinc-500">© 2025 ZWA – Interactive CSS II lesson</footer>
-        <Analytics />
-      </div>
-    </div>
+    </LessonShell>
   );
 }
-

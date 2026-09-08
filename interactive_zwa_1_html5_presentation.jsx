@@ -1,18 +1,11 @@
 import React, { useMemo, useState } from "react";
-import { Analytics } from "@vercel/analytics/react";
 import SandboxedPreview from "./src/components/playground/SandboxedPreview";
-
-function clsx(...xs) {
-  return xs.filter(Boolean).join(" ");
-}
-
-function Code({ children }) {
-  return (
-    <code className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[90%]">
-      {children}
-    </code>
-  );
-}
+import { getLessonByNumber } from "./src/config/lessons.js";
+import LessonShell, { useSlideNavigation } from "./src/components/lesson/LessonShell.jsx";
+import SharedSlideCard from "./src/components/lesson/SlideCard.jsx";
+import Code from "./src/components/lesson/Code.jsx";
+import { clsx } from "./src/components/lesson/classNames.js";
+import { scrollToId } from "./src/components/lesson/navigation.js";
 
 function HtmlPreview({ html }) {
   return (
@@ -403,52 +396,41 @@ function HtmlSections() {
     </div>
   );
 }
+const slides = [
+  { id: "intro", title: "Úvod" },
+  { id: "sections", title: "Sekce" },
+  { id: "validator", title: "Validátor" },
+  { id: "tasks", title: "Úkoly" },
+];
+
 export default function AppHtml5() {
-  const [active, setActive] = useState("intro");
-  const tabs = [
-    { id: "intro", label: "Úvod" },
-    { id: "sections", label: "Sekce" },
-    { id: "validator", label: "Validátor" },
-    { id: "tasks", label: "Úkoly" },
-  ];
+  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const currentSlide = slides.find((slide) => slide.id === activeSlide) || slides[0];
+
   function gotoSection(sectionId) {
-    setActive("sections");
+    setActiveSlide("sections");
     setTimeout(() => {
-      const el = document.getElementById(sectionId);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      scrollToId(sectionId);
     }, 50);
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-      <div className="max-w-6xl mx-auto p-4 md:p-8">
-        <header className="mb-6">
-          <h1 className="text-3xl md:text-4xl font-extrabold">ZWA-1: Interactive HTML5 Presentation</h1>
-          <p className="text-xs md:text-sm text-zinc-500 mt-1">
-            Cvičení 1 – HTML5 témata a živý playground
-            {" "}
-            (<a className="underline" href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/01/start" target="_blank" rel="noreferrer noopener">zdroj</a>)
-          </p>
-        </header>
-
-        <nav className="flex flex-wrap gap-2 mb-4">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              className={clsx(
-                "px-3 py-1.5 rounded-full text-sm border",
-                active === t.id
-                  ? "bg-sky-600 text-white border-sky-600"
-                  : "bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800 hover:bg-white"
-              )}
-              onClick={() => setActive(t.id)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
-
-        {active === "intro" && (
+    <LessonShell
+      lesson={getLessonByNumber(1)}
+      slides={slides}
+      activeSlide={activeSlide}
+      onChange={setActiveSlide}
+      title="ZWA-1: Interactive HTML5 Presentation"
+      subtitle={(
+        <>
+          Cvičení 1 – HTML5 témata a živý playground{" "}
+          (<a className="underline" href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/01/start" target="_blank" rel="noreferrer noopener">zdroj</a>)
+        </>
+      )}
+      footerText="© 2025 ZWA – HTML5 interactive worksheet"
+    >
+      <SharedSlideCard slide={currentSlide} idPrefix="lesson-html5">
+        {activeSlide === "intro" && (
           <div className="space-y-4">
             <div className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-6">
               <h2 className="text-xl font-bold mb-2">Organizace a prostředí</h2>
@@ -468,11 +450,11 @@ export default function AppHtml5() {
           </div>
         )}
 
-        {active === "sections" && (
+        {activeSlide === "sections" && (
           <HtmlSections />
         )}
 
-        {active === "validator" && (
+        {activeSlide === "validator" && (
           <div className="space-y-4">
             <Task title="Validace dokumentu">
               Zkopírujte finální HTML do
@@ -485,7 +467,7 @@ export default function AppHtml5() {
           </div>
         )}
 
-        {active === "tasks" && (
+        {activeSlide === "tasks" && (
           <div className="space-y-3">
             <div className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-4">
               <div className="font-semibold mb-2">Vyberte úkol</div>
@@ -502,10 +484,7 @@ export default function AppHtml5() {
           </div>
         )}
 
-        <footer className="mt-8 text-sm text-zinc-500">© 2025 ZWA – HTML5 interactive worksheet</footer>
-        <Analytics />
-      </div>
-    </div>
+      </SharedSlideCard>
+    </LessonShell>
   );
 }
-
