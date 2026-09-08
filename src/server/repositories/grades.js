@@ -2,43 +2,63 @@ import { getDb } from '../db.js';
 import { validateScore, validateUsername } from './validation.js';
 
 const SOURCES = new Set(['ai', 'teacher', 'normalized']);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function validateAttempt({ username, testNumber, points, maxPoints, reasoning = '', source, actor, model = null, promptVersion = null, imageCount = 0 }) {
+function validateAttempt(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new TypeError('Invalid grade attempt');
+  const {
+    username, testNumber, points, maxPoints, reasoning = '', source, actor,
+    model = null, promptVersion = null, imageCount = 0,
+  } = input;
   const user = validateUsername(username);
   validateScore(points, maxPoints);
   if (!Number.isInteger(testNumber) || testNumber < 1 || testNumber > 4 || !SOURCES.has(source)
-    || typeof actor !== 'string' || !actor || !Number.isInteger(imageCount) || imageCount < 0 || imageCount > 4
-    || typeof reasoning !== 'string' || !reasoning.trim() || reasoning.length > 4000
+    || typeof actor !== 'string' || !actor.trim() || !Number.isInteger(imageCount) || imageCount < 0 || imageCount > 4
+    || typeof reasoning !== 'string' || reasoning.length > 4000
     || (model !== null && typeof model !== 'string') || (promptVersion !== null && typeof promptVersion !== 'string')
+    || (model !== null && !model.trim()) || (promptVersion !== null && !promptVersion.trim())
     || (source !== 'teacher' && (!model || !promptVersion))) {
     throw new TypeError('Invalid grade attempt');
   }
   return {
     username: user, testNumber, points, maxPoints, reasoning: reasoning.trim(),
-    source, actor, model, promptVersion, imageCount,
+    source, actor: actor.trim(), model: model ? model.trim() : null,
+    promptVersion: promptVersion ? promptVersion.trim() : null, imageCount,
   };
 }
 
 function validateNormalizationItems(originalAttempts, normalizedItems, maxPoints) {
-  if (!Array.isArray(originalAttempts) || !Array.isArray(normalizedItems) || originalAttempts.length !== normalizedItems.length) {
+  if (!Array.isArray(originalAttempts) || !Array.isArray(normalizedItems)
+    || originalAttempts.length !== normalizedItems.length || originalAttempts.length > 500) {
     throw new TypeError('Invalid normalization run');
   }
   const originals = new Map();
   for (const item of originalAttempts) {
     const username = validateUsername(item?.username);
-    if (!Number.isInteger(item?.attemptId) || item.attemptId < 1 || originals.has(username)) throw new TypeError('Invalid normalization run');
-    originals.set(username, { username, attempt_id: item.attemptId });
+    if (!Number.isInteger(item?.attemptId) || item.attemptId < 1 || originals.has(username)
+      || (item.originalPoints !== undefined
+        && (!Number.isInteger(item.originalPoints) || item.originalPoints < 0 || item.originalPoints > maxPoints))) {
+      throw new TypeError('Invalid normalization run');
+    }
+    originals.set(username, {
+      username,
+      attempt_id: item.attemptId,
+      ...(item.originalPoints === undefined ? {} : { originalPoints: item.originalPoints }),
+    });
   }
   const normalized = [];
+  const seen = new Set();
   for (const item of normalizedItems) {
     const username = validateUsername(item?.username);
-    if (!originals.has(username) || normalized.some((row) => row.username === username)
+    if (!originals.has(username) || seen.has(username)
       || !Number.isInteger(item?.points) || item.points < 0 || item.points > maxPoints
       || typeof item?.reasoning !== 'string' || !item.reasoning.trim() || item.reasoning.length > 4000) {
       throw new TypeError('Invalid normalization run');
     }
+    seen.add(username);
     normalized.push({ username, points: item.points, reasoning: item.reasoning.trim() });
   }
+  if (seen.size !== originals.size) throw new TypeError('Invalid normalization run');
   return { originalAttempts: [...originals.values()], normalizedItems: normalized };
 }
 
@@ -52,6 +72,20 @@ export function createGradesRepository(sql = getDb()) {
         [attempt.username, attempt.testNumber, attempt.points, attempt.maxPoints, attempt.reasoning, attempt.source, attempt.actor, attempt.model, attempt.promptVersion, attempt.imageCount],
       );
       return rows[0];
+    },
+    async publishAttempt({ attemptId, actor }) {
+      if (!Number.isInteger(attemptId) || attemptId < 1 || typeof actor !== 'string' || !actor.trim()) {
+        throw new TypeError('Invalid grade publication');
+      }
+      const rows = await sql(
+        `insert into published_grades (username, test_number, attempt_id, updated_by)
+         select username, test_number, id, $2 from grade_attempts where id = $1
+         on conflict (username, test_number) do update
+           set attempt_id = excluded.attempt_id, updated_by = excluded.updated_by, updated_at = now()
+         returning *`,
+        [attemptId, actor.trim()],
+      );
+      return rows[0] || null;
     },
     async recordAndPublish(input) {
       const attempt = validateAttempt(input);
@@ -93,9 +127,9 @@ export function createGradesRepository(sql = getDb()) {
       );
     },
     async createNormalizationRun({ runId, testNumber, maxPoints, actor, model, promptVersion, originalAttempts, normalizedItems }) {
-      if (typeof runId !== 'string' || !runId || !Number.isInteger(testNumber) || testNumber < 1 || testNumber > 4
-        || !Number.isInteger(maxPoints) || maxPoints < 1 || maxPoints > 12 || typeof actor !== 'string' || !actor
-        || typeof model !== 'string' || !model || typeof promptVersion !== 'string' || !promptVersion) throw new TypeError('Invalid normalization run');
+      if (typeof runId !== 'string' || !UUID.test(runId) || !Number.isInteger(testNumber) || testNumber < 1 || testNumber > 4
+        || !Number.isInteger(maxPoints) || maxPoints < 1 || maxPoints > 12 || typeof actor !== 'string' || !actor.trim()
+        || typeof model !== 'string' || !model.trim() || typeof promptVersion !== 'string' || !promptVersion.trim()) throw new TypeError('Invalid normalization run');
       const normalized = validateNormalizationItems(originalAttempts, normalizedItems, maxPoints);
       const rows = await sql(
         `insert into grade_normalization_runs
@@ -105,8 +139,22 @@ export function createGradesRepository(sql = getDb()) {
       );
       return rows[0];
     },
+    async getLatestPreviewRun({ testNumber, maxPoints, actor }) {
+      if (!Number.isInteger(testNumber) || testNumber < 1 || testNumber > 4
+        || !Number.isInteger(maxPoints) || maxPoints < 1 || maxPoints > 12
+        || typeof actor !== 'string' || !actor.trim()) {
+        throw new TypeError('Invalid normalization request');
+      }
+      const rows = await sql(
+        `select id from grade_normalization_runs
+         where test_number = $1 and max_points = $2 and actor = $3 and status = 'previewed'
+         order by created_at desc, id desc limit 1`,
+        [testNumber, maxPoints, actor.trim()],
+      );
+      return rows[0] || null;
+    },
     async applyNormalizationRun({ runId, actor }) {
-      if (typeof runId !== 'string' || !runId || typeof actor !== 'string' || !actor) throw new TypeError('Invalid normalization run');
+      if (typeof runId !== 'string' || !UUID.test(runId) || typeof actor !== 'string' || !actor.trim()) throw new TypeError('Invalid normalization run');
       const rows = await sql(
         `with run as (
            select * from grade_normalization_runs where id = $1 and status = 'previewed' for update
@@ -114,7 +162,12 @@ export function createGradesRepository(sql = getDb()) {
            select run.* from run
            where not exists (
              select 1 from jsonb_to_recordset(run.original_attempts) as expected(username text, attempt_id bigint)
-             left join published_grades pg on pg.username = expected.username and pg.test_number = run.test_number
+             left join lateral (
+               select current_grade.attempt_id
+               from published_grades current_grade
+               where current_grade.username = expected.username and current_grade.test_number = run.test_number
+               for update
+             ) pg on true
              where pg.attempt_id is distinct from expected.attempt_id
            )
          ), inserted_attempts as (

@@ -6,7 +6,12 @@ import {
   parseGradeOutput,
   validateGradeRequest,
 } from '../../pages/api/grade-test.js';
-import { consumeNormalizationRateLimit, parseNormalizationOutput } from '../../pages/api/teacher/normalize-grades.js';
+import {
+  consumeNormalizationRateLimit,
+  NormalizationProviderError,
+  parseNormalizationOutput,
+} from '../../pages/api/teacher/normalize-grades.js';
+import { GradeProviderError } from '../../pages/api/grade-test.js';
 import { createGradesRepository } from '../../src/server/repositories/grades.js';
 
 const PNG_DATA_URL = `data:image/png;base64,${Buffer.from('tiny-image').toString('base64')}`;
@@ -59,7 +64,10 @@ test('turns an aborted provider call into a safe unavailable error', async () =>
 });
 
 test('does not coerce malformed or out-of-range grade model output into zero', () => {
-  assert.throws(() => parseGradeOutput('{"points":"0","reasoning":"bad"}', 12), /provider output/i);
+  assert.throws(() => parseGradeOutput('{"points":"0","reasoning":"bad"}', 12), (error) => {
+    assert.equal(error instanceof GradeProviderError, true);
+    return /provider output/i.test(error.message);
+  });
   assert.throws(() => parseGradeOutput('{"points":13,"reasoning":"bad"}', 12), /provider output/i);
   assert.throws(() => parseGradeOutput('not json', 12), /provider output/i);
   assert.throws(() => parseGradeOutput('{"points":7,"reasoning":"ok","confidence":1}', 12), /provider output/i);
@@ -74,7 +82,10 @@ test('rejects incomplete or invalid normalization output instead of defaulting m
     { username: 'alice', attemptId: 11, originalPoints: 10, reasoning: 'A' },
     { username: 'bob', attemptId: 12, originalPoints: 8, reasoning: 'B' },
   ];
-  assert.throws(() => parseNormalizationOutput('{"alice":{"points":9,"reasoning":"A"}}', items, 12), /missing/i);
+  assert.throws(() => parseNormalizationOutput('{"alice":{"points":9,"reasoning":"A"}}', items, 12), (error) => {
+    assert.equal(error instanceof NormalizationProviderError, true);
+    return /missing/i.test(error.message);
+  });
   assert.throws(() => parseNormalizationOutput('{"alice":{"points":9.5,"reasoning":"A"},"bob":{"points":8,"reasoning":"B"}}', items, 12), /invalid/i);
   assert.throws(() => parseNormalizationOutput('{"alice":{"points":9,"reasoning":"A"},"bob":{"points":8,"reasoning":"B","note":"extra"}}', items, 12), /invalid/i);
   assert.throws(() => parseNormalizationOutput('{"alice":{"points":9,"reasoning":"A"},"bob":{"points":8,"reasoning":"B"}}', [items[0], items[0]], 12), /duplicate/i);
@@ -155,4 +166,78 @@ test('refuses a normalization apply when a published attempt changed after previ
   assert.deepEqual(result, { updated: 0, total: 1, stale: true });
   assert.match(queries[0], /attempt_id\s+is\s+distinct\s+from\s+expected\.attempt_id/i);
   assert.doesNotMatch(queries[0], /select item\.username, run\./i);
+});
+
+test('uses the guarded normalization run values when inserting normalized attempts', async () => {
+  const queries = [];
+  const sql = async (query) => {
+    queries.push(query);
+    return [{ updated: 1, total: 1 }];
+  };
+
+  await createGradesRepository(sql).applyNormalizationRun({
+    runId: '89ccf2ca-35e8-4fb4-b4f9-3431571a7e1e', actor: 'teacher',
+  });
+
+  assert.match(queries[0], /select item\.username, guarded_run\.test_number, item\.points, guarded_run\.max_points/i);
+  assert.match(queries[0], /guarded_run\.model, guarded_run\.prompt_version/i);
+});
+
+test('rejects a normalization apply identifier that is not a UUID before querying', async () => {
+  let queried = false;
+  const sql = async () => { queried = true; return []; };
+
+  await assert.rejects(
+    createGradesRepository(sql).applyNormalizationRun({ runId: 'not-a-uuid', actor: 'teacher' }),
+    /invalid normalization run/i,
+  );
+  assert.equal(queried, false);
+});
+
+test('batches normalization provider calls at the configured limit', async () => {
+  const { normalizeGrades } = await import('../../src/server/grading/normalization.js');
+  const items = Array.from({ length: 51 }, (_, index) => ({
+    username: `student${index}`,
+    attemptId: index + 1,
+    originalPoints: 6,
+    reasoning: 'Původní hodnocení',
+  }));
+  const calls = [];
+  const normalized = await normalizeGrades({ testNumber: 1, maxPoints: 12, items, actor: 'batch-test' }, {
+    apiKey: 'test-key',
+    fetchImpl: async (_url, options) => {
+      const payload = JSON.parse(options.body);
+      const input = JSON.parse(payload.messages[0].content.split('\n').at(-1));
+      calls.push(input);
+      return {
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: JSON.stringify(Object.fromEntries(input.map(({ username }) => [username, { points: 7, reasoning: 'Sjednocené hodnocení' }]))) } }],
+        }),
+      };
+    },
+    now: 9_000_000,
+  });
+
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0].length, 50);
+  assert.equal(calls[1].length, 1);
+  assert.equal(normalized.length, 51);
+  assert.equal(normalized.at(-1).normalizedPoints, 7);
+});
+
+test('reapplying an applied normalization run is an idempotent no-op', async () => {
+  const queries = [];
+  const sql = async (query) => {
+    queries.push(query);
+    return queries.length === 1 ? [] : [{ status: 'applied', total: 2 }];
+  };
+
+  const result = await createGradesRepository(sql).applyNormalizationRun({
+    runId: '89ccf2ca-35e8-4fb4-b4f9-3431571a7e1e', actor: 'teacher',
+  });
+
+  assert.deepEqual(result, { updated: 0, total: 2, alreadyApplied: true });
+  assert.equal(queries.length, 2);
+  assert.match(queries[1], /select status/i);
 });

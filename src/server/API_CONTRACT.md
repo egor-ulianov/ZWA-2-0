@@ -17,9 +17,25 @@ Every cookie-authenticated mutation requires an `Origin` header exactly equal to
 The teacher UI currently expects names and plaintext `auth_code` values from
 `GET /api/students` and `GET /api/progress`. Its owner must switch rows to the
 username and display `accessCode` only from the successful mutation response.
-The grading-route owner must replace legacy `progress`/`test_grades` writes with
-`createGradesRepository()` and add `requireTeacher` plus `requireSameOrigin` to
-the two deliberately untouched grading routes.
+
+Grading routes are teacher-only. `POST /api/grade-test` accepts one test number
+(`1..4`), max points (`1..12`), up to four PNG/JPEG/WebP data URLs (2 MiB
+decoded per image and 8 MiB total), and criteria up to 2,000 characters. It
+returns `{ ok, points, reasoning }` only after strict model-output validation;
+malformed provider output creates no attempt. `GET /api/grade-test` preserves
+the existing `{ items: { [testNumber]: grade } }` response shape, and `PUT`
+records a teacher reasoning edit as a new audited attempt.
+
+`POST /api/teacher/normalize-grades` is a two-phase workflow. A request with
+`{ dryRun: true, testNumber, maxPoints }` returns a persisted `runId` and
+preview. Applying canonically sends `{ runId }`; for compatibility with the
+current teacher page, `{ dryRun: false, testNumber, maxPoints }` resolves the
+latest preview for that same teacher and test before applying it. The server
+rejects stale previews with `409` and safely treats an already-applied run as
+idempotent. Normalization is bounded to 500 published grades, uses deterministic
+batches, and records the actor, model, prompt version, original attempt IDs, and
+timestamps. Neither grading route writes `test_grades` or test score columns in
+`progress`.
 
 ## AI grading
 
@@ -38,4 +54,5 @@ The apply response retains `ok`, `total`, and `updated`, and additionally return
 `runId` and `alreadyApplied`; replaying an applied run is a successful no-op.
 A `409` means an underlying published attempt changed after preview, so the
 frontend must request a fresh preview. The previous `{ dryRun: false }` apply
-request without `runId` now returns `400`.
+request without `runId` resolves the latest same-teacher preview when one
+exists; otherwise it returns `400` and the frontend must request a preview.
