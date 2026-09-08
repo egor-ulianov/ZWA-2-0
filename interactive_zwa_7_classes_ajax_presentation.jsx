@@ -1227,7 +1227,7 @@ export default function AppJsLesson7() {
       {
         id: 'ajax-practice',
         title: 'AJAX v praxi',
-        activityType: 'build',
+        activityType: 'learn',
         presenterNotes: 'Nechte studenty sledovat stav před požadavkem, během něj a po odpovědi.',
       },
       {

@@ -114,6 +114,34 @@ test.describe('F2 lesson composition and deep links', () => {
     ).toBeVisible();
   });
 
+  test('CSS II keeps its playground on task slides only', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-5-css-ii?slide=theory');
+    await expect(page.getByTitle('CSS layout playground preview')).toHaveCount(0);
+    await expect(page.getByRole('textbox')).toHaveCount(0);
+
+    await page.goto('/interactive-zwa-5-css-ii?slide=tasks');
+    await expect(page.getByTitle('CSS layout playground preview')).toBeVisible();
+    await expect(page.getByRole('textbox')).toHaveCount(2);
+  });
+
+  test('JavaScript keeps its exercise workspace on task slides only', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-5-js?slide=theory');
+    await expect(
+      page.getByRole('region', { name: 'Variables and types', exact: true }),
+    ).toHaveCount(0);
+    await expect(page.getByTitle('JavaScript DOM sandbox')).toHaveCount(0);
+
+    await page.goto('/interactive-zwa-5-js?slide=tasks');
+    const workspace = page.getByRole('region', { name: 'Variables and types', exact: true });
+    await expect(workspace).toBeVisible();
+    await expect(workspace.getByRole('textbox')).toBeVisible();
+    await expect(workspace.getByTitle('JavaScript DOM sandbox')).toBeVisible();
+  });
+
   test('classes and AJAX lesson keeps its task deep link and learning objective', async ({
     page,
   }) => {

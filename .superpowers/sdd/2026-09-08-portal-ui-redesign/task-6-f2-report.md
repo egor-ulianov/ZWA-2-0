@@ -8,7 +8,7 @@ Complete for the F2 group: CSS II, JavaScript, Classes/AJAX, and PHP.
 
 - Added one deep-link and objective regression test for each F2 route in `tests/e2e/lesson-redesign.spec.js`.
 - Added concise Czech learning objectives to the existing `LessonShell` calls.
-- Added activity metadata (`learn`, `quick-check`, `build`, and `apply`) to the existing slide definitions without changing slide IDs or curriculum copy.
+- Added activity metadata (`learn`, `quick-check`, and `apply`) to the existing slide definitions without changing slide IDs or curriculum copy.
 - Added presenter cues only to slides that have a concrete teaching prompt; projector mode remains free of presenter controls/notes through the shared shell.
 - Kept CSS II and JavaScript playgrounds visible only for their task activities, preserving their existing sandbox adapters, validators, iframe titles, and task behavior.
 - Did not change shared components, wrappers, routes, backend code, or other lesson sources.
@@ -26,3 +26,9 @@ Complete for the F2 group: CSS II, JavaScript, Classes/AJAX, and PHP.
 ## Concerns
 
 No known concerns within the assigned scope. The PHP and Classes/AJAX lessons retain their original non-IDE composition; CSS II and JavaScript expose the IDE/playground only on task slides.
+
+## Review follow-up
+
+- Classified `AJAX v praxi` as `learn` rather than `build`; the Classes/AJAX lesson now uses only `learn`, `quick-check`, and `apply`.
+- Added targeted E2E checks proving the CSS II playground and JavaScript exercise workspace are absent on theory slides and present on task slides, using accessible iframe titles/region labels.
+- Follow-up verification: `node --test tests/unit/lessons.test.js` — 6 passed; focused navigation/playground/redesign E2E — 32 passed; `npm run lint` and `npm run format:check` — passed.
