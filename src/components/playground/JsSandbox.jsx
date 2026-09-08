@@ -8,6 +8,7 @@ export function JsSandbox({
   dom = '',
   stepIndex = 0,
   onResult,
+  onReady,
   onConsole,
   resetKey = 0,
   title = 'Isolated JavaScript playground',
@@ -18,12 +19,14 @@ export function JsSandbox({
   const [executionKey, setExecutionKey] = useState(0);
   const activeRunRef = useRef(false);
   const onResultRef = useRef(onResult);
+  const onReadyRef = useRef(onReady);
   const onConsoleRef = useRef(onConsole);
 
   useEffect(() => {
     onResultRef.current = onResult;
+    onReadyRef.current = onReady;
     onConsoleRef.current = onConsole;
-  }, [onConsole, onResult]);
+  }, [onConsole, onReady, onResult]);
 
   // A new execution must reset the iframe lifecycle state before it starts.
   /* eslint-disable react-hooks/set-state-in-effect -- this effect is the sandbox run boundary. */
@@ -55,6 +58,10 @@ export function JsSandbox({
 
   const handleMessage = useCallback((message) => {
     if (!activeRunRef.current) return;
+    if (message.type === 'ready') {
+      onReadyRef.current?.();
+      return;
+    }
     if (message.type === 'console') {
       onConsoleRef.current?.({ type: message.level, text: message.text });
       return;

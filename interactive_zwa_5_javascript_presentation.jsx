@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import memeImg from './src/interactive-zwa-6/image.png';
 import JsSandbox from './src/components/playground/JsSandbox';
+import ExerciseWorkspace from './src/components/exercises/ExerciseWorkspace.jsx';
+import { getJavaScriptDefinition } from './src/components/exercises/testDefinitions.js';
 import { getLessonByNumber } from './src/config/lessons.js';
 import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
@@ -94,111 +96,58 @@ function getJsTemplates(stepIndex) {
 
 function JsPlayground({ stepIndex }) {
   const templates = useMemo(() => getJsTemplates(stepIndex), [stepIndex]);
-  const [code, setCode] = useState(templates.step.js);
-  const [appliedCode, setAppliedCode] = useState(null);
-  const [validateResults, setValidateResults] = useState([]);
   const [logs, setLogs] = useState([]);
-  const [executionKey, setExecutionKey] = useState(0);
 
-  // The selected task owns the editor, result, and console state.
-  /* eslint-disable react-hooks/set-state-in-effect -- task changes define a new run. */
+  // Keep the console scoped to the selected task, as in the original playground.
+  /* eslint-disable react-hooks/set-state-in-effect -- task changes define a new console session. */
   useEffect(() => {
-    setCode(templates.step.js);
-    setAppliedCode(null);
-    setValidateResults([]);
     setLogs([]);
-    setExecutionKey((key) => key + 1);
-  }, [templates]);
+  }, [stepIndex]);
   /* eslint-enable react-hooks/set-state-in-effect */
-
-  function run() {
-    setValidateResults([]);
-    setLogs([]);
-    setAppliedCode(code);
-    setExecutionKey((key) => key + 1);
-  }
-
-  function handleResult(result) {
-    setValidateResults(Array.isArray(result) ? result : []);
-  }
 
   function handleConsole(message) {
     setLogs((current) => [...current, message].slice(-100));
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 shadow overflow-hidden">
-      <div className="grid grid-cols-1 lg:grid-cols-2">
-        <div className="p-3 border-b lg:border-b-0 lg:border-r border-zinc-200/60 dark:border-zinc-800">
-          <div className="flex items-center justify-between mb-2">
-            <div className="font-semibold text-sm">JavaScript editor</div>
-            <button
-              className="px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white"
-              onClick={run}
-            >
-              Run + Check
-            </button>
-          </div>
-          <textarea
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            spellCheck={false}
-            className="min-h-[320px] w-full rounded border p-3 font-mono text-xs bg-white dark:bg-zinc-900"
-          />
-          {Array.isArray(validateResults) && validateResults.length > 0 && (
-            <ul className="mt-3 text-sm">
-              {validateResults.map((r, i) => (
-                <li
-                  key={i}
-                  className={clsx(
-                    'flex items-center gap-2',
-                    r.ok ? 'text-emerald-600' : 'text-rose-600',
-                  )}
-                >
-                  <span
-                    className={clsx(
-                      'inline-block h-2.5 w-2.5 rounded-full',
-                      r.ok ? 'bg-emerald-500' : 'bg-rose-500',
-                    )}
-                  />
-                  {r.text}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="p-3">
-          <div className="font-semibold text-sm mb-2">DOM preview</div>
+    <div>
+      <ExerciseWorkspace
+        key={`javascript-exercise-${stepIndex}`}
+        files={[
+          { id: 'main.js', name: 'main.js', language: 'javascript', source: templates.step.js },
+        ]}
+        activeFile="main.js"
+        onChangeFile={() => {}}
+        onRun={() => setLogs([])}
+        testDefinition={getJavaScriptDefinition(stepIndex)}
+        preview={
           <JsSandbox
-            key={executionKey}
-            code={appliedCode}
             dom={templates.step.dom}
             stepIndex={stepIndex}
-            onResult={handleResult}
             onConsole={handleConsole}
             title="JavaScript DOM sandbox"
             className="w-full min-h-[160px] rounded-xl border bg-white"
           />
-          <div className="mt-3">
-            <div className="font-semibold text-sm mb-1">Console</div>
-            <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 min-h-[80px] max-h-[180px] overflow-auto text-xs">
-              {logs.length === 0 && <div className="text-zinc-500">(žádné výstupy)</div>}
-              {logs.map((l, i) => (
-                <div
-                  key={i}
-                  className={clsx(
-                    l.type === 'error'
-                      ? 'text-rose-600'
-                      : l.type === 'warn'
-                        ? 'text-amber-600'
-                        : 'text-zinc-800 dark:text-zinc-200',
-                  )}
-                >
-                  {l.text}
-                </div>
-              ))}
+        }
+      />
+      <div className="mt-3">
+        <div className="font-semibold text-sm mb-1">Console</div>
+        <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 min-h-[80px] max-h-[180px] overflow-auto text-xs">
+          {logs.length === 0 && <div className="text-zinc-500">(žádné výstupy)</div>}
+          {logs.map((l, i) => (
+            <div
+              key={i}
+              className={clsx(
+                l.type === 'error'
+                  ? 'text-rose-600'
+                  : l.type === 'warn'
+                    ? 'text-amber-600'
+                    : 'text-zinc-800 dark:text-zinc-200',
+              )}
+            >
+              {l.text}
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>

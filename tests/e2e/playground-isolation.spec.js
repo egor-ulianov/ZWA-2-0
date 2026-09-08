@@ -84,7 +84,7 @@ test('hostile student JavaScript cannot mutate the parent or block later sandbox
     try { fetch("/api/attendance", { method: "POST", body: "owned" }).catch(() => {}); } catch (_) {}
     try { parent.postMessage({ channel: "zwa-playground", version: 1, token: "wrong", type: "unknown" }, "*"); } catch (_) {}
   `);
-  await page.getByRole('button', { name: 'Run + Check' }).click();
+  await page.getByRole('button', { name: 'Run tests' }).click();
   await expect(page.getByText('Code executed', { exact: true })).toBeVisible();
 
   await expect(page.locator('html')).toHaveAttribute('data-playground-host-mutation', 'clean');
@@ -97,8 +97,17 @@ test('hostile student JavaScript cannot mutate the parent or block later sandbox
   expect(hostStorage).toEqual({ local: null, session: null, cookie: '' });
 
   await editor.fill('exports.greeting = "Ahoj"; exports.double = (n) => n * 2;');
-  await page.getByRole('button', { name: 'Run + Check' }).click();
+  await page.getByRole('button', { name: 'Run tests' }).click();
   await expect(page.getByText("exports.greeting === 'Ahoj'", { exact: true })).toBeVisible();
   await expect(page.getByText('exports.double(10) === 20', { exact: true })).toBeVisible();
+  await expect(page.locator('iframe[title="JavaScript DOM sandbox"]')).toBeVisible();
+});
+
+test('JavaScript exercise workspace runs tests in the isolated preview', async ({ page }) => {
+  await installDeterministicNetwork(page);
+
+  await page.goto('/interactive-zwa-5-js?slide=tasks');
+  await page.getByRole('button', { name: 'Run tests' }).click();
+  await expect(page.getByRole('region', { name: 'Test results' })).toContainText('Code executed');
   await expect(page.locator('iframe[title="JavaScript DOM sandbox"]')).toBeVisible();
 });
