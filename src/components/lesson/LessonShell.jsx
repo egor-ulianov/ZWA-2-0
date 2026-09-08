@@ -31,6 +31,10 @@ export function useSlideNavigation(slides) {
   const [activeSlide, setActiveSlideState] = useState(() =>
     typeof window === 'undefined' ? fallback : resolveSlideId(slides, window.location),
   );
+  const activeSlideRef = useRef(activeSlide);
+  useEffect(() => {
+    activeSlideRef.current = activeSlide;
+  }, [activeSlide]);
 
   const setActiveSlide = useCallback(
     (requestedSlide) => {
@@ -75,22 +79,21 @@ export function useSlideNavigation(slides) {
                 : null;
       if (!direction) return;
 
-      setActiveSlideState((current) => {
-        const currentIndex = Math.max(
-          0,
-          slides.findIndex((slide) => slide.id === current),
-        );
-        const nextIndex =
-          direction === 'first'
-            ? 0
-            : direction === 'last'
-              ? slides.length - 1
-              : Math.min(Math.max(currentIndex + direction, 0), slides.length - 1);
-        const nextSlide = slides[nextIndex]?.id || fallback;
-        if (nextSlide === current) return current;
-        event.preventDefault();
-        return nextSlide;
-      });
+      const current = activeSlideRef.current;
+      const currentIndex = Math.max(
+        0,
+        slides.findIndex((slide) => slide.id === current),
+      );
+      const nextIndex =
+        direction === 'first'
+          ? 0
+          : direction === 'last'
+            ? slides.length - 1
+            : Math.min(Math.max(currentIndex + direction, 0), slides.length - 1);
+      const nextSlide = slides[nextIndex]?.id || fallback;
+      if (nextSlide === current) return;
+      event.preventDefault();
+      setActiveSlideState(nextSlide);
     }
 
     window.addEventListener('keydown', handleKeyDown);
@@ -188,7 +191,9 @@ export default function LessonShell({
             slide={currentSlide}
             onPrevious={() => onChange?.(slides[Math.max(0, currentIndex - 1)]?.id)}
             onNext={() => onChange?.(slides[Math.min(slides.length - 1, currentIndex + 1)]?.id)}
-          />
+          >
+            {children}
+          </ProjectorStage>
         </PortalFrame>
       </LessonContext.Provider>
     );

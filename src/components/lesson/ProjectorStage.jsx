@@ -1,4 +1,66 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+
+const PRIVATE_PROJECTOR_SELECTORS = [
+  'textarea',
+  'input',
+  'select',
+  'button',
+  'iframe',
+  'script',
+  'style',
+  'object',
+  'embed',
+  'link',
+  '[aria-label="Course outline"]',
+  '[aria-label="Presenter outline"]',
+  '[aria-label="Presenter console"]',
+  '[aria-label="Exercise workspace"]',
+  '[aria-label="Test results"]',
+  '[role="tablist"]',
+  '[role="tab"]',
+].join(',');
+
+function sanitizeProjectorMarkup(markup) {
+  if (!markup || typeof DOMParser === 'undefined') return '';
+  const document = new DOMParser().parseFromString(
+    `<div data-projector-content="root">${markup}</div>`,
+    'text/html',
+  );
+  const root = document.body.firstElementChild;
+  if (!root) return '';
+
+  root.querySelectorAll(PRIVATE_PROJECTOR_SELECTORS).forEach((element) => element.remove());
+  root.querySelectorAll('[role="tabpanel"]').forEach((element) => {
+    element.removeAttribute('role');
+    element.removeAttribute('aria-labelledby');
+    element.removeAttribute('tabindex');
+  });
+  root.querySelectorAll('*').forEach((element) => {
+    Array.from(element.attributes).forEach((attribute) => {
+      if (attribute.name.toLowerCase().startsWith('on')) element.removeAttribute(attribute.name);
+    });
+  });
+  root.querySelectorAll('[href], [src]').forEach((element) => {
+    for (const attributeName of ['href', 'src']) {
+      const value = element.getAttribute(attributeName);
+      if (value && /^(?:javascript|data):/i.test(value.trim())) {
+        element.removeAttribute(attributeName);
+      }
+    }
+  });
+
+  return root.innerHTML;
+}
+
+function renderProjectedContent(children) {
+  if (!children) return '';
+  try {
+    return sanitizeProjectorMarkup(renderToStaticMarkup(children));
+  } catch {
+    return '';
+  }
+}
 
 function slidePosition(slides, slide) {
   const index = Array.isArray(slides)
@@ -15,6 +77,7 @@ export default function ProjectorStage({ lesson, slides, slide, onPrevious, onNe
   const { index, total } = slidePosition(slides, slide);
   const hasPrevious = index > 0;
   const hasNext = index < total - 1;
+  const projectedMarkup = useMemo(() => renderProjectedContent(children), [children]);
 
   return (
     <main
@@ -37,7 +100,12 @@ export default function ProjectorStage({ lesson, slides, slide, onPrevious, onNe
               {slide.subtitle}
             </p>
           ) : null}
-          {children ? <div className="mt-10">{children}</div> : null}
+          {projectedMarkup ? (
+            <div
+              className="projector-teaching-content mt-10"
+              dangerouslySetInnerHTML={{ __html: projectedMarkup }}
+            />
+          ) : null}
         </div>
       </div>
 
@@ -64,3 +132,5 @@ export default function ProjectorStage({ lesson, slides, slide, onPrevious, onNe
     </main>
   );
 }
+
+export { renderProjectedContent, sanitizeProjectorMarkup };

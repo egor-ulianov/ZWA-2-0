@@ -38,7 +38,8 @@ export default function PresenterConsole({ lesson, slides = [], activeSlide, onC
     if (!active?.id || typeof window === 'undefined') return;
     const path = buildProjectorPath(active.id);
     setProjectorUrl(path);
-    const popup = window.open(path, '_blank', 'noopener,noreferrer');
+    const popup = window.open(path, '_blank');
+    if (popup) popup.opener = null;
     setPopupBlocked(!popup);
     if (popup && typeof popup.focus === 'function') popup.focus();
   }
