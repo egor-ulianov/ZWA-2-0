@@ -3,23 +3,12 @@ import SandboxedPreview from './src/components/playground/SandboxedPreview';
 import { getLessonByNumber } from './src/config/lessons.js';
 import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
+import { clsx } from './src/components/lesson/classNames.js';
 
 import {
   CSS_LAYOUT_INSPECTION,
   validateCssLayout,
 } from './src/components/playground/validators.js';
-
-function clsx(...xs) {
-  return xs.filter(Boolean).join(' ');
-}
-
-function Code({ children }) {
-  return (
-    <code className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[90%]">
-      {children}
-    </code>
-  );
-}
 
 function getBaseHtml() {
   return [

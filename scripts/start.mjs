@@ -3,10 +3,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { runMigrations } from './migrate.mjs';
+import { getServerEnv } from '../src/server/env.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 export async function start({ migrate = runMigrations, spawnProcess = spawn } = {}) {
+  getServerEnv();
   await migrate();
   const nextBin = path.join(root, 'node_modules', 'next', 'dist', 'bin', 'next');
   const child = spawnProcess(process.execPath, [nextBin, 'start'], {

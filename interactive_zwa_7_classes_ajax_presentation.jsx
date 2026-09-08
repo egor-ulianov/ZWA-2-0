@@ -255,7 +255,7 @@ function ChallengeReveal({ children }) {
 
 function LessonSlideContent({ slide, password, setPassword, isWeakPassword }) {
   return (
-    <SharedSlideCard slide={slide} idPrefix="lesson-7">
+    <SharedSlideCard slide={slide} idPrefix="lesson-classes-ajax">
       {slide.id === 'title' && (
         <div className="mt-6 text-zinc-600 dark:text-zinc-400">
           <div>Autor: Bc. Egor Ulianov</div>

@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Analytics } from '@vercel/analytics/react';
 import SlideNavigation from './SlideNavigation.jsx';
 import { buildSlideUrl, resolveSlideId } from './navigation.js';
 
@@ -92,7 +91,6 @@ export default function LessonShell({
         <footer className="mt-8 text-sm text-zinc-500 text-center">
           {footerText || `© 2025 ZWA – ${lesson.title}`}
         </footer>
-        <Analytics />
       </div>
     </div>
   );

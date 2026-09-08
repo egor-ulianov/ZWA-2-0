@@ -76,6 +76,16 @@ test('uses one transaction for a validated bulk attendance write', async () => {
   ]);
 });
 
+test('normalizes PostgreSQL date values returned as Date instances', async () => {
+  const sql = async () => [
+    { attendance_date: new Date(2026, 8, 8), present: true },
+  ];
+
+  assert.deepEqual(await createAttendanceRepository(sql).getForStudent('alice'), {
+    '2026-09-08': true,
+  });
+});
+
 test('passes a cleared final-points value as SQL NULL through the progress repository', async () => {
   const queries = [];
   const sql = async (query, parameters) => {

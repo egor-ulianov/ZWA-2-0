@@ -494,7 +494,7 @@ function LessonSlideContent({ slide, commandLog }) {
   const totalSections = hasSections ? slide.sections.length : 0;
   const currentSection = hasSections ? slide.sections[stepIndex] : null;
   return (
-    <SharedSlideCard slide={slide} idPrefix="lesson-3">
+    <SharedSlideCard slide={slide} idPrefix="lesson-network">
       {slide.body && !hasSections && (
         <div
           className={clsx(

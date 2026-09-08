@@ -1,4 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { createRequire } from 'node:module';
+
+const { expect, test } = createRequire(import.meta.url)('@playwright/test');
 import { fulfillJson, installDeterministicNetwork } from './helpers/browser.js';
 
 test('unauthorized student progress redirects back to the login page', async ({ page }) => {
@@ -82,4 +84,24 @@ test('student login reaches progress and renders only least-privilege grade fiel
   expect(renderedText).not.toContain('teacher-secret-not-for-students');
   expect(renderedText).not.toContain('private-model-not-for-students');
   expect(renderedText).not.toContain('prompt-secret-not-for-students');
+});
+
+test('student can use the real login and progress flow against the test provider', async ({
+  page,
+}) => {
+  await installDeterministicNetwork(page, { allowApi: true });
+
+  await page.goto('/student');
+  await page.getByLabel('Username').fill('e2e_student');
+  await page.getByLabel('Auth code').fill('e2e-student-code');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+
+  await expect(page).toHaveURL(/\/student\/progress\/?$/);
+  await expect(page.getByRole('heading', { name: 'Your Progress' })).toBeVisible();
+  await expect(page.getByText('e2e_student', { exact: true })).toBeVisible();
+  await expect(page.getByText('e2e_partner', { exact: true })).toBeVisible();
+  await expect(page.getByText('Evaluation – Test 1')).toBeVisible();
+  await expect(page.getByText('Points:').locator('..')).toContainText('9');
+  await expect(page.getByText('2026-09-08')).toBeVisible();
+  await expect(page.getByText('Present', { exact: true })).toBeVisible();
 });

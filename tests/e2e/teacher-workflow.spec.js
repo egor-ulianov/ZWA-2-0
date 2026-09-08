@@ -1,4 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { createRequire } from 'node:module';
+
+const { expect, test } = createRequire(import.meta.url)('@playwright/test');
 import { fulfillJson, installDeterministicNetwork } from './helpers/browser.js';
 
 test('teacher can sign in, edit roster data, and retry a conflicted attendance save', async ({

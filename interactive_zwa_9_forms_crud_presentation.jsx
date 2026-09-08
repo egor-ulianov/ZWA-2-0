@@ -13,7 +13,7 @@ import { clsx } from './src/components/lesson/classNames.js';
 
 function LessonSlideContent({ slide }) {
   return (
-    <SharedSlideCard slide={slide} idPrefix="lesson-9">
+    <SharedSlideCard slide={slide} idPrefix="lesson-forms-crud">
       {slide.id === 'title' && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

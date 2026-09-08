@@ -24,6 +24,9 @@ COPY --from=builder --chown=app:app /app/.next ./.next
 COPY --from=builder --chown=app:app /app/public ./public
 COPY --from=builder --chown=app:app /app/db ./db
 COPY --from=builder --chown=app:app /app/scripts ./scripts
+# scripts/start.mjs validates the server environment through src/server/env.js;
+# import-roster.mjs also shares the CSV/validation modules from src/.
+COPY --from=builder --chown=app:app /app/src ./src
 
 USER app
 EXPOSE 3000

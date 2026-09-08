@@ -1,6 +1,5 @@
 import React from 'react';
 import Link from 'next/link';
-import { Analytics } from '@vercel/analytics/next';
 import { lessons } from '../src/config/lessons.js';
 
 export default function Home() {
@@ -31,7 +30,6 @@ export default function Home() {
           </Link>
         </li>
       </ul>
-      <Analytics />
     </main>
   );
 }

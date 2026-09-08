@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import test from 'node:test';
+
+const root = path.resolve(new URL('../..', import.meta.url).pathname);
 
 import { ApiError, request } from '../../src/lib/apiClient.js';
 
@@ -87,4 +91,54 @@ test('normalization apply payload requires an explicit preview run ID', async ()
     (error) => error instanceof ApiError && error.status === 400 && error.code === 'normalization_run_required',
   );
   assert.deepEqual(buildNormalizationRequestBody({ dryRun: false, runId: 'run-1' }), { runId: 'run-1' });
+});
+
+test('student progress offers retry for ordinary load failures without changing unauthorized handling', async () => {
+  const source = await readFile(path.join(root, 'pages/student/progress.jsx'), 'utf8');
+
+  assert.match(source, /loadAttempt/);
+  assert.match(source, /setLoadAttempt/);
+  assert.match(source, /Retry/);
+  assert.match(source, /isUnauthorized\(e\)/);
+  assert.match(source, /window\.location\.replace\('\/student'\)/);
+});
+
+test('attendance CSV file imports guard in-flight reads and report FileReader errors', async () => {
+  const source = await readFile(path.join(root, 'src/components/teacher/AttendancePage.jsx'), 'utf8');
+
+  assert.match(source, /fileReaderRef/);
+  assert.match(source, /reader\.onerror/);
+  assert.match(source, /if \(fileReaderRef\.current\)/);
+});
+
+test('attendance CSV import bounds files and cancels an active reader on unmount', async () => {
+  const source = await readFile(path.join(root, 'src/components/teacher/AttendancePage.jsx'), 'utf8');
+
+  assert.match(source, /MAX_CSV_INPUT_BYTES/);
+  assert.match(source, /file\.size > MAX_CSV_INPUT_BYTES/);
+  assert.match(source, /reader\.onload = null/);
+  assert.match(source, /reader\.abort\(\)/);
+});
+
+test('attendance CSV import clears an older draft when reading or parsing a replacement fails', async () => {
+  const source = await readFile(path.join(root, 'src/components/teacher/AttendancePage.jsx'), 'utf8');
+
+  assert.match(source, /function showImportError\(message\)/);
+  assert.match(source, /showImportError\(cause\.message/);
+  assert.match(source, /setImportDraft\(null\);/);
+});
+
+test('progress editor validates final points and only creates mailto links for email usernames', async () => {
+  const source = await readFile(path.join(root, 'src/components/teacher/ProgressEditor.jsx'), 'utf8');
+
+  assert.match(source, /Final points must be a whole number from 0 to 100/);
+  assert.match(source, /isEmailAddress\(username\)/);
+  assert.match(source, /status\.accessCode && isEmailAddress\(username\)/);
+});
+
+test('progress editor drops a queued final-points patch when the draft becomes invalid', async () => {
+  const source = await readFile(path.join(root, 'src/components/teacher/ProgressEditor.jsx'), 'utf8');
+
+  assert.match(source, /delete pendingRef\.current\.assignment_final_points/);
+  assert.match(source, /delete failedRef\.current\.assignment_final_points/);
 });

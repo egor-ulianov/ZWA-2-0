@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Analytics } from '@vercel/analytics/next';
 import { isUnauthorized, request } from '../../src/lib/apiClient.js';
 
 export default function StudentProgress() {
@@ -8,10 +7,12 @@ export default function StudentProgress() {
   const [error, setError] = React.useState('');
   const [attendance, setAttendance] = React.useState({});
   const [grades, setGrades] = React.useState({});
+  const [loadAttempt, setLoadAttempt] = React.useState(0);
   React.useEffect(() => {
     let mounted = true;
     const controller = new AbortController();
     async function load() {
+      if (mounted) setError('');
       try {
         const [d, at, gj] = await Promise.all([
           request('/api/student/me', { signal: controller.signal }),
@@ -36,7 +37,7 @@ export default function StudentProgress() {
       mounted = false;
       controller.abort();
     };
-  }, []);
+  }, [loadAttempt]);
 
   async function logout() {
     try {
@@ -52,6 +53,16 @@ export default function StudentProgress() {
         <main className="max-w-4xl mx-auto p-6">
           <div className="rounded-2xl border border-rose-300/40 dark:border-rose-900/40 bg-white/70 dark:bg-zinc-900/60 p-6">
             <p className="text-rose-600 dark:text-rose-400">{error}</p>
+            <button
+              type="button"
+              className="mt-3 rounded bg-zinc-200 px-3 py-1 dark:bg-zinc-800"
+              onClick={() => {
+                setError('');
+                setLoadAttempt((attempt) => attempt + 1);
+              }}
+            >
+              Retry
+            </button>
           </div>
         </main>
       </div>
@@ -206,7 +217,6 @@ export default function StudentProgress() {
 
         <footer className="mt-8 text-sm text-zinc-500">© 2025 ZWA – Student view</footer>
       </div>
-      <Analytics />
     </div>
   );
 }

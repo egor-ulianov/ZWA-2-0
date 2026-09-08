@@ -16,9 +16,25 @@ function sqlLiteral(value) {
   return `'${String(value).replaceAll("'", "''")}'`;
 }
 
+function uniqueDollarTag(prefix, source) {
+  let tag = prefix;
+  let suffix = 0;
+  while (source.includes(`$${tag}$`)) tag = `${prefix}_${++suffix}`;
+  return tag;
+}
+
 function migrationQuery(filename, sourceOrDigest, maybeDigest) {
   const digest = maybeDigest ?? sourceOrDigest;
-  return `do $$migration_checksum_guard$$
+  const source = maybeDigest === undefined ? null : String(sourceOrDigest);
+  const guardTag = uniqueDollarTag(`migration_checksum_guard_${digest}`, source ?? '');
+  const sourceTag = source === null ? null : uniqueDollarTag(`migration_source_${digest}`, source);
+  const sourceBlock = source === null
+    ? '    return;'
+    : `    execute $${sourceTag}$${source}$${sourceTag}$;
+    insert into schema_migrations (filename, checksum)
+      values (${sqlLiteral(filename)}, ${sqlLiteral(digest)});`;
+
+  return `do $${guardTag}$
 declare
   existing_checksum text;
 begin
@@ -27,11 +43,15 @@ begin
   if existing_checksum is not null and existing_checksum <> ${sqlLiteral(digest)} then
     raise exception 'Migration checksum changed for %', ${sqlLiteral(filename)};
   end if;
-  if not exists (select 1 from schema_migrations where filename = ${sqlLiteral(filename)}) then
+  if exists (select 1 from schema_migrations where filename = ${sqlLiteral(filename)}) then
+    update schema_migrations
+      set checksum = coalesce(checksum, ${sqlLiteral(digest)})
+      where filename = ${sqlLiteral(filename)};
     return;
   end if;
+${sourceBlock}
 end
-$$migration_checksum_guard$$;`;
+$${guardTag}$;`;
 }
 
 export async function getMigrationFiles(directory = defaultDirectory) {
@@ -57,12 +77,7 @@ export async function runMigrations({
         applied_at timestamptz not null default now()
       )`),
       sql('alter table schema_migrations add column if not exists checksum text'),
-      sql(migrationQuery(filename, digest)),
-      sql(source),
-      sql(`insert into schema_migrations (filename, checksum)
-        values (${sqlLiteral(filename)}, ${sqlLiteral(digest)})
-        on conflict (filename) do update
-          set checksum = coalesce(schema_migrations.checksum, excluded.checksum)`),
+      sql(migrationQuery(filename, source, digest)),
     ]);
     output(`Processed ${filename}`);
   }

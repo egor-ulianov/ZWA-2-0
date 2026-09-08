@@ -292,6 +292,32 @@ test('normalization replay returns an idempotent no-op for an applied run', asyn
   });
 });
 
+for (const status of ['previewed', 'applied']) {
+  test(`normalization ${status} run cannot be replayed by a non-owner`, async () => {
+    const runId = '89ccf2ca-35e8-4fb4-b4f9-3431571a7e1e';
+    let calls = 0;
+    setDbForTests(async (query, parameters) => {
+      calls += 1;
+      if (calls < 3) return [];
+      assert.match(query, /from grade_normalization_runs/i);
+      assert.deepEqual(parameters, [runId, 'non-owner']);
+      return [];
+    });
+
+    const res = response();
+    await normalizeHandler({
+      method: 'POST',
+      headers: { cookie: teacherCookie('non-owner'), origin: 'http://localhost:3000' },
+      body: { runId },
+    }, res);
+
+    assert.equal(res.statusCode, 404);
+    assert.equal(res.body.error, 'Normalization run not found');
+    assert.equal(Object.hasOwn(res.body, 'total'), false);
+    void status;
+  });
+}
+
 test('legacy normalization apply requests resolve the latest same-teacher preview', async () => {
   let calls = 0;
   const runId = '89ccf2ca-35e8-4fb4-b4f9-3431571a7e1e';

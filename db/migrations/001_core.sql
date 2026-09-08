@@ -81,9 +81,11 @@ begin
       where username ~ '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$'
       on conflict (username) do nothing;
     insert into attendance (attendance_date, username, present, updated_by)
-      select date::date, lower(trim(username)), present, 'legacy-migration'
+      select to_date(date::text, 'YYYY-MM-DD'), lower(trim(username)), present, 'legacy-migration'
       from attendance_legacy
-      where date ~ '^\\d{4}-\\d{2}-\\d{2}$' and username ~ '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$'
+      where date::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+        and to_char(to_date(date::text, 'YYYY-MM-DD'), 'YYYY-MM-DD') = date::text
+        and username ~ '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$'
       on conflict (attendance_date, username) do nothing;
   end if;
 end $$;

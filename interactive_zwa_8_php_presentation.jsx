@@ -9,7 +9,7 @@ import { clsx } from './src/components/lesson/classNames.js';
 
 function LessonSlideContent({ slide }) {
   return (
-    <SharedSlideCard slide={slide} idPrefix="lesson-8">
+    <SharedSlideCard slide={slide} idPrefix="lesson-php">
       {slide.id === 'title' && (
         <div className="mt-6 text-zinc-600 dark:text-zinc-400">
           <div>Autor: Bc. Egor Ulianov</div>

@@ -1,4 +1,7 @@
-import { expect, test } from '@playwright/test';
+import { createRequire } from 'node:module';
+
+const { expect, test } = createRequire(import.meta.url)('@playwright/test');
+import { lessons } from '../../src/config/lessons.js';
 import { installDeterministicNetwork } from './helpers/browser.js';
 
 test.describe('public catalog and lesson navigation', () => {
@@ -74,4 +77,47 @@ test.describe('public catalog and lesson navigation', () => {
     await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
     await expect(tabs.nth(0)).toBeFocused();
   });
+
+  for (const lesson of lessons) {
+    test(`route ${lesson.number} exposes navigable accessible lesson tabs`, async ({ page }) => {
+      await installDeterministicNetwork(page);
+
+      const response = await page.goto(lesson.href);
+      expect(response).not.toBeNull();
+      expect(response.ok()).toBe(true);
+      await expect(page.locator('h1').first()).toBeVisible();
+
+      const navigation = page.getByRole('navigation', { name: 'Navigace mezi snímky' });
+      const tabs = navigation.getByRole('tab');
+      const tabCount = await tabs.count();
+      expect(tabCount).toBeGreaterThan(1);
+
+      const controlledPanelIds = new Set();
+      for (let index = 0; index < tabCount; index += 1) {
+        const tab = tabs.nth(index);
+        const tabId = await tab.getAttribute('id');
+        const panelId = await tab.getAttribute('aria-controls');
+        expect(tabId).toBeTruthy();
+        expect(panelId).toBeTruthy();
+        expect(controlledPanelIds.has(panelId)).toBe(false);
+        controlledPanelIds.add(panelId);
+      }
+
+      const activeTab = navigation.getByRole('tab', { selected: true });
+      const activeTabId = await activeTab.getAttribute('id');
+      const activePanelId = await activeTab.getAttribute('aria-controls');
+      await expect(page.locator(`#${activePanelId}`)).toHaveAttribute(
+        'aria-labelledby',
+        activeTabId,
+      );
+      await expect(activeTab).toHaveAttribute('aria-selected', 'true');
+      await tabs.nth(1).click();
+      await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true');
+      await expect(
+        page.locator(`#${await tabs.nth(1).getAttribute('aria-controls')}`),
+      ).toBeVisible();
+      await expect(tabs.nth(1)).toHaveAttribute('tabindex', '0');
+      await expect(tabs.first()).toHaveAttribute('tabindex', '-1');
+    });
+  }
 });

@@ -8,6 +8,19 @@ export class AttendanceConflictError extends Error {
   }
 }
 
+function attendanceDateValue(value) {
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) throw new TypeError('Invalid attendance date from database');
+    // PostgreSQL DATE values are parsed by the Neon client as local-midnight
+    // Date instances. Use local calendar fields so the date cannot move across
+    // a UTC boundary when the application serializes it for the UI.
+    return [value.getFullYear(), value.getMonth() + 1, value.getDate()]
+      .map((part, index) => index === 0 ? String(part).padStart(4, '0') : String(part).padStart(2, '0'))
+      .join('-');
+  }
+  return String(value).slice(0, 10);
+}
+
 export function createAttendanceRepository(sql = getDb()) {
   return {
     async getByDate(attendanceDate) {
@@ -29,7 +42,7 @@ export function createAttendanceRepository(sql = getDb()) {
     async getOverview() {
       const rows = await sql('select attendance_date, username, present from attendance order by attendance_date, username');
       return rows.reduce((overview, row) => {
-        const date = String(row.attendance_date).slice(0, 10);
+        const date = attendanceDateValue(row.attendance_date);
         overview[date] ||= {};
         overview[date][row.username] = Boolean(row.present);
         return overview;
@@ -37,7 +50,7 @@ export function createAttendanceRepository(sql = getDb()) {
     },
     async getForStudent(username) {
       const rows = await sql('select attendance_date, present from attendance where username = $1 order by attendance_date', [validateUsername(username)]);
-      return Object.fromEntries(rows.map((row) => [String(row.attendance_date).slice(0, 10), Boolean(row.present)]));
+      return Object.fromEntries(rows.map((row) => [attendanceDateValue(row.attendance_date), Boolean(row.present)]));
     },
     async bulkUpsert(input) {
       const { attendanceDate, entries, actor, expectedRevision } = validateAttendanceInput(input);

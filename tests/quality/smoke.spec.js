@@ -1,4 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { createRequire } from 'node:module';
+
+const { expect, test } = createRequire(import.meta.url)('@playwright/test');
 import { installDeterministicNetwork } from '../e2e/helpers/browser.js';
 
 test('homepage renders the lesson catalog and protected workspace entry point', async ({

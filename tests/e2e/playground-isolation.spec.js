@@ -1,5 +1,57 @@
-import { expect, test } from '@playwright/test';
+import { createRequire } from 'node:module';
+
+const { expect, test } = createRequire(import.meta.url)('@playwright/test');
 import { installDeterministicNetwork } from './helpers/browser.js';
+
+const playgroundLessons = [
+  {
+    name: 'HTML5 static preview',
+    href: '/interactive-zwa-1-html5?slide=tasks',
+    verify: async (page) => {
+      await expect(page.getByText('Vyberte úkol', { exact: true })).toBeVisible();
+    },
+  },
+  {
+    name: 'HTML forms interaction',
+    href: '/interactive-zwa-2-forms?slide=playground',
+    verify: async (page) => {
+      await page.getByRole('button', { name: 'Vyzkoušet' }).first().click();
+      await expect(page.getByLabel('Jméno')).toBeVisible();
+      await page.getByLabel('Jméno').fill('Ada');
+      await expect(page.getByLabel('Jméno')).toHaveValue('Ada');
+    },
+  },
+  {
+    name: 'CSS static preview',
+    href: '/interactive-zwa-2?slide=tasks',
+    frameTitle: 'CSS playground preview',
+  },
+  {
+    name: 'CSS II static preview',
+    href: '/interactive-zwa-5-css-ii?slide=tasks',
+    frameTitle: 'CSS layout playground preview',
+  },
+  {
+    name: 'JavaScript sandbox preview',
+    href: '/interactive-zwa-5-js?slide=tasks',
+    frameTitle: 'JavaScript DOM sandbox',
+  },
+];
+
+for (const playground of playgroundLessons) {
+  test(`playground lesson supports ${playground.name}`, async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    const response = await page.goto(playground.href);
+    expect(response).not.toBeNull();
+    expect(response.ok()).toBe(true);
+
+    if (playground.frameTitle) {
+      await expect(page.locator(`iframe[title="${playground.frameTitle}"]`)).toBeVisible();
+    }
+    await playground.verify?.(page);
+  });
+}
 
 test('hostile student JavaScript cannot mutate the parent or block later sandbox use', async ({
   page,

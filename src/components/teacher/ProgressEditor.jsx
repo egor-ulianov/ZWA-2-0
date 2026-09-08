@@ -14,17 +14,31 @@ const EMPTY_PROGRESS = {
   assignment_final_points: '',
 };
 
+const FINAL_POINTS_ERROR = 'Final points must be a whole number from 0 to 100.';
+
+function normalizeFinalPoints(value) {
+  if (value === null || value === undefined || value === '') return '';
+  const patch = progressPatchForFinalPointsInput(String(value));
+  return patch?.assignment_final_points ?? '';
+}
+
+function isEmailAddress(value) {
+  const email = typeof value === 'string' ? value.trim() : '';
+  return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 function normalizeProgress(value) {
   return {
     ...EMPTY_PROGRESS,
     ...(value || {}),
-    assignment_final_points: value?.assignment_final_points ?? '',
+    assignment_final_points: normalizeFinalPoints(value?.assignment_final_points),
   };
 }
 
 export default function ProgressEditor({ username, value, onSavePatch }) {
   const [draft, setDraft] = React.useState(() => normalizeProgress(value));
   const [status, setStatus] = React.useState({ saving: false, error: '', accessCode: '' });
+  const [finalPointsError, setFinalPointsError] = React.useState('');
   const pendingRef = React.useRef({});
   const failedRef = React.useRef({});
   const serverValueRef = React.useRef(normalizeProgress(value));
@@ -43,6 +57,7 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
       dirtyFieldsRef.current = new Set();
       fieldVersionsRef.current = new Map();
       setStatus({ saving: false, error: '', accessCode: '' });
+      setFinalPointsError('');
     }
     const nextServerValue = normalizeProgress(value);
     serverValueRef.current = nextServerValue;
@@ -114,6 +129,22 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
     setStatus((current) => ({ ...current, error: '' }));
   }
 
+  function handleFinalPointsBlur() {
+    const raw = draftRef.current.assignment_final_points;
+    const patch = progressPatchForFinalPointsInput(raw === null || raw === undefined ? '' : String(raw));
+    if (!patch) {
+      const restored = normalizeProgress(serverValueRef.current).assignment_final_points;
+      const next = { ...draftRef.current, assignment_final_points: restored };
+      draftRef.current = next;
+      setDraft(next);
+      setFinalPointsError(FINAL_POINTS_ERROR);
+      return;
+    }
+    setFinalPointsError('');
+    if (String(raw) !== String(patch.assignment_final_points ?? '')) change(patch);
+    flush();
+  }
+
   async function generateAccessCode() {
     setStatus((current) => ({ ...current, saving: true, error: '', accessCode: '' }));
     try {
@@ -125,7 +156,7 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
     }
   }
 
-  const mailto = status.accessCode
+  const mailto = status.accessCode && isEmailAddress(username)
     ? `mailto:${encodeURIComponent(username)}?subject=${encodeURIComponent('ZWA access information')}&body=${encodeURIComponent(`Username: ${username}\nAccess code: ${status.accessCode}\n\nLogin: ${typeof window === 'undefined' ? '/student' : `${window.location.origin}/student`}`)}`
     : '';
 
@@ -146,16 +177,32 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
         <input className="mt-1 block w-full border rounded px-2 py-1" value={draft.assignment_partner || ''} onBlur={flush} onChange={(event) => change({ assignment_partner: event.target.value })} />
       </label>
       <label className="text-sm">Final points
-        <input className="mt-1 block w-full border rounded px-2 py-1" type="number" min="0" max="100" value={draft.assignment_final_points ?? ''} onBlur={flush} onChange={(event) => {
+        <input className="mt-1 block w-full border rounded px-2 py-1" type="number" min="0" max="100" step="1" value={draft.assignment_final_points ?? ''} onBlur={handleFinalPointsBlur} onChange={(event) => {
           const raw = event.target.value;
           const patch = progressPatchForFinalPointsInput(raw);
-          if (patch) change(patch);
-          else setDraft((current) => {
-            const next = { ...current, assignment_final_points: raw };
-            draftRef.current = next;
-            return next;
-          });
-        }} />
+          if (patch) {
+            setFinalPointsError('');
+            change(patch);
+          } else {
+            fieldVersionsRef.current.set(
+              'assignment_final_points',
+              (fieldVersionsRef.current.get('assignment_final_points') || 0) + 1,
+            );
+            delete pendingRef.current.assignment_final_points;
+            delete failedRef.current.assignment_final_points;
+            dirtyFieldsRef.current.delete('assignment_final_points');
+            clearTimeout(timerRef.current);
+            if (!flushingRef.current && Object.keys(pendingRef.current).length) {
+              timerRef.current = setTimeout(flush, 500);
+            }
+            setDraft((current) => {
+              const next = { ...current, assignment_final_points: raw };
+              draftRef.current = next;
+              return next;
+            });
+          }
+        }} aria-invalid={Boolean(finalPointsError)} aria-describedby={finalPointsError ? 'final-points-error' : undefined} />
+        {finalPointsError ? <p id="final-points-error" className="mt-1 text-sm text-red-600" role="alert">{finalPointsError}</p> : null}
       </label>
       <div className="flex flex-wrap gap-2">
         <button type="button" className="px-3 py-1 rounded bg-zinc-200 disabled:opacity-50" disabled={status.saving} onClick={generateAccessCode}>Generate access code</button>

@@ -166,9 +166,10 @@ export function createGradesRepository(sql = getDb()) {
     },
     async applyNormalizationRun({ runId, actor }) {
       if (typeof runId !== 'string' || !UUID.test(runId) || typeof actor !== 'string' || !actor.trim()) throw new TypeError('Invalid normalization run');
+      const owner = actor.trim();
       const rows = await sql(
         `with run as (
-           select * from grade_normalization_runs where id = $1 and status = 'previewed' for update
+           select * from grade_normalization_runs where id = $1 and actor = $2 and status = 'previewed' for update
          ), guarded_run as (
            select run.* from run
            where run.actor = $2
@@ -201,10 +202,13 @@ export function createGradesRepository(sql = getDb()) {
          select (select count(*)::int from inserted_attempts) as updated,
                 (select jsonb_array_length(original_attempts) from guarded_run) as total
          from marked`,
-        [runId, actor],
+        [runId, owner],
       );
       if (rows[0]) return { ...rows[0], alreadyApplied: false };
-      const existing = await sql('select status, jsonb_array_length(original_attempts) as total from grade_normalization_runs where id = $1', [runId]);
+      const existing = await sql(
+        'select status, jsonb_array_length(original_attempts) as total from grade_normalization_runs where id = $1 and actor = $2',
+        [runId, owner],
+      );
       if (existing[0]?.status === 'applied') return { updated: 0, total: existing[0].total, alreadyApplied: true };
       if (existing[0]?.status === 'previewed') return { updated: 0, total: existing[0].total, stale: true };
       return null;

@@ -6,7 +6,11 @@ import {
   isUnauthorized,
   request,
 } from '../../lib/apiClient.js';
-import { parseAttendanceCsv, serializeAttendanceCsv } from '../../lib/csv.js';
+import {
+  MAX_CSV_INPUT_BYTES,
+  parseAttendanceCsv,
+  serializeAttendanceCsv,
+} from '../../lib/csv.js';
 import StudentRow from './StudentRow.jsx';
 
 function today() { return new Date().toISOString().slice(0, 10); }
@@ -51,6 +55,18 @@ export default function AttendancePage() {
   const confirmedRef = React.useRef(new Map());
   const attendanceRef = React.useRef({});
   const saveVersionsRef = React.useRef(new Map());
+  const fileReaderRef = React.useRef(null);
+
+  React.useEffect(() => () => {
+    const reader = fileReaderRef.current;
+    fileReaderRef.current = null;
+    if (reader?.readyState === 1) {
+      reader.onload = null;
+      reader.onerror = null;
+      reader.onabort = null;
+      reader.abort();
+    }
+  }, []);
 
   const onUnauthorized = React.useCallback(() => setTeacher(null), []);
   const client = React.useCallback((path, options) => request(path, { ...options, onUnauthorized }), [onUnauthorized]);
@@ -185,12 +201,42 @@ export default function AttendancePage() {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
+    if (fileReaderRef.current) {
+      setSaveError({ message: 'A CSV file is already being read.' });
+      return;
+    }
+    function showImportError(message) {
+      setImportDraft(null);
+      setSaveError({ message });
+    }
+    if (typeof file.size === 'number' && file.size > MAX_CSV_INPUT_BYTES) {
+      showImportError(`CSV file exceeds the maximum size of ${MAX_CSV_INPUT_BYTES} bytes.`);
+      return;
+    }
     const reader = new FileReader();
+    fileReaderRef.current = reader;
+    const finishReading = () => {
+      if (fileReaderRef.current === reader) fileReaderRef.current = null;
+    };
     reader.onload = () => {
       try { setImportDraft(parseAttendanceCsv(String(reader.result || ''), { knownUsernames: new Set(students.map((student) => student.username)) })); }
-      catch (cause) { setSaveError({ message: cause.message || 'Unable to parse CSV' }); }
+      catch (cause) { showImportError(cause.message || 'Unable to parse CSV'); }
+      finally { finishReading(); }
     };
-    reader.readAsText(file);
+    reader.onerror = () => {
+      finishReading();
+      showImportError(reader.error?.message || 'Unable to read CSV file');
+    };
+    reader.onabort = () => {
+      finishReading();
+      showImportError('CSV file reading was cancelled.');
+    };
+    try {
+      reader.readAsText(file);
+    } catch (cause) {
+      finishReading();
+      showImportError(cause.message || 'Unable to read CSV file');
+    }
   }
 
   function confirmImport() {
