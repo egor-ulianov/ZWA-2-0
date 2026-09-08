@@ -72,7 +72,7 @@ export function filterAssignmentPatch(patch) {
     if (field === 'assignment_task_checked' || field === 'assignment_midterm_ok') {
       if (typeof value !== 'boolean') throw new TypeError(`${field} must be boolean`);
     } else if (field === 'assignment_final_points') {
-      if (!Number.isInteger(value) || value < 0 || value > 100) throw new TypeError('Invalid final points');
+      if (value !== null && (!Number.isInteger(value) || value < 0 || value > 100)) throw new TypeError('Invalid final points');
     } else if (typeof value !== 'string' || value.length > (field === 'assignment_topic' ? 500 : 200)) {
       throw new TypeError(`Invalid ${field}`);
     }

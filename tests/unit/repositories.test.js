@@ -8,6 +8,7 @@ import {
   validateUsername,
 } from '../../src/server/repositories/validation.js';
 import { createAttendanceRepository } from '../../src/server/repositories/attendance.js';
+import { createProgressRepository } from '../../src/server/repositories/progress.js';
 
 test('rejects invalid usernames before a database query can be built', () => {
   assert.throws(() => validateUsername('alice; drop table students'), /username/i);
@@ -46,6 +47,7 @@ test('filters progress changes to assignment fields and enforces score bounds', 
     test1: 12,
     auth_code: 'not persisted here',
   }), { assignment_topic: 'HTTP' });
+  assert.deepEqual(filterAssignmentPatch({ assignment_final_points: null }), { assignment_final_points: null });
   assert.throws(
     () => filterAssignmentPatch({ assignment_final_points: 101 }),
     /final points/i,
@@ -72,4 +74,23 @@ test('uses one transaction for a validated bulk attendance write', async () => {
     ['2026-09-08', 'alice', true, 'teacher'],
     ['2026-09-08', 'bob', false, 'teacher'],
   ]);
+});
+
+test('passes a cleared final-points value as SQL NULL through the progress repository', async () => {
+  const queries = [];
+  const sql = async (query, parameters) => {
+    queries.push({ query, parameters });
+    return [{ username: 'alice', assignment_final_points: null }];
+  };
+
+  const result = await createProgressRepository(sql).patch(
+    'alice',
+    { assignment_final_points: null },
+    'teacher',
+  );
+
+  assert.equal(result.assignment_final_points, null);
+  assert.equal(queries.length, 1);
+  assert.equal(queries[0].parameters[1], null);
+  assert.match(queries[0].query, /assignment_final_points/);
 });

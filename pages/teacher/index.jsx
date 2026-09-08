@@ -1,4 +1,5 @@
 import React from 'react';
+import { buildNormalizationRequestBody, isAbortError, request } from '../../src/lib/apiClient.js';
 
 export default function TeacherNormalize() {
   const [auth, setAuth] = React.useState({ loading: true, username: '', error: '' });
@@ -13,43 +14,51 @@ export default function TeacherNormalize() {
     let mounted = true;
     (async () => {
       try {
-        const res = await fetch('/api/teacher/me');
-        if (!res.ok) throw new Error('Unauthorized');
-        const d = await res.json();
+        const d = await request('/api/teacher/me');
         if (!mounted) return;
         setAuth({ loading: false, username: d.username || '', error: '' });
-      } catch (e) {
-        if (mounted) setAuth({ loading: false, username: '', error: 'Unauthorized' });
+      } catch (error) {
+        if (mounted && !isAbortError(error)) setAuth({ loading: false, username: '', error: 'Unauthorized' });
       }
     })();
     return () => { mounted = false; };
   }, []);
 
   async function runNormalize(testNumber, dryRun) {
+    let body;
+    try {
+      body = buildNormalizationRequestBody({
+        dryRun,
+        testNumber,
+        maxPoints: 12,
+        runId: stateByTest[testNumber]?.result?.runId,
+      });
+    } catch (error) {
+      setStateByTest((s) => ({
+        ...s,
+        [testNumber]: { ...s[testNumber], loading: false, error: error.message || 'Run a dry-run before applying normalization' },
+      }));
+      return;
+    }
     setStateByTest((s) => ({
       ...s,
       [testNumber]: { ...s[testNumber], loading: true, error: '', result: null }
     }));
     try {
-      const res = await fetch('/api/teacher/normalize-grades', {
+      const data = await request('/api/teacher/normalize-grades', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          testNumber,
-          maxPoints: 12,
-          dryRun
-        })
+        body: JSON.stringify(body),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Failed');
       setStateByTest((s) => ({
         ...s,
         [testNumber]: { loading: false, error: '', result: data }
       }));
-    } catch (e) {
+    } catch (error) {
+      if (isAbortError(error)) return;
       setStateByTest((s) => ({
         ...s,
-        [testNumber]: { loading: false, error: String(e.message || e), result: null }
+        [testNumber]: { loading: false, error: error.message || 'Failed', result: null }
       }));
     }
   }
@@ -64,6 +73,7 @@ export default function TeacherNormalize() {
           <h2 className="text-lg font-bold">Test {tn}</h2>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               className="text-xs px-3 py-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50"
               onClick={() => runNormalize(tn, true)}
               disabled={st.loading}
@@ -71,9 +81,10 @@ export default function TeacherNormalize() {
               Dry‑run
             </button>
             <button
+              type="button"
               className="text-xs px-3 py-1 rounded-md border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 disabled:opacity-50"
               onClick={() => runNormalize(tn, false)}
-              disabled={st.loading}
+              disabled={st.loading || !st.result?.runId}
             >
               Apply
             </button>
@@ -180,6 +191,5 @@ export default function TeacherNormalize() {
     </div>
   );
 }
-
 
 
