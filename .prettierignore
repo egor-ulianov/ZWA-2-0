@@ -1,0 +1,28 @@
+# Generated and dependency output
+node_modules/
+.next/
+out/
+
+# Repository planning artifacts are not application source.
+docs/superpowers/
+
+# Server, teacher workflow, and migration files are owned by adjacent workstreams.
+pages/api/
+pages/teacher/
+scripts/
+src/components/teacher/
+src/server/
+
+# This module is a protocol boundary owned by the playground workstream.
+src/components/playground/protocol.js
+
+# Tests for the server/auth/AI and teacher persistence workstreams.
+tests/api/
+tests/unit/api-client.test.js
+tests/unit/auth-session.test.js
+tests/unit/csv.test.js
+tests/unit/grading.test.js
+tests/unit/migrations.test.js
+tests/unit/repositories.test.js
+tests/unit/server-remediation.test.js
+tests/unit/ui-state.test.js

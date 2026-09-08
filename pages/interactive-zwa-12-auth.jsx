@@ -6,6 +6,3 @@ const App = dynamic(() => import('../interactive_zwa_12_auth_presentation.jsx'),
 export default function InteractiveZwa12AuthPage() {
   return <App />;
 }
-
-
-

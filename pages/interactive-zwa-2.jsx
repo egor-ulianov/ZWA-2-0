@@ -6,6 +6,3 @@ const App = dynamic(() => import('../interactive_zwa_2_css_presentation.jsx'), {
 export default function InteractiveZwa2Page() {
   return <App />;
 }
-
-
-

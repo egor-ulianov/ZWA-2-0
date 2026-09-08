@@ -1,17 +1,17 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import SandboxedPreview from "./SandboxedPreview";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import SandboxedPreview from './SandboxedPreview';
 
 export const EXECUTION_TIMEOUT_MS = 1500;
 
 export function JsSandbox({
   code = null,
-  dom = "",
+  dom = '',
   stepIndex = 0,
   onResult,
   onConsole,
   resetKey = 0,
-  title = "Isolated JavaScript playground",
-  className = "w-full min-h-[160px] rounded-xl border bg-white",
+  title = 'Isolated JavaScript playground',
+  className = 'w-full min-h-[160px] rounded-xl border bg-white',
 }) {
   const [finished, setFinished] = useState(code === null);
   const [timedOut, setTimedOut] = useState(false);
@@ -25,12 +25,15 @@ export function JsSandbox({
     onConsoleRef.current = onConsole;
   }, [onConsole, onResult]);
 
+  // A new execution must reset the iframe lifecycle state before it starts.
+  /* eslint-disable react-hooks/set-state-in-effect -- this effect is the sandbox run boundary. */
   useEffect(() => {
     activeRunRef.current = code !== null;
     setFinished(code === null);
     setTimedOut(false);
     setExecutionKey((key) => key + 1);
   }, [code, dom, resetKey, stepIndex]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (code === null || finished || timedOut) return;
@@ -50,27 +53,24 @@ export function JsSandbox({
     return () => clearTimeout(timeout);
   }, [code, executionKey, finished, timedOut]);
 
-  const handleMessage = useCallback(
-    (message) => {
-      if (!activeRunRef.current) return;
-      if (message.type === "console") {
-        onConsoleRef.current?.({ type: message.level, text: message.text });
-        return;
-      }
-      if (message.type === "result") {
-        activeRunRef.current = false;
-        setFinished(true);
-        onResultRef.current?.(message.value);
-        return;
-      }
-      if (message.type === "error") {
-        activeRunRef.current = false;
-        setFinished(true);
-        onResultRef.current?.([{ ok: false, text: message.message }]);
-      }
-    },
-    []
-  );
+  const handleMessage = useCallback((message) => {
+    if (!activeRunRef.current) return;
+    if (message.type === 'console') {
+      onConsoleRef.current?.({ type: message.level, text: message.text });
+      return;
+    }
+    if (message.type === 'result') {
+      activeRunRef.current = false;
+      setFinished(true);
+      onResultRef.current?.(message.value);
+      return;
+    }
+    if (message.type === 'error') {
+      activeRunRef.current = false;
+      setFinished(true);
+      onResultRef.current?.([{ ok: false, text: message.message }]);
+    }
+  }, []);
 
   if (timedOut) {
     return (
@@ -89,27 +89,25 @@ export function JsSandbox({
     );
   }
 
-  return (
-    code === null ? (
-      <SandboxedPreview
-        key={executionKey}
-        html={dom}
-        mode="static"
-        title={title}
-        className={className}
-      />
-    ) : (
-      <SandboxedPreview
-        key={executionKey}
-        html={dom}
-        mode="javascript"
-        code={code}
-        stepIndex={stepIndex}
-        onMessage={handleMessage}
-        title={title}
-        className={className}
-      />
-    )
+  return code === null ? (
+    <SandboxedPreview
+      key={executionKey}
+      html={dom}
+      mode="static"
+      title={title}
+      className={className}
+    />
+  ) : (
+    <SandboxedPreview
+      key={executionKey}
+      html={dom}
+      mode="javascript"
+      code={code}
+      stepIndex={stepIndex}
+      onMessage={handleMessage}
+      title={title}
+      className={className}
+    />
   );
 }
 

@@ -6,9 +6,3 @@ const App = dynamic(() => import('../interactive_zwa_8_php_presentation.jsx'), {
 export default function InteractiveZwa8PhpPage() {
   return <App />;
 }
-
-
-
-
-
-

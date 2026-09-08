@@ -5,11 +5,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2022"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "module": "CommonJS",
     "moduleResolution": "Node",
     "noEmit": true,
@@ -25,16 +21,14 @@
     "postcss.config.js",
     "tailwind.config.js",
     "playwright.config.js",
-    "pages/api/**/*.js",
-    "src/server/**/*.js",
-    "src/lib/**/*.js",
+    "pages/**/*.js",
+    "pages/**/*.jsx",
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "interactive_zwa_*.jsx",
     "scripts/**/*.mjs",
-    "tests/quality/**/*.mjs",
-    "tests/quality/**/*.js"
+    "tests/**/*.mjs",
+    "tests/**/*.js"
   ],
-  "exclude": [
-    "node_modules",
-    ".next",
-    "out"
-  ]
+  "exclude": ["node_modules", ".next", "out"]
 }

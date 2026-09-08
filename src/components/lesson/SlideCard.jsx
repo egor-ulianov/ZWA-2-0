@@ -1,10 +1,10 @@
-import React, { useEffect, useRef } from "react";
-import { clsx } from "./classNames.js";
-import { getSlideDomIds } from "./navigation.js";
+import React, { useEffect, useRef } from 'react';
+import { clsx } from './classNames.js';
+import { getSlideDomIds } from './navigation.js';
 
-export { getSlideDomIds } from "./navigation.js";
+export { getSlideDomIds } from './navigation.js';
 
-export default function SlideCard({ slide, children, idPrefix = "lesson" }) {
+export default function SlideCard({ slide, children, idPrefix = 'lesson' }) {
   const headingRef = useRef(null);
   const mountedRef = useRef(false);
   const { panelId, tabId } = getSlideDomIds(slide.id, idPrefix);
@@ -21,11 +21,16 @@ export default function SlideCard({ slide, children, idPrefix = "lesson" }) {
       aria-labelledby={tabId}
       tabIndex={-1}
       className={clsx(
-        "p-6 rounded-2xl shadow-lg bg-white/70 dark:bg-zinc-900/60",
-        "backdrop-blur border border-zinc-200/60 dark:border-zinc-800"
+        'p-6 rounded-2xl shadow-lg bg-white/70 dark:bg-zinc-900/60',
+        'backdrop-blur border border-zinc-200/60 dark:border-zinc-800',
       )}
     >
-      <h2 ref={headingRef} id={`${panelId}-heading`} tabIndex={-1} className="text-3xl font-bold mb-3">
+      <h2
+        ref={headingRef}
+        id={`${panelId}-heading`}
+        tabIndex={-1}
+        className="text-3xl font-bold mb-3"
+      >
         {slide.title}
       </h2>
       {slide.subtitle && (

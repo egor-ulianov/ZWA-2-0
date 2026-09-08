@@ -1,13 +1,13 @@
-import React, { useState, useRef, useMemo } from "react";
-import lenin1 from "./src/interactive-zwa-7/lenin1.png";
-import lenin2 from "./src/interactive-zwa-7/lenin2.png";
-import lenin3 from "./src/interactive-zwa-7/lenin3.png";
-import { getLessonByNumber } from "./src/config/lessons.js";
-import LessonShell, { useSlideNavigation } from "./src/components/lesson/LessonShell.jsx";
-import SharedSlideCard from "./src/components/lesson/SlideCard.jsx";
-import Code from "./src/components/lesson/Code.jsx";
-import InfoBox from "./src/components/lesson/InfoBox.jsx";
-import { clsx } from "./src/components/lesson/classNames.js";
+import React, { useState, useRef, useMemo } from 'react';
+import lenin1 from './src/interactive-zwa-7/lenin1.png';
+import lenin2 from './src/interactive-zwa-7/lenin2.png';
+import lenin3 from './src/interactive-zwa-7/lenin3.png';
+import { getLessonByNumber } from './src/config/lessons.js';
+import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
+import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
+import Code from './src/components/lesson/Code.jsx';
+import InfoBox from './src/components/lesson/InfoBox.jsx';
+import { clsx } from './src/components/lesson/classNames.js';
 
 function QuizSection() {
   const [answers, setAnswers] = useState({});
@@ -20,9 +20,9 @@ function QuizSection() {
       options: [
         'Statické typování – typ se musí vždy definovat předem',
         'Dynamické typování – proměnná může změnit typ za běhu',
-        'Žádné typování – v JS jsou jen stringy'
+        'Žádné typování – v JS jsou jen stringy',
       ],
-      correctIndex: 1
+      correctIndex: 1,
     },
     {
       id: 'q2',
@@ -30,9 +30,9 @@ function QuizSection() {
       options: [
         'Pokud něco vypadá jako typ a chová se jako typ, tak se k němu tak chováme',
         'Všechny proměnné musí mít typ duck',
-        'Proměnné typu var se vždy mění na let'
+        'Proměnné typu var se vždy mění na let',
       ],
-      correctIndex: 0
+      correctIndex: 0,
     },
     {
       id: 'q3',
@@ -40,9 +40,9 @@ function QuizSection() {
       options: [
         'for...in iteruje přes indexy, for...of přes hodnoty pole',
         'for...in se používá jen pro objekty, for...of jen pro čísla',
-        'Žádný rozdíl, oba dělají to samé'
+        'Žádný rozdíl, oba dělají to samé',
       ],
-      correctIndex: 0
+      correctIndex: 0,
     },
     {
       id: 'q4',
@@ -50,9 +50,9 @@ function QuizSection() {
       options: [
         'Seřadí prvky pole',
         'Projde všechny prvky pole a na každý zavolá předanou funkci',
-        'Vrátí délku pole'
+        'Vrátí délku pole',
       ],
-      correctIndex: 1
+      correctIndex: 1,
     },
     {
       id: 'q5',
@@ -60,9 +60,9 @@ function QuizSection() {
       options: [
         'Vypíše text do konzole',
         'Zobrazí dialog s OK/Cancel a vrátí true/false podle volby uživatele',
-        'Vždy vyvolá chybu'
+        'Vždy vyvolá chybu',
       ],
-      correctIndex: 1
+      correctIndex: 1,
     },
     {
       id: 'q6',
@@ -70,9 +70,9 @@ function QuizSection() {
       options: [
         'querySelector používá CSS selektory a může vrátit jakýkoli prvek, getElementById hledá přímo podle id',
         'getElementById umí hledat podle třídy',
-        'querySelector vždy vrací pole'
+        'querySelector vždy vrací pole',
       ],
-      correctIndex: 0
+      correctIndex: 0,
     },
     {
       id: 'q7',
@@ -80,10 +80,10 @@ function QuizSection() {
       options: [
         'button.onClick = "alert(\'Ahoj\')"',
         'button.addEventListener("click", () => alert("Ahoj"));',
-        'addEventListener(button, "click", alert("Ahoj"))'
+        'addEventListener(button, "click", alert("Ahoj"))',
       ],
-      correctIndex: 1
-    }
+      correctIndex: 1,
+    },
   ];
 
   const score = questions.reduce((acc, q) => acc + (answers[q.id] === q.correctIndex ? 1 : 0), 0);
@@ -101,14 +101,14 @@ function QuizSection() {
     setSubmitted(false);
   }
 
-  let resultMessage = "";
+  let resultMessage = '';
   if (submitted) {
     if (score <= 2) {
-      resultMessage = "Je čas se na to ještě podívat 🙂";
+      resultMessage = 'Je čas se na to ještě podívat 🙂';
     } else if (score <= 4) {
-      resultMessage = "Dobrá práce, ale ještě je co zlepšovat.";
+      resultMessage = 'Dobrá práce, ale ještě je co zlepšovat.';
     } else {
-      resultMessage = "Skvělé, máte to v malíku! 🎉";
+      resultMessage = 'Skvělé, máte to v malíku! 🎉';
     }
   }
 
@@ -127,12 +127,12 @@ function QuizSection() {
             <div
               key={q.id}
               className={clsx(
-                "rounded-xl border p-4 bg-white/70 dark:bg-zinc-900/60",
+                'rounded-xl border p-4 bg-white/70 dark:bg-zinc-900/60',
                 showFeedback
                   ? isCorrect
-                    ? "border-emerald-400 dark:border-emerald-600"
-                    : "border-rose-400 dark:border-rose-600"
-                  : "border-zinc-200/60 dark:border-zinc-800"
+                    ? 'border-emerald-400 dark:border-emerald-600'
+                    : 'border-rose-400 dark:border-rose-600'
+                  : 'border-zinc-200/60 dark:border-zinc-800',
               )}
             >
               <div className="font-medium mb-3">
@@ -147,12 +147,12 @@ function QuizSection() {
                     <button
                       key={idx}
                       className={clsx(
-                        "w-full text-left px-3 py-2 rounded-lg border text-sm transition-all",
+                        'w-full text-left px-3 py-2 rounded-lg border text-sm transition-all',
                         active
-                          ? "border-sky-500 bg-sky-50 dark:bg-sky-950/30"
-                          : "border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 hover:bg-zinc-50 dark:hover:bg-zinc-800/60",
-                        correct ? "ring-2 ring-emerald-400" : "",
-                        wrong ? "ring-2 ring-rose-400" : ""
+                          ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/30'
+                          : 'border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 hover:bg-zinc-50 dark:hover:bg-zinc-800/60',
+                        correct ? 'ring-2 ring-emerald-400' : '',
+                        wrong ? 'ring-2 ring-rose-400' : '',
                       )}
                       onClick={() => selectAnswer(q.id, idx)}
                       disabled={submitted}
@@ -201,16 +201,16 @@ function ChallengeReveal({ children }) {
 
   const handleClick = () => {
     const now = Date.now();
-    const recentClicks = [...clicks, now].filter(time => now - time < TIME_WINDOW);
+    const recentClicks = [...clicks, now].filter((time) => now - time < TIME_WINDOW);
     setClicks(recentClicks);
-    
+
     if (recentClicks.length >= REQUIRED_CLICKS) {
       setRevealed(true);
     }
   };
 
   const progress = Math.min((clicks.length / REQUIRED_CLICKS) * 100, 100);
-  const validClicks = clicks.filter(time => Date.now() - time < TIME_WINDOW).length;
+  const validClicks = clicks.length;
 
   if (revealed) {
     return <div>{children}</div>;
@@ -243,7 +243,7 @@ function ChallengeReveal({ children }) {
           style={{ width: `${progress}%` }}
         />
       </div>
-      
+
       {validClicks > 0 && validClicks < REQUIRED_CLICKS && (
         <p className="text-xs text-zinc-500 mt-2">
           Ještě {REQUIRED_CLICKS - validClicks} kliknutí... ⏱️ RYCHLE!
@@ -256,32 +256,34 @@ function ChallengeReveal({ children }) {
 function LessonSlideContent({ slide, password, setPassword, isWeakPassword }) {
   return (
     <SharedSlideCard slide={slide} idPrefix="lesson-7">
-      {slide.id === "title" && (
+      {slide.id === 'title' && (
         <div className="mt-6 text-zinc-600 dark:text-zinc-400">
           <div>Autor: Bc. Egor Ulianov</div>
           <div>Datum: 5. 11. 2025</div>
         </div>
       )}
-      
-      {slide.id === "quiz" && <QuizSection />}
-      
-      {slide.id === "intro" && <IntroSlide />}
-      
-      {slide.id === "oop-theory" && <OopTheorySlide />}
-      
-      {slide.id === "creating-objects" && <CreatingObjectsSlide />}
-      
-      {slide.id === "methods-private" && <MethodsPrivateSlide />}
-      
-      {slide.id === "ajax-theory" && <AjaxTheorySlide />}
-      
-      {slide.id === "ajax-practice" && <AjaxPracticeSlide />}
-      
-      {slide.id === "task1" && <Task1Slide />}
-      
-      {slide.id === "task2" && <Task2Slide password={password} setPassword={setPassword} isWeakPassword={isWeakPassword} />}
-      
-      {slide.id === "summary" && <SummarySlide />}
+
+      {slide.id === 'quiz' && <QuizSection />}
+
+      {slide.id === 'intro' && <IntroSlide />}
+
+      {slide.id === 'oop-theory' && <OopTheorySlide />}
+
+      {slide.id === 'creating-objects' && <CreatingObjectsSlide />}
+
+      {slide.id === 'methods-private' && <MethodsPrivateSlide />}
+
+      {slide.id === 'ajax-theory' && <AjaxTheorySlide />}
+
+      {slide.id === 'ajax-practice' && <AjaxPracticeSlide />}
+
+      {slide.id === 'task1' && <Task1Slide />}
+
+      {slide.id === 'task2' && (
+        <Task2Slide password={password} setPassword={setPassword} isWeakPassword={isWeakPassword} />
+      )}
+
+      {slide.id === 'summary' && <SummarySlide />}
     </SharedSlideCard>
   );
 }
@@ -291,9 +293,21 @@ function IntroSlide() {
     <div>
       <h3 className="text-2xl font-bold mb-4">Jak JS zabil Lenina?</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-        <img src={lenin1.src} alt="Lenin meme 1" className="rounded-lg border border-zinc-200 dark:border-zinc-800" />
-        <img src={lenin2.src} alt="Lenin meme 2" className="rounded-lg border border-zinc-200 dark:border-zinc-800" />
-        <img src={lenin3.src} alt="Lenin meme 3" className="rounded-lg border border-zinc-200 dark:border-zinc-800" />
+        <img
+          src={lenin1.src}
+          alt="Lenin meme 1"
+          className="rounded-lg border border-zinc-200 dark:border-zinc-800"
+        />
+        <img
+          src={lenin2.src}
+          alt="Lenin meme 2"
+          className="rounded-lg border border-zinc-200 dark:border-zinc-800"
+        />
+        <img
+          src={lenin3.src}
+          alt="Lenin meme 3"
+          className="rounded-lg border border-zinc-200 dark:border-zinc-800"
+        />
       </div>
       <ul className="list-disc pl-6 space-y-2 mb-6 text-lg">
         <li>JavaScript je vlastněn společností Oracle (kapitalisté)</li>
@@ -309,8 +323,8 @@ function IntroSlide() {
       </div>
       <p className="mt-6 text-zinc-700 dark:text-zinc-300 leading-relaxed text-lg">
         <strong>Třídy</strong> nám pomáhají strukturovat data a logiku do přehledných celků.
-        <strong> AJAX</strong> umožňuje načítat data ze serveru bez reloadu celé stránky,
-        což je základ moderních webových aplikací.
+        <strong> AJAX</strong> umožňuje načítat data ze serveru bez reloadu celé stránky, což je
+        základ moderních webových aplikací.
       </p>
     </div>
   );
@@ -324,22 +338,22 @@ function OopTheorySlide() {
         <div className="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 p-4">
           <h4 className="font-semibold mb-1">Zapouzdření (Encapsulation)</h4>
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            Data a metody jsou pohromadě v jednom objektu. Skrýváme implementační detaily
-            a vystavujeme jen potřebné rozhraní.
+            Data a metody jsou pohromadě v jednom objektu. Skrýváme implementační detaily a
+            vystavujeme jen potřebné rozhraní.
           </p>
         </div>
         <div className="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 p-4">
           <h4 className="font-semibold mb-1">Dědičnost (Inheritance)</h4>
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            Možnost přebírat vlastnosti a metody z nadřazené třídy.
-            Redukuje duplicitu kódu a vytváří hierarchie tříd.
+            Možnost přebírat vlastnosti a metody z nadřazené třídy. Redukuje duplicitu kódu a
+            vytváří hierarchie tříd.
           </p>
         </div>
         <div className="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 p-4">
           <h4 className="font-semibold mb-1">Polymorfismus</h4>
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            Různé implementace stejného rozhraní. Objekty různých tříd mohou
-            reagovat na stejné zprávy různým způsobem.
+            Různé implementace stejného rozhraní. Objekty různých tříd mohou reagovat na stejné
+            zprávy různým způsobem.
           </p>
         </div>
       </div>
@@ -349,15 +363,23 @@ function OopTheorySlide() {
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-zinc-100 dark:bg-zinc-800">
-              <th className="border border-zinc-300 dark:border-zinc-700 p-2 text-left">Vlastnost</th>
-              <th className="border border-zinc-300 dark:border-zinc-700 p-2 text-left">Class-based</th>
-              <th className="border border-zinc-300 dark:border-zinc-700 p-2 text-left">Prototype-based</th>
+              <th className="border border-zinc-300 dark:border-zinc-700 p-2 text-left">
+                Vlastnost
+              </th>
+              <th className="border border-zinc-300 dark:border-zinc-700 p-2 text-left">
+                Class-based
+              </th>
+              <th className="border border-zinc-300 dark:border-zinc-700 p-2 text-left">
+                Prototype-based
+              </th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td className="border border-zinc-300 dark:border-zinc-700 p-2">Vytváření objektů</td>
-              <td className="border border-zinc-300 dark:border-zinc-700 p-2">Z tříd (blueprints)</td>
+              <td className="border border-zinc-300 dark:border-zinc-700 p-2">
+                Z tříd (blueprints)
+              </td>
               <td className="border border-zinc-300 dark:border-zinc-700 p-2">Z prototypů</td>
             </tr>
             <tr className="bg-zinc-50 dark:bg-zinc-900/40">
@@ -373,43 +395,54 @@ function OopTheorySlide() {
         <h4 className="font-semibold mb-3 text-lg">🔗 Jak fungují prototypy v JavaScriptu?</h4>
         <div className="space-y-3 text-sm text-zinc-700 dark:text-zinc-300">
           <p>
-            <strong>Každý objekt v JS má interní odkaz na svůj prototyp</strong> – jiný objekt, 
-            ze kterého "dědí" vlastnosti a metody. Tento odkaz se ukládá do vlastnosti <Code>[[Prototype]]</Code> 
+            <strong>Každý objekt v JS má interní odkaz na svůj prototyp</strong> – jiný objekt, ze
+            kterého &quot;dědí&quot; vlastnosti a metody. Tento odkaz se ukládá do vlastnosti{' '}
+            <Code>[[Prototype]]</Code>
             (přístupná přes <Code>__proto__</Code> nebo <Code>Object.getPrototypeOf()</Code>).
           </p>
           <p>
-            <strong>Prototype chain (řetězec prototypů):</strong> Když přistoupíte k vlastnosti objektu, 
-            kterou objekt nemá, JavaScript se podívá do jeho prototypu, pak do prototypu prototypu, atd., 
-            dokud nenajde vlastnost nebo nenarazí na konec řetězce (<Code>null</Code>).
+            <strong>Prototype chain (řetězec prototypů):</strong> Když přistoupíte k vlastnosti
+            objektu, kterou objekt nemá, JavaScript se podívá do jeho prototypu, pak do prototypu
+            prototypu, atd., dokud nenajde vlastnost nebo nenarazí na konec řetězce (
+            <Code>null</Code>).
           </p>
           <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-3 font-mono text-xs">
-            <div>const animal = {'{'} eats: true {'}'};</div>
-            <div>const rabbit = {'{'} jumps: true {'}'};</div>
+            <div>
+              const animal = {'{'} eats: true {'}'};
+            </div>
+            <div>
+              const rabbit = {'{'} jumps: true {'}'};
+            </div>
             <div>rabbit.__proto__ = animal;</div>
             <div className="mt-2 text-emerald-600 dark:text-emerald-400">
-              // rabbit.eats → true (z prototypu)
+              {'//'} rabbit.eats → true (z prototypu)
             </div>
             <div className="text-emerald-600 dark:text-emerald-400">
-              // rabbit.jumps → true (vlastní vlastnost)
+              {'//'} rabbit.jumps → true (vlastní vlastnost)
             </div>
           </div>
           <p>
-            <strong>Konstruktorové funkce a .prototype:</strong> Když vytvoříte objekt pomocí <Code>new</Code>, 
-            nový objekt získá jako prototyp vlastnost <Code>prototype</Code> konstruktorové funkce.
+            <strong>Konstruktorové funkce a .prototype:</strong> Když vytvoříte objekt pomocí{' '}
+            <Code>new</Code>, nový objekt získá jako prototyp vlastnost <Code>prototype</Code>{' '}
+            konstruktorové funkce.
           </p>
           <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-3 font-mono text-xs">
-            <div>function User(name) {'{'} this.name = name; {'}'}</div>
+            <div>
+              function User(name) {'{'} this.name = name; {'}'}
+            </div>
             <div>User.prototype.greet = function() {'{'}</div>
-            <div className="pl-4">return `Hi, ${'{'}this.name{'}'}!`;</div>
+            <div className="pl-4">
+              return `Hi, ${'{'}this.name{'}'}!`;
+            </div>
             <div>{'}'};</div>
-            <div className="mt-2">const user = new User("Alice");</div>
+            <div className="mt-2">const user = new User(&quot;Alice&quot;);</div>
             <div className="text-emerald-600 dark:text-emerald-400">
-              // user.__proto__ === User.prototype
+              {'//'} user.__proto__ === User.prototype
             </div>
           </div>
           <p>
-            <strong>ES6 class je syntaktický cukr:</strong> Moderní <Code>class</Code> syntaxe 
-            pod kapotou stále vytváří konstruktorovou funkci a nastavuje prototypy stejným způsobem!
+            <strong>ES6 class je syntaktický cukr:</strong> Moderní <Code>class</Code> syntaxe pod
+            kapotou stále vytváří konstruktorovou funkci a nastavuje prototypy stejným způsobem!
           </p>
         </div>
       </div>
@@ -417,9 +450,9 @@ function OopTheorySlide() {
       <InfoBox type="tip">
         <h4 className="font-semibold mb-2">💡 Did you know?</h4>
         <p>
-          Před ES6 (2015) neexistovalo klíčové slovo <Code>class</Code>. Všechno se řešilo 
-          pomocí konstruktorových funkcí a manuálního nastavování prototypů. ES6 třídy jsou 
-          jen čitelnější způsob zápisu, ale mechanismus zůstává stejný – prototypy!
+          Před ES6 (2015) neexistovalo klíčové slovo <Code>class</Code>. Všechno se řešilo pomocí
+          konstruktorových funkcí a manuálního nastavování prototypů. ES6 třídy jsou jen čitelnější
+          způsob zápisu, ale mechanismus zůstává stejný – prototypy!
         </p>
       </InfoBox>
     </div>
@@ -430,33 +463,33 @@ function CreatingObjectsSlide() {
   const [step, setStep] = useState(0);
   const steps = [
     {
-      title: "1. new Object() + přiřazení",
+      title: '1. new Object() + přiřazení',
       code: `const user1 = new Object();
 user1.name = "John";
 user1.surname = "Smith";
-console.log(user1);`
+console.log(user1);`,
     },
     {
-      title: "2. Konstruktorová funkce",
+      title: '2. Konstruktorová funkce',
       code: `function User(name, surname) {
   this.name = name;
   this.surname = surname;
 }
 
-const user2 = new User("John", "Smith");`
+const user2 = new User("John", "Smith");`,
     },
     {
-      title: "3. Objektový literál",
+      title: '3. Objektový literál',
       code: `const user3 = {
   name: "John",
   surname: "Smith",
   getFullName() {
     return \`\${this.name} \${this.surname}\`;
   }
-};`
+};`,
     },
     {
-      title: "4. ES6 třídy (doporučeno)",
+      title: '4. ES6 třídy (doporučeno)',
       code: `class User {
   constructor(name, surname) {
     this.name = name;
@@ -471,8 +504,8 @@ class AccessUser extends User {
     super(name, surname);
     this.#role = role;
   }
-}`
-    }
+}`,
+    },
   ];
 
   return (
@@ -480,7 +513,7 @@ class AccessUser extends User {
       <p className="mb-4 text-zinc-700 dark:text-zinc-300">
         JavaScript nabízí několik způsobů vytváření objektů:
       </p>
-      
+
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm px-2 py-1 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
@@ -506,8 +539,10 @@ class AccessUser extends User {
             <button
               key={i}
               className={clsx(
-                "h-2.5 w-2.5 rounded-full border",
-                i === step ? "bg-sky-500 border-sky-500" : "bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700"
+                'h-2.5 w-2.5 rounded-full border',
+                i === step
+                  ? 'bg-sky-500 border-sky-500'
+                  : 'bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700',
               )}
               onClick={() => setStep(i)}
             />
@@ -538,13 +573,19 @@ function MethodsPrivateSlide() {
     <div>
       <h3 className="text-xl font-semibold mb-4">Instanční vs. statické metody</h3>
       <ul className="list-disc pl-6 space-y-2 text-sm text-zinc-700 dark:text-zinc-300 mb-6">
-        <li><strong>Instanční metody</strong> – patří objektu, přístup k <Code>this</Code></li>
-        <li><strong>Statické metody</strong> – patří třídě, volají se na třídě</li>
-        <li><strong>Soukromá pole (#)</strong> – přístupná jen uvnitř třídy</li>
+        <li>
+          <strong>Instanční metody</strong> – patří objektu, přístup k <Code>this</Code>
+        </li>
+        <li>
+          <strong>Statické metody</strong> – patří třídě, volají se na třídě
+        </li>
+        <li>
+          <strong>Soukromá pole (#)</strong> – přístupná jen uvnitř třídy
+        </li>
       </ul>
 
       <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-<code className="language-js">{`class AccessUser extends User {
+        <code className="language-js">{`class AccessUser extends User {
   #role; // Soukromé pole
   
   constructor(name, surname, role) {
@@ -575,13 +616,13 @@ function AjaxTheorySlide() {
     <div>
       <h3 className="text-xl font-semibold mb-4">Co je AJAX?</h3>
       <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed mb-2 text-lg">
-        <strong>AJAX</strong> = <strong>A</strong>synchronous <strong>J</strong>avaScript{" "}
+        <strong>AJAX</strong> = <strong>A</strong>synchronous <strong>J</strong>avaScript{' '}
         <strong>a</strong>nd <strong>X</strong>ML
       </p>
       <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed mb-6">
-        Technika pro <strong>asynchronní komunikaci se serverem</strong> bez reloadu celé stránky. 
-        Umožňuje dynamicky aktualizovat části stránky na základě dat ze serveru. 
-        Dnes se místo XML používá většinou <strong>JSON</strong>.
+        Technika pro <strong>asynchronní komunikaci se serverem</strong> bez reloadu celé stránky.
+        Umožňuje dynamicky aktualizovat části stránky na základě dat ze serveru. Dnes se místo XML
+        používá většinou <strong>JSON</strong>.
       </p>
 
       <div className="mb-6 p-4 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
@@ -595,8 +636,10 @@ function AjaxTheorySlide() {
               <li>Uživatel klikne na odkaz/tlačítko</li>
               <li>Prohlížeč pošle požadavek na server</li>
               <li>Server zpracuje a vrátí celou HTML stránku</li>
-              <li><strong>Celá stránka se znovu načte</strong></li>
-              <li>Uživatel vidí "bliknutí" a ztrátu stavu</li>
+              <li>
+                <strong>Celá stránka se znovu načte</strong>
+              </li>
+              <li>Uživatel vidí &quot;bliknutí&quot; a ztrátu stavu</li>
             </ol>
           </div>
           <div>
@@ -607,7 +650,9 @@ function AjaxTheorySlide() {
               <li>Uživatel provede akci</li>
               <li>JavaScript pošle požadavek na pozadí</li>
               <li>Server vrátí jen data (JSON, XML, text)</li>
-              <li><strong>Aktualizuje se jen část stránky</strong></li>
+              <li>
+                <strong>Aktualizuje se jen část stránky</strong>
+              </li>
               <li>Plynulá interakce bez reloadu</li>
             </ol>
           </div>
@@ -620,15 +665,19 @@ function AjaxTheorySlide() {
           <div>
             <p className="font-semibold mb-1">🔒 Synchronní požadavek:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Kód čeká na odpověď serveru – <strong>blokuje celou stránku</strong></li>
+              <li>
+                Kód čeká na odpověď serveru – <strong>blokuje celou stránku</strong>
+              </li>
               <li>Uživatel nemůže nic dělat, dokud server neodpoví</li>
-              <li>UI "zamrzne" (špatný UX)</li>
+              <li>UI &quot;zamrzne&quot; (špatný UX)</li>
             </ul>
           </div>
           <div>
             <p className="font-semibold mb-1">🚀 Asynchronní požadavek (AJAX):</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Požadavek běží na pozadí – <strong>neblokuje UI</strong></li>
+              <li>
+                Požadavek běží na pozadí – <strong>neblokuje UI</strong>
+              </li>
               <li>Uživatel může dál pracovat se stránkou</li>
               <li>Po obdržení odpovědi se spustí callback funkce</li>
               <li>Moderní přístup: Promises a async/await</li>
@@ -636,13 +685,21 @@ function AjaxTheorySlide() {
           </div>
         </div>
         <div className="mt-3 rounded-lg bg-white/60 dark:bg-zinc-900/60 p-3 font-mono text-xs">
-          <div className="text-rose-600 dark:text-rose-400">// ❌ Synchronní (nedoporučeno)</div>
+          <div className="text-rose-600 dark:text-rose-400">
+            {'//'} ❌ Synchronní (nedoporučeno)
+          </div>
           <div>const xhr = new XMLHttpRequest();</div>
-          <div>xhr.open('GET', url, <span className="text-rose-600 dark:text-rose-400 font-bold">false</span>); // false = sync</div>
-          <div>xhr.send(); // Blokuje!</div>
+          <div>
+            xhr.open(&apos;GET&apos;, url,{' '}
+            <span className="text-rose-600 dark:text-rose-400 font-bold">false</span>); {'//'} false
+            = sync
+          </div>
+          <div>xhr.send(); {'//'} Blokuje!</div>
           <div className="mt-2"></div>
-          <div className="text-emerald-600 dark:text-emerald-400">// ✅ Asynchronní (doporučeno)</div>
-          <div>fetch(url) // Neblokuje</div>
+          <div className="text-emerald-600 dark:text-emerald-400">
+            {'//'} ✅ Asynchronní (doporučeno)
+          </div>
+          <div>fetch(url) {'//'} Neblokuje</div>
           <div className="pl-4">.then(res =&gt; res.json())</div>
           <div className="pl-4">.then(data =&gt; console.log(data));</div>
         </div>
@@ -652,19 +709,35 @@ function AjaxTheorySlide() {
         <div className="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 p-4">
           <h4 className="font-semibold mb-2">✅ Výhody AJAXu</h4>
           <ul className="list-disc pl-5 space-y-1 text-sm">
-            <li><strong>Rychlejší odezva</strong> – načítají se jen data, ne celá stránka</li>
-            <li><strong>Lepší UX</strong> – plynulá interakce bez "blikání"</li>
-            <li><strong>Menší přenos dat</strong> – šetří bandwidth</li>
-            <li><strong>Desktopový zážitek</strong> – aplikace se chová jako nativní software</li>
+            <li>
+              <strong>Rychlejší odezva</strong> – načítají se jen data, ne celá stránka
+            </li>
+            <li>
+              <strong>Lepší UX</strong> – plynulá interakce bez &quot;blikání&quot;
+            </li>
+            <li>
+              <strong>Menší přenos dat</strong> – šetří bandwidth
+            </li>
+            <li>
+              <strong>Desktopový zážitek</strong> – aplikace se chová jako nativní software
+            </li>
           </ul>
         </div>
         <div className="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 p-4">
           <h4 className="font-semibold mb-2">⚠️ Nevýhody/Výzvy</h4>
           <ul className="list-disc pl-5 space-y-1 text-sm">
-            <li><strong>SEO</strong> – obsah načítaný AJAXem je hůře indexovatelný</li>
-            <li><strong>Historie prohlížeče</strong> – tlačítko zpět nemusí fungovat správně</li>
-            <li><strong>Složitější debugging</strong> – asynchronní kód je náročnější</li>
-            <li><strong>Závislost na JS</strong> – bez JS aplikace nefunguje</li>
+            <li>
+              <strong>SEO</strong> – obsah načítaný AJAXem je hůře indexovatelný
+            </li>
+            <li>
+              <strong>Historie prohlížeče</strong> – tlačítko zpět nemusí fungovat správně
+            </li>
+            <li>
+              <strong>Složitější debugging</strong> – asynchronní kód je náročnější
+            </li>
+            <li>
+              <strong>Závislost na JS</strong> – bez JS aplikace nefunguje
+            </li>
           </ul>
         </div>
       </div>
@@ -673,27 +746,32 @@ function AjaxTheorySlide() {
         <h4 className="font-semibold mb-2">📚 Historie AJAXu</h4>
         <div className="space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
           <p>
-            <strong>1999:</strong> Microsoft představil XMLHttpRequest v IE5 (původně pro Outlook Web Access)
+            <strong>1999:</strong> Microsoft představil XMLHttpRequest v IE5 (původně pro Outlook
+            Web Access)
           </p>
           <p>
-            <strong>2005:</strong> Jesse James Garrett pojmenoval techniku "AJAX" – rychlý vzestup popularity
+            <strong>2005:</strong> Jesse James Garrett pojmenoval techniku &quot;AJAX&quot; – rychlý
+            vzestup popularity
           </p>
           <p>
             <strong>2006+:</strong> AJAX se stal standardem (Gmail, Google Maps, Facebook)
           </p>
           <p>
-            <strong>2015:</strong> Standardizace <Code>fetch()</Code> API – moderní, promise-based přístup
+            <strong>2015:</strong> Standardizace <Code>fetch()</Code> API – moderní, promise-based
+            přístup
           </p>
           <p>
-            <strong>Dnes:</strong> fetch() + async/await je preferovaný způsob. JSON kompletně nahradil XML.
+            <strong>Dnes:</strong> fetch() + async/await je preferovaný způsob. JSON kompletně
+            nahradil XML.
           </p>
         </div>
       </div>
 
       <InfoBox>
         <p className="text-sm">
-          <strong>💡 Fun fact:</strong> Přestože se AJAX jmenuje "...and XML", dnes se XML téměř nepoužívá. 
-          JSON je jednodušší, menší a přirozeně podporovaný JavaScriptem (<Code>JSON.parse()</Code>, <Code>JSON.stringify()</Code>).
+          <strong>💡 Fun fact:</strong> Přestože se AJAX jmenuje &quot;...and XML&quot;, dnes se XML
+          téměř nepoužívá. JSON je jednodušší, menší a přirozeně podporovaný JavaScriptem (
+          <Code>JSON.parse()</Code>, <Code>JSON.stringify()</Code>).
         </p>
       </InfoBox>
     </div>
@@ -704,7 +782,7 @@ function AjaxPracticeSlide() {
   const [mode, setMode] = useState(0);
   const modes = [
     {
-      title: "XMLHttpRequest (starší)",
+      title: 'XMLHttpRequest (starší)',
       code: `function loadDoc() {
   const xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
@@ -714,15 +792,15 @@ function AjaxPracticeSlide() {
   };
   xhttp.open("GET", "https://jsonplaceholder.typicode.com/todos/1", true);
   xhttp.send();
-}`
+}`,
     },
     {
-      title: "fetch() (moderní)",
+      title: 'fetch() (moderní)',
       code: `fetch("https://jsonplaceholder.typicode.com/todos/1")
   .then(response => response.text())
   .then(text => console.log(text))
-  .catch(error => console.error('Error:', error));`
-    }
+  .catch(error => console.error('Error:', error));`,
+    },
   ];
 
   return (
@@ -730,8 +808,8 @@ function AjaxPracticeSlide() {
       <div className="flex gap-2 mb-4">
         <button
           className={clsx(
-            "px-4 py-2 rounded-lg text-sm",
-            mode === 0 ? "bg-sky-600 text-white" : "bg-zinc-100 dark:bg-zinc-800"
+            'px-4 py-2 rounded-lg text-sm',
+            mode === 0 ? 'bg-sky-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800',
           )}
           onClick={() => setMode(0)}
         >
@@ -739,8 +817,8 @@ function AjaxPracticeSlide() {
         </button>
         <button
           className={clsx(
-            "px-4 py-2 rounded-lg text-sm",
-            mode === 1 ? "bg-sky-600 text-white" : "bg-zinc-100 dark:bg-zinc-800"
+            'px-4 py-2 rounded-lg text-sm',
+            mode === 1 ? 'bg-sky-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800',
           )}
           onClick={() => setMode(1)}
         >
@@ -755,8 +833,8 @@ function AjaxPracticeSlide() {
 
       <InfoBox>
         <p className="text-sm">
-          💡 <Code>fetch()</Code> je čitelnější a promise-based. Ukázka používá neutrální veřejný JSON soubor;
-          tajná data ani hesla nikdy nestahujte do prohlížeče.
+          💡 <Code>fetch()</Code> je čitelnější a promise-based. Ukázka používá neutrální veřejný
+          JSON soubor; tajná data ani hesla nikdy nestahujte do prohlížeče.
         </p>
       </InfoBox>
     </div>
@@ -777,7 +855,7 @@ function Task1Slide() {
       </ul>
 
       <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-6">
-<code className="language-js">{`class FacultyProgram {
+        <code className="language-js">{`class FacultyProgram {
   constructor(faculty, program) {
     this.faculty = faculty;
     this.program = program;
@@ -805,11 +883,11 @@ console.log(student);`}</code>
           <h4 className="font-semibold text-lg mb-4 text-emerald-900 dark:text-emerald-100">
             ✅ Řešení odhaleno
           </h4>
-          
+
           <div className="mb-4">
             <h5 className="font-semibold mb-2">HTML (index.html)</h5>
             <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-<code className="language-html">{`<!DOCTYPE html>
+              <code className="language-html">{`<!DOCTYPE html>
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
@@ -860,7 +938,7 @@ console.log(student);`}</code>
           <div>
             <h5 className="font-semibold mb-2">JavaScript (script.js)</h5>
             <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-<code className="language-js">{`// Definice tříd
+              <code className="language-js">{`// Definice tříd
 class FacultyProgram {
   constructor(faculty, program) {
     this.faculty = faculty;
@@ -944,11 +1022,12 @@ function Task2Slide({ password, setPassword, isWeakPassword }) {
     <div>
       <h3 className="text-lg font-semibold mb-3">Zadání</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-3">
-        Vytvořte pouze klientský náhled slabého hesla; skutečnou politiku hesel musí vynucovat server.
+        Vytvořte pouze klientský náhled slabého hesla; skutečnou politiku hesel musí vynucovat
+        server.
       </p>
 
       <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-4">
-<code className="language-js">{`const demoWeakPasswords = new Set(["password", "123456", "qwerty"]);
+        <code className="language-js">{`const demoWeakPasswords = new Set(["password", "123456", "qwerty"]);
 passwordInput.addEventListener('input', () => {
   showWarning(demoWeakPasswords.has(passwordInput.value));
 });`}</code>
@@ -980,11 +1059,11 @@ passwordInput.addEventListener('input', () => {
           <h4 className="font-semibold text-lg mb-4 text-emerald-900 dark:text-emerald-100">
             ✅ Řešení odhaleno
           </h4>
-          
+
           <div className="mb-4">
             <h5 className="font-semibold mb-2">HTML (index.html)</h5>
             <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-<code className="language-html">{`<!DOCTYPE html>
+              <code className="language-html">{`<!DOCTYPE html>
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
@@ -1025,7 +1104,7 @@ passwordInput.addEventListener('input', () => {
           <div>
             <h5 className="font-semibold mb-2">JavaScript (script.js)</h5>
             <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-<code className="language-js">{`// Pouze UX nápověda; nikdy nenahrazuje serverovou validaci.
+              <code className="language-js">{`// Pouze UX nápověda; nikdy nenahrazuje serverovou validaci.
 const demoWeakPasswords = new Set(['password', '123456', 'qwerty']);
 
 // Čekání na načtení DOMu
@@ -1094,11 +1173,21 @@ function SummarySlide() {
   return (
     <div>
       <ul className="list-disc pl-6 space-y-3 text-zinc-700 dark:text-zinc-300">
-        <li><strong>OOP v JS:</strong> Prototypy vs. Class syntaxe</li>
-        <li><strong>Vytváření objektů:</strong> Object, funkce, literály, třídy</li>
-        <li><strong>Soukromá pole:</strong> Symbol # pro zapouzdření</li>
-        <li><strong>AJAX:</strong> XMLHttpRequest vs fetch()</li>
-        <li><strong>Praxe:</strong> Strukturování dat + asynchronní komunikace</li>
+        <li>
+          <strong>OOP v JS:</strong> Prototypy vs. Class syntaxe
+        </li>
+        <li>
+          <strong>Vytváření objektů:</strong> Object, funkce, literály, třídy
+        </li>
+        <li>
+          <strong>Soukromá pole:</strong> Symbol # pro zapouzdření
+        </li>
+        <li>
+          <strong>AJAX:</strong> XMLHttpRequest vs fetch()
+        </li>
+        <li>
+          <strong>Praxe:</strong> Strukturování dat + asynchronní komunikace
+        </li>
       </ul>
       <p className="mt-8 text-2xl font-bold text-center text-sky-600 dark:text-sky-400">
         Děkuji za pozornost!
@@ -1108,25 +1197,28 @@ function SummarySlide() {
 }
 
 export default function AppJsLesson7() {
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState('');
 
-  const slides = useMemo(() => [
-    { id: "title", title: "Základy webových aplikací – 7. cvičení", subtitle: "Třídy a AJAX" },
-    { id: "quiz", title: "Kvíz z minulého cvičení" },
-    { id: "intro", title: "Úvod" },
-    { id: "oop-theory", title: "Teorie OOP" },
-    { id: "creating-objects", title: "Vytváření objektů" },
-    { id: "methods-private", title: "Metody a soukromá pole" },
-    { id: "ajax-theory", title: "Teorie AJAXu" },
-    { id: "ajax-practice", title: "AJAX v praxi" },
-    { id: "task1", title: "Úkol 1: Třídy" },
-    { id: "task2", title: "Úkol 2: AJAX" },
-    { id: "summary", title: "Shrnutí" },
-  ], []);
+  const slides = useMemo(
+    () => [
+      { id: 'title', title: 'Základy webových aplikací – 7. cvičení', subtitle: 'Třídy a AJAX' },
+      { id: 'quiz', title: 'Kvíz z minulého cvičení' },
+      { id: 'intro', title: 'Úvod' },
+      { id: 'oop-theory', title: 'Teorie OOP' },
+      { id: 'creating-objects', title: 'Vytváření objektů' },
+      { id: 'methods-private', title: 'Metody a soukromá pole' },
+      { id: 'ajax-theory', title: 'Teorie AJAXu' },
+      { id: 'ajax-practice', title: 'AJAX v praxi' },
+      { id: 'task1', title: 'Úkol 1: Třídy' },
+      { id: 'task2', title: 'Úkol 2: AJAX' },
+      { id: 'summary', title: 'Shrnutí' },
+    ],
+    [],
+  );
 
   const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
   const currentSlide = slides.find((s) => s.id === activeSlide) || slides[0];
-  const demoWeakPasswords = ["password", "123456", "qwerty"];
+  const demoWeakPasswords = ['password', '123456', 'qwerty'];
   const isWeakPassword = password.length > 0 && demoWeakPasswords.includes(password);
 
   return (
@@ -1139,12 +1231,12 @@ export default function AppJsLesson7() {
       subtitle="Interaktivní prezentace s příklady kódu a úkoly"
       footerText="© 2025 ZWA – Cvičení 7: Třídy a AJAX"
     >
-        <LessonSlideContent
-          slide={currentSlide}
-          password={password}
-          setPassword={setPassword}
-          isWeakPassword={isWeakPassword}
-        />
+      <LessonSlideContent
+        slide={currentSlide}
+        password={password}
+        setPassword={setPassword}
+        isWeakPassword={isWeakPassword}
+      />
     </LessonShell>
   );
 }

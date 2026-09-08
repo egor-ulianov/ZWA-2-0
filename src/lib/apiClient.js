@@ -13,7 +13,10 @@ export function isAbortError(error) {
 
 export function createAttendanceSnapshotOptions({ date, map, revision }) {
   if (!Number.isSafeInteger(revision) || revision < 0) {
-    throw new ApiError('Attendance revision required', { status: 428, code: 'attendance_revision_required' });
+    throw new ApiError('Attendance revision required', {
+      status: 428,
+      code: 'attendance_revision_required',
+    });
   }
   return {
     method: 'POST',
@@ -84,8 +87,12 @@ export async function request(path, { onUnauthorized, ...options } = {}) {
   }
   const payload = await responsePayload(response);
   if (!response.ok) {
-    const message = typeof payload === 'object' && payload?.error ? payload.error : 'Request failed';
-    const error = new ApiError(message, { status: response.status, code: typeof payload === 'object' ? payload?.code : undefined });
+    const message =
+      typeof payload === 'object' && payload?.error ? payload.error : 'Request failed';
+    const error = new ApiError(message, {
+      status: response.status,
+      code: typeof payload === 'object' ? payload?.code : undefined,
+    });
     if (response.status === 401) onUnauthorized?.(error);
     throw error;
   }
@@ -106,15 +113,18 @@ export function createSerializedRequestQueue(write) {
     } catch (error) {
       result = Promise.reject(error);
     }
-    Promise.resolve(result).then((value) => {
-      active = false;
-      pump();
-      job.resolve(value);
-    }, (error) => {
-      active = false;
-      pump();
-      job.reject(error);
-    });
+    Promise.resolve(result).then(
+      (value) => {
+        active = false;
+        pump();
+        job.resolve(value);
+      },
+      (error) => {
+        active = false;
+        pump();
+        job.reject(error);
+      },
+    );
   }
 
   return {
@@ -128,7 +138,9 @@ export function createSerializedRequestQueue(write) {
       const queued = pending.splice(0);
       queued.forEach((job) => job.reject(error));
     },
-    get pendingCount() { return pending.length + (active ? 1 : 0); },
+    get pendingCount() {
+      return pending.length + (active ? 1 : 0);
+    },
   };
 }
 

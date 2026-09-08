@@ -1,13 +1,13 @@
-import React, { useMemo, useRef, useState, useEffect } from "react";
-import portraitImg from "./src/interactive-zwa-1/assets/portrait.png";
-import discordLogo from "./src/interactive-zwa-1/assets/discord-logo.png";
-import telegramQr from "./src/interactive-zwa-1/assets/telegram-qr.png";
-import semestralMeme from "./src/interactive-zwa-1/assets/semestral-meme.png";
-import LessonShell, { useSlideNavigation } from "./src/components/lesson/LessonShell.jsx";
-import SharedSlideCard from "./src/components/lesson/SlideCard.jsx";
-import Code from "./src/components/lesson/Code.jsx";
-import { getLessonByNumber } from "./src/config/lessons.js";
-import { clsx } from "./src/components/lesson/classNames.js";
+import React, { useMemo, useRef, useState, useEffect } from 'react';
+import portraitImg from './src/interactive-zwa-1/assets/portrait.png';
+import discordLogo from './src/interactive-zwa-1/assets/discord-logo.png';
+import telegramQr from './src/interactive-zwa-1/assets/telegram-qr.png';
+import semestralMeme from './src/interactive-zwa-1/assets/semestral-meme.png';
+import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
+import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
+import Code from './src/components/lesson/Code.jsx';
+import { getLessonByNumber } from './src/config/lessons.js';
+import { clsx } from './src/components/lesson/classNames.js';
 
 // Interactive ZWA-1 presentation with a built-in simulated Linux CLI (no external libs)
 // Tailwind is available in canvas preview. All code is self-contained.
@@ -28,7 +28,7 @@ class VFS {
     return this.files.get(path);
   }
   ls() {
-    return [...this.files.keys()].join("\n");
+    return [...this.files.keys()].join('\n');
   }
 }
 
@@ -36,47 +36,47 @@ class VFS {
 const NET = {
   interfaces: [
     {
-      name: "eth0",
-      ipv4: "192.168.1.57",
-      netmask: "255.255.255.0",
-      broadcast: "192.168.1.255",
-      mac: "02:42:ac:11:00:02",
+      name: 'eth0',
+      ipv4: '192.168.1.57',
+      netmask: '255.255.255.0',
+      broadcast: '192.168.1.255',
+      mac: '02:42:ac:11:00:02',
     },
   ],
   dns: {
-    "cvut.cz": {
-      A: ["147.32.0.1"],
-      NS: ["ns.cvut.cz", "albert.ics.cvut.cz"],
-      TXT: ["v=spf1 include:_spf.cvut.cz ~all"],
-      CAA: ["0 issue \"letsencrypt.org\""],
+    'cvut.cz': {
+      A: ['147.32.0.1'],
+      NS: ['ns.cvut.cz', 'albert.ics.cvut.cz'],
+      TXT: ['v=spf1 include:_spf.cvut.cz ~all'],
+      CAA: ['0 issue "letsencrypt.org"'],
     },
-    "fel.cvut.cz": {
-      A: ["147.32.85.229"],
-      NS: ["ns.fel.cvut.cz"],
-      TXT: ["v=spf1 include:_spf.fel.cvut.cz ~all"],
+    'fel.cvut.cz': {
+      A: ['147.32.85.229'],
+      NS: ['ns.fel.cvut.cz'],
+      TXT: ['v=spf1 include:_spf.fel.cvut.cz ~all'],
     },
-    "seznam.cz": {
-      A: ["77.75.79.53"],
-      NS: ["ns1.seznam.cz", "ns2.seznam.cz"],
-      TXT: ["v=spf1 include:_spf.seznam.cz ~all"],
+    'seznam.cz': {
+      A: ['77.75.79.53'],
+      NS: ['ns1.seznam.cz', 'ns2.seznam.cz'],
+      TXT: ['v=spf1 include:_spf.seznam.cz ~all'],
     },
-    "147.32.85.229": { PTR: ["fel.cvut.cz"] },
+    '147.32.85.229': { PTR: ['fel.cvut.cz'] },
   },
   traceroutes: {
-    "cvut.cz": [
-      { hop: 1, host: "192.168.1.1", rtt: 1.1 },
-      { hop: 2, host: "10.0.0.1", rtt: 3.4 },
-      { hop: 3, host: "147.32.0.1", rtt: 12.7 },
+    'cvut.cz': [
+      { hop: 1, host: '192.168.1.1', rtt: 1.1 },
+      { hop: 2, host: '10.0.0.1', rtt: 3.4 },
+      { hop: 3, host: '147.32.0.1', rtt: 12.7 },
     ],
-    "fel.cvut.cz": [
-      { hop: 1, host: "192.168.1.1", rtt: 1.0 },
-      { hop: 2, host: "10.0.0.1", rtt: 3.2 },
-      { hop: 3, host: "147.32.85.229", rtt: 13.0 },
+    'fel.cvut.cz': [
+      { hop: 1, host: '192.168.1.1', rtt: 1.0 },
+      { hop: 2, host: '10.0.0.1', rtt: 3.2 },
+      { hop: 3, host: '147.32.85.229', rtt: 13.0 },
     ],
-    "seznam.cz": [
-      { hop: 1, host: "192.168.1.1", rtt: 1.2 },
-      { hop: 2, host: "10.0.0.1", rtt: 4.8 },
-      { hop: 3, host: "77.75.79.53", rtt: 21.2 },
+    'seznam.cz': [
+      { hop: 1, host: '192.168.1.1', rtt: 1.2 },
+      { hop: 2, host: '10.0.0.1', rtt: 4.8 },
+      { hop: 3, host: '77.75.79.53', rtt: 21.2 },
     ],
   },
 };
@@ -84,39 +84,42 @@ const NET = {
 // ------------------------------
 // Terminal Emulator (very small)
 // ------------------------------
-function Terminal({ prompt = "student@fel:~$", onCommand, height = 340 }) {
+function Terminal({ prompt = 'student@fel:~$', onCommand, height = 340 }) {
   const [history, setHistory] = useState([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const endRef = useRef(null);
 
   const submit = async () => {
     const cmd = input.trim();
-    setInput("");
+    setInput('');
     const out = await onCommand(cmd);
     setHistory((h) => [...h, { cmd, out }]);
   };
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
 
   const onKeyDown = (e) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       e.preventDefault();
       submit();
     }
   };
 
   return (
-    <div className="bg-black text-gray-100 rounded-2xl p-3 font-mono text-sm shadow-inner" style={{ height }}>
+    <div
+      className="bg-black text-gray-100 rounded-2xl p-3 font-mono text-sm shadow-inner"
+      style={{ height }}
+    >
       <div className="overflow-auto h-full">
         <div>
           {history.map((h, i) => (
             <div key={i} className="mb-2">
-              <div><span className="text-green-400">{prompt}</span> {h.cmd}</div>
-              {h.out && (
-                <pre className="whitespace-pre-wrap text-gray-200 mt-1">{h.out}</pre>
-              )}
+              <div>
+                <span className="text-green-400">{prompt}</span> {h.cmd}
+              </div>
+              {h.out && <pre className="whitespace-pre-wrap text-gray-200 mt-1">{h.out}</pre>}
             </div>
           ))}
           <div className="flex items-center gap-2">
@@ -173,13 +176,13 @@ Tips:
       .map(
         (i) => `\n${i.name}: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         inet ${i.ipv4}  netmask ${i.netmask}  broadcast ${i.broadcast}
-        ether ${i.mac}  txqueuelen 1000  (Ethernet)`
+        ether ${i.mac}  txqueuelen 1000  (Ethernet)`,
       )
-      .join("\n");
+      .join('\n');
   }
 
   function doHost(target) {
-    if (!target) return "usage: host <name|ip>";
+    if (!target) return 'usage: host <name|ip>';
     const rec = NET.dns[target];
     if (!rec) return `Host ${target} not found: 3(NXDOMAIN)`;
     const lines = [];
@@ -188,43 +191,48 @@ Tips:
     if (rec.TXT) rec.TXT.forEach((t) => lines.push(`${target} descriptive text \"${t}\"`));
     if (rec.CAA) rec.CAA.forEach((c) => lines.push(`${target} has CAA record ${c}`));
     if (rec.PTR) rec.PTR.forEach((p) => lines.push(`${target} domain name pointer ${p}`));
-    return lines.join("\n");
+    return lines.join('\n');
   }
 
   function doNslookup(args) {
     // nslookup -type=ns cvut.cz
     const tokens = args.trim().split(/\s+/).filter(Boolean);
-    if (!tokens.length) return "usage: nslookup [-type=TYPE] <name>";
-    let type = "A";
+    if (!tokens.length) return 'usage: nslookup [-type=TYPE] <name>';
+    let type = 'A';
     let name = tokens[tokens.length - 1];
-    const typeFlag = tokens.find((t) => t.startsWith("-type="));
-    if (typeFlag) type = typeFlag.split("=")[1].toUpperCase();
+    const typeFlag = tokens.find((t) => t.startsWith('-type='));
+    if (typeFlag) type = typeFlag.split('=')[1].toUpperCase();
     const rec = NET.dns[name];
     if (!rec) return `** server can't find ${name}: NXDOMAIN`;
     const values = rec[type];
     if (!values) return `** server can't find ${name} for type ${type}`;
-    return values.map((v) => `${type}\t${name}\t${v}`).join("\n");
+    return values.map((v) => `${type}\t${name}\t${v}`).join('\n');
   }
 
   function doPing(host) {
-    if (!host) return "usage: ping <host>";
+    if (!host) return 'usage: ping <host>';
     const ip = NET.dns[host]?.A?.[0] || host;
-    const rtts = [Math.random() * 10 + 10, Math.random() * 10 + 10, Math.random() * 10 + 10].map((n) => n.toFixed(2));
+    const rtts = [Math.random() * 10 + 10, Math.random() * 10 + 10, Math.random() * 10 + 10].map(
+      (n) => n.toFixed(2),
+    );
     return rtts
       .map((r, i) => `64 bytes from ${ip}: icmp_seq=${i + 1} ttl=56 time=${r} ms`)
-      .concat(`--- ${host} ping statistics ---`, `3 packets transmitted, 3 received, 0% packet loss`)
-      .join("\n");
+      .concat(
+        `--- ${host} ping statistics ---`,
+        `3 packets transmitted, 3 received, 0% packet loss`,
+      )
+      .join('\n');
   }
 
   function doTraceroute(host) {
-    if (!host) return "usage: traceroute <host>";
+    if (!host) return 'usage: traceroute <host>';
     const hops = NET.traceroutes[host];
     if (!hops) return `traceroute: unknown host ${host}`;
-    return hops.map((h) => `${h.hop}\t${h.host}\t${h.rtt.toFixed(1)} ms`).join("\n");
+    return hops.map((h) => `${h.hop}\t${h.host}\t${h.rtt.toFixed(1)} ms`).join('\n');
   }
 
   function doTelnet(host, port) {
-    if (!host || !port) return "usage: telnet <host> <port>";
+    if (!host || !port) return 'usage: telnet <host> <port>';
     // Demo: we immediately "send" GET / and show a simple HTTP response
     const status = `Trying ${NET.dns[host]?.A?.[0] || host}...
 Connected to ${host}.
@@ -239,11 +247,11 @@ Content-Length: 32\n\n<html><body>Hello ZWA!</body></html>`;
   }
 
   function doGrep(pattern, file) {
-    if (!pattern || !file) return "usage: grep <pattern> <file>";
+    if (!pattern || !file) return 'usage: grep <pattern> <file>';
     try {
       const text = vfs.read(file);
       const lines = text.split(/\r?\n/).filter((l) => l.includes(pattern));
-      return lines.join("\n");
+      return lines.join('\n');
     } catch (e) {
       return String(e.message);
     }
@@ -262,49 +270,49 @@ Content-Length: 32\n\n<html><body>Hello ZWA!</body></html>`;
   }
 
   async function run(raw) {
-    if (!raw) return "";
+    if (!raw) return '';
 
     // handle clear as a special signal (Terminal wipes history)
-    if (raw === "clear") return { __clear: true };
+    if (raw === 'clear') return { __clear: true };
 
     const { base, toFile } = parse(raw);
     const [cmd, ...args] = base.split(/\s+/);
 
-    let output = "";
+    let output = '';
     switch (cmd) {
-      case "help":
+      case 'help':
         output = help;
         break;
-      case "host":
+      case 'host':
         output = doHost(args[0]);
         break;
-      case "nslookup":
-        output = doNslookup(args.join(" "));
+      case 'nslookup':
+        output = doNslookup(args.join(' '));
         break;
-      case "ifconfig":
-      case "ipconfig":
+      case 'ifconfig':
+      case 'ipconfig':
         output = doIfconfig();
         break;
-      case "ping":
+      case 'ping':
         output = doPing(args[0]);
         break;
-      case "traceroute":
+      case 'traceroute':
         output = doTraceroute(args[0]);
         break;
-      case "telnet":
+      case 'telnet':
         output = doTelnet(args[0], args[1]);
         break;
-      case "grep":
+      case 'grep':
         output = doGrep(args[0], args[1]);
         break;
-      case "cat":
+      case 'cat':
         output = doCat(args[0]);
         break;
-      case "ls":
+      case 'ls':
         output = vfs.ls();
         break;
-      case "echo": {
-        const joined = args.join(" ");
+      case 'echo': {
+        const joined = args.join(' ');
         const m = joined.match(/^\"([\s\S]*)\"$/) || joined.match(/^'([\s\S]*)'$/);
         output = m ? m[1] : joined;
         break;
@@ -314,12 +322,12 @@ Content-Length: 32\n\n<html><body>Hello ZWA!</body></html>`;
     }
 
     if (toFile) {
-      const text = typeof output === "string" ? output : JSON.stringify(output, null, 2);
+      const text = typeof output === 'string' ? output : JSON.stringify(output, null, 2);
       vfs.write(toFile, text);
       return `(output redirected)\nwritten to ${toFile}`;
     }
 
-    return typeof output === "object" && output?.__clear ? "__CLEAR__" : output;
+    return typeof output === 'object' && output?.__clear ? '__CLEAR__' : output;
   }
 
   return { run };
@@ -330,140 +338,142 @@ Content-Length: 32\n\n<html><body>Hello ZWA!</body></html>`;
 // ------------------------------
 const slides = [
   {
-    id: "title",
-    title: "Základy webových aplikací – 3. cvičení",
-    subtitle: "FEL ČVUT, DCGI – 8. 10. 2025",
+    id: 'title',
+    title: 'Základy webových aplikací – 3. cvičení',
+    subtitle: 'FEL ČVUT, DCGI – 8. 10. 2025',
     body: `Bc. Egor Ulianov`,
   },
   {
-    id: "quiz-html",
-    title: "KVÍZ: HTML základy",
+    id: 'quiz-html',
+    title: 'KVÍZ: HTML základy',
     body: `Krátký kvíz k opakování základů HTML5 (elementy, atributy, formuláře a sémantika).`,
   },
   {
-    id: "about-me",
-    title: "KDO JSEM JÁ?",
+    id: 'about-me',
+    title: 'KDO JSEM JÁ?',
     body: `Jazyky: Čeština, Angličtina, Ruština\nZkušenost: 2019–2025 Misterine (Fullstack), 2025–… DEVEON.ai (Leading SE)\nStudium: OI FEL ČVUT (Bc.), MFF UK (Mgr.)\nCvičící ZWA na FEL ČVUT\nOblasti: Angular, NestJS, NodeJS, .NET, Architektura, Unity, AR, Počítačové vidění`,
   },
   {
-    id: "about-course",
-    title: "O ČEM JE PŘEDMĚT?",
+    id: 'about-course',
+    title: 'O ČEM JE PŘEDMĚT?',
     bullets: [
-      "KLIENT: Design, Logika, Architektura",
-      "SERVER: Logika, Bezpečnost, Architektura",
-      "KOMUNIKACE: Technologie, Struktura, Bezpečnost",
+      'KLIENT: Design, Logika, Architektura',
+      'SERVER: Logika, Bezpečnost, Architektura',
+      'KOMUNIKACE: Technologie, Struktura, Bezpečnost',
     ],
   },
   {
-    id: "tips",
-    title: "DOPORUČENÍ PRO SEMESTRÁLKU",
+    id: 'tips',
+    title: 'DOPORUČENÍ PRO SEMESTRÁLKU',
     bullets: [
-      "Pracujte průběžně – vyhnete se stresu",
-      "Zvolte jednoduché zadání a udělejte ho kvalitně",
-      "Používejte git – zvyk do praxe",
+      'Pracujte průběžně – vyhnete se stresu',
+      'Zvolte jednoduché zadání a udělejte ho kvalitně',
+      'Používejte git – zvyk do praxe',
     ],
   },
   {
-    id: "extras",
-    title: "DODATEČNÉ INFO",
-    bullets: [
-      "Telegram skupina cvičení (odkazy, Q&A)",
-      "FEL ČVUT Discord – odpovědi 1× týdně",
-    ],
+    id: 'extras',
+    title: 'DODATEČNÉ INFO',
+    bullets: ['Telegram skupina cvičení (odkazy, Q&A)', 'FEL ČVUT Discord – odpovědi 1× týdně'],
   },
   {
-    id: "theory",
-    title: "TEORIE: Síť pro web",
+    id: 'theory',
+    title: 'TEORIE: Síť pro web',
     sections: [
       {
-        icon: "🌐",
-        title: "DNS – překládání jmen",
+        icon: '🌐',
+        title: 'DNS – překládání jmen',
         points: [
-          "DNS je telefonní seznam internetu: převádí jména (např. fel.cvut.cz) na IP adresy, opačně PTR vrací jméno pro IP.",
-          "Záznamy: A/AAAA = adresa serveru, CNAME = alias na jiné jméno, NS = který server je autoritativní, TXT = libovolný text (např. SPF).",
-          "Cesta dotazu: váš stroj → rekurzivní resolver (často od ISP) → autoritativní servery (hierarchie: root → TLD → doména).",
-          "Výsledky se cachují podle TTL (čas života), existuje i negativní cache pro neexistující jména.",
-          "Protokol používá UDP/53 pro většinu dotazů (rychlé, malé), TCP/53 pro větší odpovědi a přenos zón; DNSSEC přidává kryptografické podpisy."
-        ]
+          'DNS je telefonní seznam internetu: převádí jména (např. fel.cvut.cz) na IP adresy, opačně PTR vrací jméno pro IP.',
+          'Záznamy: A/AAAA = adresa serveru, CNAME = alias na jiné jméno, NS = který server je autoritativní, TXT = libovolný text (např. SPF).',
+          'Cesta dotazu: váš stroj → rekurzivní resolver (často od ISP) → autoritativní servery (hierarchie: root → TLD → doména).',
+          'Výsledky se cachují podle TTL (čas života), existuje i negativní cache pro neexistující jména.',
+          'Protokol používá UDP/53 pro většinu dotazů (rychlé, malé), TCP/53 pro větší odpovědi a přenos zón; DNSSEC přidává kryptografické podpisy.',
+        ],
       },
       {
-        icon: "🔢",
-        title: "IP adresy – jak se zařízení najdou",
+        icon: '🔢',
+        title: 'IP adresy – jak se zařízení najdou',
         points: [
-          "IPv4 má 4 oktety (např. 192.168.1.57). Maska sítě (např. /24) určuje, které adresy jsou „moje síť“ a které jsou mimo.",
-          "Privátní rozsahy (10.x, 172.16–31.x, 192.168.x) nejsou přímo routované do internetu; 127.0.0.1 je loopback (sám k sobě).",
-          "Default gateway je výchozí router do dalších sítí; broadcast je poslední adresa v síti a slouží k doručení všem v segmentu.",
-          "DHCP přiděluje IP, masku, gateway i DNS automaticky. NAT (typicky PAT) překládá více privátních zařízení na jednu veřejnou IP.",
-          "K nalezení MAC v lokální síti se používá ARP; mimo lokální síť paket putuje přes směrovače (routers)."
-        ]
+          'IPv4 má 4 oktety (např. 192.168.1.57). Maska sítě (např. /24) určuje, které adresy jsou „moje síť“ a které jsou mimo.',
+          'Privátní rozsahy (10.x, 172.16–31.x, 192.168.x) nejsou přímo routované do internetu; 127.0.0.1 je loopback (sám k sobě).',
+          'Default gateway je výchozí router do dalších sítí; broadcast je poslední adresa v síti a slouží k doručení všem v segmentu.',
+          'DHCP přiděluje IP, masku, gateway i DNS automaticky. NAT (typicky PAT) překládá více privátních zařízení na jednu veřejnou IP.',
+          'K nalezení MAC v lokální síti se používá ARP; mimo lokální síť paket putuje přes směrovače (routers).',
+        ],
       },
       {
-        icon: "🔗",
-        title: "TCP – spolehlivý přenos",
+        icon: '🔗',
+        title: 'TCP – spolehlivý přenos',
         points: [
-          "Porty identifikují službu na stroji (HTTP 80, HTTPS 443). Jedna IP může mít desítky služeb díky portům.",
-          "Připojení se navazuje 3-krokově: SYN → SYN-ACK → ACK. Ukončení spojení probíhá přes FIN/ACK nebo nouzově RST.",
-          "Spolehlivost: pořadí a doručení dat hlídají sekvenční čísla a potvrzení (ACK). Při ztrátě paketů probíhají retransmise.",
-          "Řízení toku (window, window scaling) brání zahlcení příjemce, řízení zahlcení (např. CUBIC) chrání síť před přetížením.",
-          "UDP je alternativa bez záruk a bez navázání spojení (hodí se pro DNS, video/hraní). TLS šifruje nad TCP."
-        ]
+          'Porty identifikují službu na stroji (HTTP 80, HTTPS 443). Jedna IP může mít desítky služeb díky portům.',
+          'Připojení se navazuje 3-krokově: SYN → SYN-ACK → ACK. Ukončení spojení probíhá přes FIN/ACK nebo nouzově RST.',
+          'Spolehlivost: pořadí a doručení dat hlídají sekvenční čísla a potvrzení (ACK). Při ztrátě paketů probíhají retransmise.',
+          'Řízení toku (window, window scaling) brání zahlcení příjemce, řízení zahlcení (např. CUBIC) chrání síť před přetížením.',
+          'UDP je alternativa bez záruk a bez navázání spojení (hodí se pro DNS, video/hraní). TLS šifruje nad TCP.',
+        ],
       },
       {
-        icon: "📄",
-        title: "HTTP – jazyk webu",
+        icon: '📄',
+        title: 'HTTP – jazyk webu',
         points: [
-          "Požadavek obsahuje metodu (GET/POST…), cestu (/api), hlavičky (Headers) a volitelné tělo (Body). Odpověď má status (200/404/500…), hlavičky a tělo.",
-          "Idempotentní metody (GET, PUT) lze opakovat bez změny stavu; POST obvykle vytváří/změňuje. HEAD/OPTIONS slouží pro metadata a možnosti.",
-          "Cachování: ETag/If-None-Match a Last-Modified/If-Modified-Since, řídí se také Cache-Control a max-age.",
-          "Obsah a formát se domlouvá přes Content-Type a Accept (JSON, HTML…). Hostitel je v hlavičce Host (SNI v TLS).",
-          "Autentizace: Authorization (např. Bearer token), nebo cookies (Set-Cookie, SameSite, HttpOnly, Secure). Trvalá spojení udržuje keep-alive; HTTP/2 multiplexuje více požadavků."
-        ]
+          'Požadavek obsahuje metodu (GET/POST…), cestu (/api), hlavičky (Headers) a volitelné tělo (Body). Odpověď má status (200/404/500…), hlavičky a tělo.',
+          'Idempotentní metody (GET, PUT) lze opakovat bez změny stavu; POST obvykle vytváří/změňuje. HEAD/OPTIONS slouží pro metadata a možnosti.',
+          'Cachování: ETag/If-None-Match a Last-Modified/If-Modified-Since, řídí se také Cache-Control a max-age.',
+          'Obsah a formát se domlouvá přes Content-Type a Accept (JSON, HTML…). Hostitel je v hlavičce Host (SNI v TLS).',
+          'Autentizace: Authorization (např. Bearer token), nebo cookies (Set-Cookie, SameSite, HttpOnly, Secure). Trvalá spojení udržuje keep-alive; HTTP/2 multiplexuje více požadavků.',
+        ],
       },
       {
-        icon: "🔒",
-        title: "HTTPS – šifrované HTTP",
+        icon: '🔒',
+        title: 'HTTPS – šifrované HTTP',
         points: [
-          "TLS poskytuje šifrování, integritu a ověření serveru pomocí certifikátu podepsaného důvěryhodnou CA (řetězec důvěry).",
-          "Handshake vyjedná šifry a klíče; moderní TLS (1.2/1.3) používá dopředné utajení (Forward Secrecy). SNI zajistí správný certifikát pro více domén na jedné IP.",
-          "Standardní port je 443. HSTS nutí prohlížeč používat jen HTTPS. Let's Encrypt přes ACME automatizuje vydání a obnovu certifikátů."
-        ]
+          'TLS poskytuje šifrování, integritu a ověření serveru pomocí certifikátu podepsaného důvěryhodnou CA (řetězec důvěry).',
+          'Handshake vyjedná šifry a klíče; moderní TLS (1.2/1.3) používá dopředné utajení (Forward Secrecy). SNI zajistí správný certifikát pro více domén na jedné IP.',
+          "Standardní port je 443. HSTS nutí prohlížeč používat jen HTTPS. Let's Encrypt přes ACME automatizuje vydání a obnovu certifikátů.",
+        ],
       },
       {
-        icon: "🧪",
-        title: "Jak to souvisí s úlohami",
+        icon: '🧪',
+        title: 'Jak to souvisí s úlohami',
         points: [
-          "host / nslookup → zobrazíte A/NS/TXT a pochopíte, odkud se jména berou.",
-          "ifconfig / ping → ověříte IP, masku, MAC a základní konektivitu/latenci.",
-          "traceroute → uvidíte jednotlivé hopy (směrovače), kde může vznikat zpoždění.",
-          "telnet host 80 → pošlete ručně GET / a uvidíte syrovou HTTP/1.1 odpověď; pro HTTPS by byl nutný TLS handshake."
-        ]
-      }
-    ]
+          'host / nslookup → zobrazíte A/NS/TXT a pochopíte, odkud se jména berou.',
+          'ifconfig / ping → ověříte IP, masku, MAC a základní konektivitu/latenci.',
+          'traceroute → uvidíte jednotlivé hopy (směrovače), kde může vznikat zpoždění.',
+          'telnet host 80 → pošlete ručně GET / a uvidíte syrovou HTTP/1.1 odpověď; pro HTTPS by byl nutný TLS handshake.',
+        ],
+      },
+    ],
   },
   {
-    id: "tasks-net",
-    title: "Úlohy – síť (v terminálu vpravo)",
+    id: 'tasks-net',
+    title: 'Úlohy – síť (v terminálu vpravo)',
     body: `Na této stránce si vyzkoušíte základní síťové příkazy. Terminál vpravo je simulovaný – nevytváří skutečná síťová spojení, ale ukazuje typické výstupy, které uvidíte na reálném Linuxu. Využijte ho k pochopení principů DNS, směrování a TCP/HTTP.`,
     steps: [
       {
-        title: "DNS: host / nslookup",
-        desc: "Překládá doménová jména na IP adresy (A), zobrazuje nameservery (NS), textové záznamy (TXT) a další. Ukazuje, jak DNS vrací různé typy záznamů.",
-        examples: ["host cvut.cz", "nslookup -type=ns cvut.cz", "host 147.32.85.229"],
+        title: 'DNS: host / nslookup',
+        desc: 'Překládá doménová jména na IP adresy (A), zobrazuje nameservery (NS), textové záznamy (TXT) a další. Ukazuje, jak DNS vrací různé typy záznamů.',
+        examples: ['host cvut.cz', 'nslookup -type=ns cvut.cz', 'host 147.32.85.229'],
       },
       {
-        title: "Lokální síť a konektivita: ifconfig / ping",
-        desc: "ifconfig zobrazí IP adresu, masku a MAC vašeho rozhraní. ping měří zpoždění (RTT) k cíli a ztrátu paketů – rychlá kontrola dostupnosti.",
-        examples: ["ifconfig", "ifconfig > ifconfigresult.txt", "grep 192.168. ifconfigresult.txt", "ping seznam.cz"],
+        title: 'Lokální síť a konektivita: ifconfig / ping',
+        desc: 'ifconfig zobrazí IP adresu, masku a MAC vašeho rozhraní. ping měří zpoždění (RTT) k cíli a ztrátu paketů – rychlá kontrola dostupnosti.',
+        examples: [
+          'ifconfig',
+          'ifconfig > ifconfigresult.txt',
+          'grep 192.168. ifconfigresult.txt',
+          'ping seznam.cz',
+        ],
       },
       {
-        title: "Směrování: traceroute",
-        desc: "Ukazuje jednotlivé směrovače (hopy), přes které paket prochází k cílovému serveru. Pomáhá najít, kde se zpoždění nebo výpadek děje.",
-        examples: ["traceroute fel.cvut.cz", "traceroute seznam.cz"],
+        title: 'Směrování: traceroute',
+        desc: 'Ukazuje jednotlivé směrovače (hopy), přes které paket prochází k cílovému serveru. Pomáhá najít, kde se zpoždění nebo výpadek děje.',
+        examples: ['traceroute fel.cvut.cz', 'traceroute seznam.cz'],
       },
       {
-        title: "TCP/HTTP: telnet",
-        desc: "Naváže TCP spojení na zadaný port a v demu pošle jednoduché HTTP GET /. Výstup simuluje základní HTTP odpověď (status, hlavičky, tělo).",
-        examples: ["telnet zwa.toad.cz 80"],
+        title: 'TCP/HTTP: telnet',
+        desc: 'Naváže TCP spojení na zadaný port a v demu pošle jednoduché HTTP GET /. Výstup simuluje základní HTTP odpověď (status, hlavičky, tělo).',
+        examples: ['telnet zwa.toad.cz 80'],
       },
     ],
   },
@@ -473,9 +483,12 @@ function LessonSlideContent({ slide, commandLog }) {
   const hasSteps = Array.isArray(slide.steps) && slide.steps.length > 0;
   const hasSections = Array.isArray(slide.sections) && slide.sections.length > 0;
   const [stepIndex, setStepIndex] = useState(0);
+  // Each slide owns an independent step sequence.
+  /* eslint-disable react-hooks/set-state-in-effect -- reset is the slide transition boundary. */
   useEffect(() => {
     setStepIndex(0);
   }, [slide]);
+  /* eslint-enable react-hooks/set-state-in-effect */
   const totalSteps = hasSteps ? slide.steps.length : 0;
   const currentStep = hasSteps ? slide.steps[stepIndex] : null;
   const totalSections = hasSections ? slide.sections.length : 0;
@@ -483,9 +496,15 @@ function LessonSlideContent({ slide, commandLog }) {
   return (
     <SharedSlideCard slide={slide} idPrefix="lesson-3">
       {slide.body && !hasSections && (
-        <div className={clsx(slide.id === "about-me" ? "grid grid-cols-1 sm:grid-cols-[1fr,180px] gap-4 items-start" : "")}> 
+        <div
+          className={clsx(
+            slide.id === 'about-me'
+              ? 'grid grid-cols-1 sm:grid-cols-[1fr,180px] gap-4 items-start'
+              : '',
+          )}
+        >
           <pre className="whitespace-pre-wrap leading-relaxed">{slide.body}</pre>
-          {slide.id === "about-me" && (
+          {slide.id === 'about-me' && (
             <div className="justify-self-end">
               <img
                 src={portraitImg.src}
@@ -496,13 +515,13 @@ function LessonSlideContent({ slide, commandLog }) {
           )}
         </div>
       )}
-      {slide.id === "theory" && (
+      {slide.id === 'theory' && (
         <div className="mt-2 text-sm text-zinc-700 dark:text-zinc-300 space-y-2">
           <p>
             Tento blok shrnuje síťové základy, na kterých web stojí. Cílem není jen vědět, jaké
-            příkazy existují, ale chápat, co se děje „pod kapotou“. Když zadáte adresu do prohlížeče,
-            proběhne překlad jména (DNS), naváže se připojení (TCP/TLS) a odešle se HTTP požadavek.
-            Každý krok má typické symptomy při potížích a jde zkoumat nástroji níže.
+            příkazy existují, ale chápat, co se děje „pod kapotou“. Když zadáte adresu do
+            prohlížeče, proběhne překlad jména (DNS), naváže se připojení (TCP/TLS) a odešle se HTTP
+            požadavek. Každý krok má typické symptomy při potížích a jde zkoumat nástroji níže.
           </p>
           <p>
             V praktických úlohách si vyzkoušíte, jak DNS vrací různé typy záznamů, jak ověřit svoji
@@ -516,10 +535,14 @@ function LessonSlideContent({ slide, commandLog }) {
         <div className="mt-4">
           <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">Krok {stepIndex + 1} / {totalSections}</span>
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
+                Krok {stepIndex + 1} / {totalSections}
+              </span>
             </div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl" aria-hidden>{currentSection.icon}</span>
+              <span className="text-xl" aria-hidden>
+                {currentSection.icon}
+              </span>
               <div className="font-semibold">{currentSection.title}</div>
             </div>
             {Array.isArray(currentSection.points) && (
@@ -543,8 +566,8 @@ function LessonSlideContent({ slide, commandLog }) {
                 <button
                   key={i}
                   className={clsx(
-                    "h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700",
-                    i === stepIndex ? "bg-sky-500" : "bg-zinc-200 dark:bg-zinc-800"
+                    'h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700',
+                    i === stepIndex ? 'bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800',
                   )}
                   onClick={() => setStepIndex(i)}
                   aria-label={`Přejít na krok ${i + 1}`}
@@ -568,17 +591,16 @@ function LessonSlideContent({ slide, commandLog }) {
           ))}
         </ul>
       )}
-      {slide.id === "quiz-html" && (
-        <QuizHtmlBasics />
-      )}
-      {slide.id === "tasks-net" && (
+      {slide.id === 'quiz-html' && <QuizHtmlBasics />}
+      {slide.id === 'tasks-net' && (
         <SectionTabs
           theory={
             <div className="text-sm text-zinc-700 dark:text-zinc-300 space-y-2">
               <p>
                 Terminál vpravo je simulátor: příkazy nic neodesílají do sítě, ale vrací typické
-                výstupy. Zaměřte se na porozumění – co znamená A/NS/TXT v DNS, co je <em>mask of
-                network</em>, proč má traceroute více <em>hopů</em>, a proč u HTTPS nejde jen poslat
+                výstupy. Zaměřte se na porozumění – co znamená A/NS/TXT v DNS, co je{' '}
+                <em>mask of network</em>, proč má traceroute více <em>hopů</em>, a proč u HTTPS
+                nejde jen poslat
                 <Code>GET /</Code> jako v čistém TCP.
               </p>
               <p>
@@ -589,7 +611,12 @@ function LessonSlideContent({ slide, commandLog }) {
             </div>
           }
           examples={<TaskHints />}
-          tryContent={<div className="text-sm text-zinc-700 dark:text-zinc-300">Použijte terminál vpravo. Začněte příkazy <Code>host cvut.cz</Code>, <Code>ifconfig</Code>, <Code>traceroute fel.cvut.cz</Code>.</div>}
+          tryContent={
+            <div className="text-sm text-zinc-700 dark:text-zinc-300">
+              Použijte terminál vpravo. Začněte příkazy <Code>host cvut.cz</Code>,{' '}
+              <Code>ifconfig</Code>, <Code>traceroute fel.cvut.cz</Code>.
+            </div>
+          }
           task={<TaskChecklist commandLog={commandLog} />}
         />
       )}
@@ -597,12 +624,16 @@ function LessonSlideContent({ slide, commandLog }) {
         <div className="mt-4">
           <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">Krok {stepIndex + 1} / {totalSteps}</span>
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
+                Krok {stepIndex + 1} / {totalSteps}
+              </span>
             </div>
             <div className="font-semibold mb-1">{currentStep.title}</div>
             <p className="text-sm text-zinc-600 dark:text-zinc-300 mb-2">{currentStep.desc}</p>
             {currentStep.examples && (
-              <pre className="text-xs bg-zinc-100/70 dark:bg-zinc-800/70 rounded-lg p-2 whitespace-pre-wrap">{currentStep.examples.join("\n")}</pre>
+              <pre className="text-xs bg-zinc-100/70 dark:bg-zinc-800/70 rounded-lg p-2 whitespace-pre-wrap">
+                {currentStep.examples.join('\n')}
+              </pre>
             )}
           </div>
           <div className="mt-3 flex items-center justify-between">
@@ -618,8 +649,8 @@ function LessonSlideContent({ slide, commandLog }) {
                 <button
                   key={i}
                   className={clsx(
-                    "h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700",
-                    i === stepIndex ? "bg-sky-500" : "bg-zinc-200 dark:bg-zinc-800"
+                    'h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700',
+                    i === stepIndex ? 'bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800',
                   )}
                   onClick={() => setStepIndex(i)}
                   aria-label={`Přejít na krok ${i + 1}`}
@@ -636,12 +667,16 @@ function LessonSlideContent({ slide, commandLog }) {
           </div>
         </div>
       )}
-      {slide.id === "tips" && (
+      {slide.id === 'tips' && (
         <div className="mt-4 rounded-xl overflow-hidden border border-zinc-200/60 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40">
-          <img src={semestralMeme.src} alt="Semestrální meme" className="w-full max-h-80 object-contain bg-white dark:bg-zinc-900 p-2" />
+          <img
+            src={semestralMeme.src}
+            alt="Semestrální meme"
+            className="w-full max-h-80 object-contain bg-white dark:bg-zinc-900 p-2"
+          />
         </div>
       )}
-      {slide.id === "extras" && (
+      {slide.id === 'extras' && (
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <a
             href="https://t.me/+W4QiRAsv2dxmYzE8"
@@ -649,8 +684,14 @@ function LessonSlideContent({ slide, commandLog }) {
             rel="noopener noreferrer"
             className="rounded-xl overflow-hidden border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 hover:shadow transition-shadow"
           >
-            <img src={telegramQr.src} alt="Telegram skupina – QR" className="w-full h-48 object-contain bg-white dark:bg-zinc-900 p-2" />
-            <div className="px-3 py-2 text-xs text-sky-700 dark:text-sky-400 underline">Otevřít Telegram skupinu</div>
+            <img
+              src={telegramQr.src}
+              alt="Telegram skupina – QR"
+              className="w-full h-48 object-contain bg-white dark:bg-zinc-900 p-2"
+            />
+            <div className="px-3 py-2 text-xs text-sky-700 dark:text-sky-400 underline">
+              Otevřít Telegram skupinu
+            </div>
           </a>
           <a
             href="https://discord.gg/YZjJbkvfaS"
@@ -661,7 +702,9 @@ function LessonSlideContent({ slide, commandLog }) {
             <div className="w-full h-48 flex items-center justify-center bg-gradient-to-br from-indigo-50 to-sky-50 dark:from-zinc-900 dark:to-zinc-950">
               <img src={discordLogo.src} alt="FEL Discord" className="h-16 w-16 object-contain" />
             </div>
-            <div className="px-3 py-2 text-xs text-indigo-700 dark:text-indigo-400 underline">Připojit se na Discord</div>
+            <div className="px-3 py-2 text-xs text-indigo-700 dark:text-indigo-400 underline">
+              Připojit se na Discord
+            </div>
           </a>
         </div>
       )}
@@ -705,57 +748,57 @@ function QuizHtmlBasics() {
   const [submitted, setSubmitted] = useState(false);
   const questions = [
     {
-      id: "q1",
-      text: "Který z následujících je správný minimální HTML5 skeleton?",
+      id: 'q1',
+      text: 'Který z následujících je správný minimální HTML5 skeleton?',
       options: [
-        "<!doctype html><html><head><title></title></head><body></body></html>",
-        "<html5><head><title></title></head><body></body></html5>",
-        "<doctype html5><html><head></head><body></body></html>",
+        '<!doctype html><html><head><title></title></head><body></body></html>',
+        '<html5><head><title></title></head><body></body></html5>',
+        '<doctype html5><html><head></head><body></body></html>',
       ],
       correctIndex: 0,
-      hint: "Viz validátor a HTML5 doctype.",
+      hint: 'Viz validátor a HTML5 doctype.',
     },
     {
-      id: "q2",
-      text: "Který element je sémantický pro navigaci?",
-      options: ["<div>", "<nav>", "<section>"],
+      id: 'q2',
+      text: 'Který element je sémantický pro navigaci?',
+      options: ['<div>', '<nav>', '<section>'],
       correctIndex: 1,
-      hint: "HTML5 sémantické značky.",
+      hint: 'HTML5 sémantické značky.',
     },
     {
-      id: "q3",
-      text: "Jaký atribut zajistí, že pole formuláře musí být vyplněno?",
-      options: ["required", "mandatory", "mustfill"],
+      id: 'q3',
+      text: 'Jaký atribut zajistí, že pole formuláře musí být vyplněno?',
+      options: ['required', 'mandatory', 'mustfill'],
       correctIndex: 0,
-      hint: "HTML5 atributy formulářů.",
+      hint: 'HTML5 atributy formulářů.',
     },
     {
-      id: "q4",
-      text: "Jaký typ inputu použijete pro e‑mail s nativní validací?",
-      options: ["text", "email", "address"],
+      id: 'q4',
+      text: 'Jaký typ inputu použijete pro e‑mail s nativní validací?',
+      options: ['text', 'email', 'address'],
       correctIndex: 1,
-      hint: "Nové typy inputů.",
+      hint: 'Nové typy inputů.',
     },
     {
-      id: "q5",
-      text: "Které dvojice tvoří logický celek pro formuláře?",
-      options: ["label + input", "legend + option", "meter + datalist"],
+      id: 'q5',
+      text: 'Které dvojice tvoří logický celek pro formuláře?',
+      options: ['label + input', 'legend + option', 'meter + datalist'],
       correctIndex: 0,
-      hint: "Label patří k ovládacím prvkům.",
+      hint: 'Label patří k ovládacím prvkům.',
     },
     {
-      id: "q6",
-      text: "Který element použijete pro seskupení formulářových prvků s popiskem skupiny?",
-      options: ["<fieldset> + <legend>", "<section> + <h3>", "<div> + <span>"],
+      id: 'q6',
+      text: 'Který element použijete pro seskupení formulářových prvků s popiskem skupiny?',
+      options: ['<fieldset> + <legend>', '<section> + <h3>', '<div> + <span>'],
       correctIndex: 0,
-      hint: "Formulářové skupiny se značí fieldsetem a legendou.",
+      hint: 'Formulářové skupiny se značí fieldsetem a legendou.',
     },
     {
-      id: "q7",
-      text: "Jaký atribut použijete k zobrazení šedého návodu uvnitř textového pole?",
-      options: ["placeholder", "hint", "title"],
+      id: 'q7',
+      text: 'Jaký atribut použijete k zobrazení šedého návodu uvnitř textového pole?',
+      options: ['placeholder', 'hint', 'title'],
       correctIndex: 0,
-      hint: "HTML5 přidalo atribut placeholder.",
+      hint: 'HTML5 přidalo atribut placeholder.',
     },
   ];
 
@@ -785,8 +828,13 @@ function QuizHtmlBasics() {
         const selected = answers[q.id];
         const isCorrect = selected === q.correctIndex;
         return (
-          <div key={q.id} className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-4">
-            <div className="font-medium mb-2">{qi + 1}. {q.text}</div>
+          <div
+            key={q.id}
+            className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-4"
+          >
+            <div className="font-medium mb-2">
+              {qi + 1}. {q.text}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {q.options.map((opt, idx) => {
                 const active = selected === idx;
@@ -796,10 +844,12 @@ function QuizHtmlBasics() {
                   <button
                     key={idx}
                     className={clsx(
-                      "text-left px-3 py-2 rounded-lg border text-sm",
-                      active ? "border-sky-500 bg-sky-50 dark:bg-sky-950/30" : "border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60",
-                      correct ? "ring-2 ring-emerald-400" : "",
-                      wrong ? "ring-2 ring-rose-400" : ""
+                      'text-left px-3 py-2 rounded-lg border text-sm',
+                      active
+                        ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/30'
+                        : 'border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60',
+                      correct ? 'ring-2 ring-emerald-400' : '',
+                      wrong ? 'ring-2 ring-rose-400' : '',
                     )}
                     onClick={() => selectAnswer(q.id, idx)}
                   >
@@ -809,8 +859,11 @@ function QuizHtmlBasics() {
               })}
             </div>
             {submitted && (
-              <div className={clsx("mt-2 text-xs", isCorrect ? "text-emerald-600" : "text-rose-600")}> 
-                {isCorrect ? "Správně!" : `Nesprávně. Správná volba je ${q.correctIndex + 1}.`} <span className="text-zinc-500">({q.hint})</span>
+              <div
+                className={clsx('mt-2 text-xs', isCorrect ? 'text-emerald-600' : 'text-rose-600')}
+              >
+                {isCorrect ? 'Správně!' : `Nesprávně. Správná volba je ${q.correctIndex + 1}.`}{' '}
+                <span className="text-zinc-500">({q.hint})</span>
               </div>
             )}
           </div>
@@ -819,19 +872,44 @@ function QuizHtmlBasics() {
 
       <div className="flex items-center gap-2">
         {!submitted ? (
-          <button className="px-4 py-2 rounded-lg bg-sky-600 text-white" onClick={submit}>Vyhodnotit</button>
+          <button className="px-4 py-2 rounded-lg bg-sky-600 text-white" onClick={submit}>
+            Vyhodnotit
+          </button>
         ) : (
           <>
-            <div className="text-sm text-zinc-700 dark:text-zinc-300">Skóre: {score} / {total}</div>
-            <button className="px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700" onClick={reset}>Reset</button>
+            <div className="text-sm text-zinc-700 dark:text-zinc-300">
+              Skóre: {score} / {total}
+            </div>
+            <button
+              className="px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700"
+              onClick={reset}
+            >
+              Reset
+            </button>
           </>
         )}
       </div>
 
       <div className="text-xs text-zinc-500">
-        Doporučené zdroje: 
-        <a className="underline ml-1" href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/01/start" target="_blank" rel="noreferrer noopener">Cvičení 1 – HTML</a>,
-        <a className="underline ml-1" href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/02/start" target="_blank" rel="noreferrer noopener">Cvičení 2 – Formuláře</a>.
+        Doporučené zdroje:
+        <a
+          className="underline ml-1"
+          href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/01/start"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          Cvičení 1 – HTML
+        </a>
+        ,
+        <a
+          className="underline ml-1"
+          href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/02/start"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          Cvičení 2 – Formuláře
+        </a>
+        .
       </div>
     </div>
   );
@@ -840,23 +918,23 @@ function QuizHtmlBasics() {
 // Media is embedded per-slide instead of a global gallery
 
 function SectionTabs({ theory, examples, tryContent, task }) {
-  const [tab, setTab] = useState("theory");
+  const [tab, setTab] = useState('theory');
   return (
     <div className="mt-4">
       <div className="mb-2 flex flex-wrap gap-2">
         {[
-          { id: "theory", label: "Teorie" },
-          { id: "examples", label: "Příklady" },
-          { id: "try", label: "Vyzkoušet" },
-          { id: "task", label: "Úkol" },
+          { id: 'theory', label: 'Teorie' },
+          { id: 'examples', label: 'Příklady' },
+          { id: 'try', label: 'Vyzkoušet' },
+          { id: 'task', label: 'Úkol' },
         ].map((t) => (
           <button
             key={t.id}
             className={clsx(
-              "px-2 py-1 rounded border text-xs",
+              'px-2 py-1 rounded border text-xs',
               tab === t.id
-                ? "bg-sky-600 text-white border-sky-600"
-                : "bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800"
+                ? 'bg-sky-600 text-white border-sky-600'
+                : 'bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800',
             )}
             onClick={() => setTab(t.id)}
           >
@@ -864,22 +942,38 @@ function SectionTabs({ theory, examples, tryContent, task }) {
           </button>
         ))}
       </div>
-      {tab === "theory" && <div>{theory}</div>}
-      {tab === "examples" && <div>{examples}</div>}
-      {tab === "try" && <div>{tryContent}</div>}
-      {tab === "task" && <div>{task}</div>}
+      {tab === 'theory' && <div>{theory}</div>}
+      {tab === 'examples' && <div>{examples}</div>}
+      {tab === 'try' && <div>{tryContent}</div>}
+      {tab === 'task' && <div>{task}</div>}
     </div>
   );
 }
 
 function TaskChecklist({ commandLog }) {
   const reqs = [
-    { id: "dns", label: "Proveďte DNS dotaz (host/nslookup) pro cvut.cz", test: (log) => /^(host|nslookup)\s+.*cvut\.cz/i.test(log) },
-    { id: "ifconfig", label: "Zobrazte konfiguraci rozhraní (ifconfig)", test: (log) => /^ifconfig/i.test(log) || /^ipconfig/i.test(log) },
-    { id: "traceroute", label: "Proveďte traceroute na fel.cvut.cz", test: (log) => /^traceroute\s+.*fel\.cvut\.cz/i.test(log) },
-    { id: "telnet", label: "Vyzkoušejte telnet na port 80 (GET /)", test: (log) => /^telnet\s+.+\s+80/i.test(log) },
+    {
+      id: 'dns',
+      label: 'Proveďte DNS dotaz (host/nslookup) pro cvut.cz',
+      test: (log) => /^(host|nslookup)\s+.*cvut\.cz/i.test(log),
+    },
+    {
+      id: 'ifconfig',
+      label: 'Zobrazte konfiguraci rozhraní (ifconfig)',
+      test: (log) => /^ifconfig/i.test(log) || /^ipconfig/i.test(log),
+    },
+    {
+      id: 'traceroute',
+      label: 'Proveďte traceroute na fel.cvut.cz',
+      test: (log) => /^traceroute\s+.*fel\.cvut\.cz/i.test(log),
+    },
+    {
+      id: 'telnet',
+      label: 'Vyzkoušejte telnet na port 80 (GET /)',
+      test: (log) => /^telnet\s+.+\s+80/i.test(log),
+    },
   ];
-  const last = commandLog[commandLog.length - 1] || "";
+  const last = commandLog[commandLog.length - 1] || '';
   return (
     <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4 text-sm">
       <div className="font-semibold mb-2">Kontrolní seznam</div>
@@ -888,13 +982,18 @@ function TaskChecklist({ commandLog }) {
           const ok = commandLog.some((c) => r.test(c));
           return (
             <li key={r.id} className="flex items-center gap-2">
-              <span className={clsx("h-2.5 w-2.5 rounded-full border", ok ? "bg-emerald-500 border-emerald-500" : "bg-zinc-300 border-zinc-400")} />
+              <span
+                className={clsx(
+                  'h-2.5 w-2.5 rounded-full border',
+                  ok ? 'bg-emerald-500 border-emerald-500' : 'bg-zinc-300 border-zinc-400',
+                )}
+              />
               <span>{r.label}</span>
             </li>
           );
         })}
       </ul>
-      <div className="mt-2 text-xs text-zinc-500">Poslední příkaz: {last || "(zatím nic)"}</div>
+      <div className="mt-2 text-xs text-zinc-500">Poslední příkaz: {last || '(zatím nic)'}</div>
     </div>
   );
 }
@@ -906,11 +1005,11 @@ export default function App() {
 
   async function handleCommand(cmd) {
     const out = await run(cmd);
-    if (out === "__CLEAR__") {
+    if (out === '__CLEAR__') {
       // trigger terminal remount to clear history
       setClearKey((k) => k + 1);
       setCommandLog([]);
-      return "";
+      return '';
     }
     setCommandLog((logs) => [...logs, cmd].slice(-50));
     return out;
@@ -931,37 +1030,37 @@ export default function App() {
       maxWidthClass="max-w-7xl"
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <LessonSlideContent slide={current} commandLog={commandLog} />
-            {current.id === "tasks-net" && <TaskHints />}
-          </div>
+        <div>
+          <LessonSlideContent slide={current} commandLog={commandLog} />
+          {current.id === 'tasks-net' && <TaskHints />}
+        </div>
 
-          <div>
-            <div className="lg:sticky lg:top-8">
-              <div className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 shadow">
-                <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-200/60 dark:border-zinc-800">
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-3 w-3 rounded-full bg-red-500/90" />
-                    <span className="h-3 w-3 rounded-full bg-amber-400/90" />
-                    <span className="h-3 w-3 rounded-full bg-green-500/90" />
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-zinc-500">
-                    <kbd className="px-2 py-1 rounded bg-zinc-200/60 dark:bg-zinc-800">Enter</kbd>
-                    <span>run command</span>
-                  </div>
+        <div>
+          <div className="lg:sticky lg:top-8">
+            <div className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 shadow">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-200/60 dark:border-zinc-800">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-full bg-red-500/90" />
+                  <span className="h-3 w-3 rounded-full bg-amber-400/90" />
+                  <span className="h-3 w-3 rounded-full bg-green-500/90" />
                 </div>
-                <div className="p-3">
-                  {/* key forces remount to clear history */}
-                  <Terminal key={clearKey} onCommand={handleCommand} />
+                <div className="flex items-center gap-2 text-xs text-zinc-500">
+                  <kbd className="px-2 py-1 rounded bg-zinc-200/60 dark:bg-zinc-800">Enter</kbd>
+                  <span>run command</span>
                 </div>
               </div>
-              <div className="mt-3 text-xs text-zinc-500">
-                Note: This terminal is a classroom simulation (no real network calls). Outputs are simplified to support the exercises.
+              <div className="p-3">
+                {/* key forces remount to clear history */}
+                <Terminal key={clearKey} onCommand={handleCommand} />
               </div>
+            </div>
+            <div className="mt-3 text-xs text-zinc-500">
+              Note: This terminal is a classroom simulation (no real network calls). Outputs are
+              simplified to support the exercises.
             </div>
           </div>
         </div>
-
+      </div>
     </LessonShell>
   );
 }
