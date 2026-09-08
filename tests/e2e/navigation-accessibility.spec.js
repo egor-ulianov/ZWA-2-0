@@ -1,86 +1,77 @@
-const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
-const { join } = require("node:path");
-const test = require("node:test");
+const { test, expect } = require('@playwright/test');
+const { installDeterministicNetwork } = require('./helpers/browser.js');
 
-const root = join(__dirname, "..", "..");
-const read = (path) => readFileSync(join(root, path), "utf8");
+test.describe('public catalog and lesson navigation', () => {
+  test('homepage catalog navigates to the legacy network lesson route', async ({ page }) => {
+    await installDeterministicNetwork(page);
 
-test("shared lesson navigation exposes semantic tabs and keyboard movement", () => {
-  const navigation = read("src/components/lesson/SlideNavigation.jsx");
-  assert.match(navigation, /role="tablist"/);
-  assert.match(navigation, /role="tab"/);
-  assert.match(navigation, /aria-selected/);
-  assert.match(navigation, /aria-controls/);
-  assert.match(navigation, /aria-current/);
-  assert.match(navigation, /tabIndex/);
-  assert.match(navigation, /ArrowLeft/);
-  assert.match(navigation, /ArrowRight/);
-  assert.match(navigation, /ArrowUp/);
-  assert.match(navigation, /ArrowDown/);
-  assert.match(navigation, /Home/);
-  assert.match(navigation, /End/);
-  assert.match(navigation, /\.focus\(\)/);
-  assert.match(navigation, /motion-reduce:/);
-});
+    const response = await page.goto('/');
+    expect(response).not.toBeNull();
+    expect(response.ok()).toBe(true);
+    await expect(page.getByRole('heading', { name: 'ZWA Presentations' })).toBeVisible();
 
-test("lesson shell and slide card support validated deep links and focus context", () => {
-  const shell = read("src/components/lesson/LessonShell.jsx");
-  const card = read("src/components/lesson/SlideCard.jsx");
-  const home = read("pages/index.jsx");
+    const lessonLinks = page
+      .getByRole('main')
+      .getByRole('link')
+      .filter({ hasText: /^\d+\)/ });
+    await expect(lessonLinks).toHaveCount(12);
+    await expect(
+      page.getByRole('link', { name: /Web Presentation with Simulated Linux CLI/ }),
+    ).toHaveAttribute('href', '/interactive-zwa-1');
 
-  assert.match(shell, /resolveSlideId/);
-  assert.match(shell, /history\.replaceState/);
-  assert.match(shell, /window\.location/);
-  assert.match(shell, /popstate/);
-  assert.match(shell, /hashchange/);
-  assert.match(card, /role="tabpanel"/);
-  assert.match(card, /tabIndex=\{-1\}/);
-  assert.match(card, /\.focus\(\{ preventScroll: true \}\)/);
-  assert.match(home, /lessons\.map/);
-  assert.doesNotMatch(home, /href="\/interactive-zwa-/);
-});
+    await page.getByRole('link', { name: /Web Presentation with Simulated Linux CLI/ }).click();
+    await expect(page).toHaveURL(/\/interactive-zwa-1\/?(?:\?slide=title)?$/);
+    await expect(page.locator('h1').first()).toBeVisible();
+  });
 
-test("shared navigation honors reduced motion for in-page scrolling", () => {
-  const navigation = read("src/components/lesson/navigation.js");
-  assert.match(navigation, /prefers-reduced-motion/);
-  assert.match(navigation, /scrollIntoView/);
-  assert.match(navigation, /getScrollBehavior/);
-});
+  test('valid lesson deep links select the requested slide and invalid ones fall back safely', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
 
-test("lesson sources contain no machine-specific file links", () => {
-  const lessonFiles = [
-    "interactive_zwa_1_web_presentation_with_simulated_linux_cli.jsx",
-    "interactive_zwa_7_classes_ajax_presentation.jsx",
-    "interactive_zwa_8_php_presentation.jsx",
-    "interactive_zwa_9_forms_crud_presentation.jsx",
-    "interactive_zwa_10_sessions_cookies_presentation.jsx",
-    "interactive_zwa_11_files_json_presentation.jsx",
-    "interactive_zwa_12_auth_presentation.jsx",
-  ];
-  for (const file of lessonFiles) {
-    assert.doesNotMatch(read(file), /file:\/\//, file);
-  }
-});
+    await page.goto('/interactive-zwa-1-html5?slide=tasks#stale');
+    await expect(page.getByRole('tab', { name: 'Úkoly' })).toHaveAttribute('aria-selected', 'true');
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
+    expect(new URL(page.url()).hash).toBe('');
 
-test("route wrappers retain dynamic client-only lesson loading", () => {
-  const wrappers = [
-    "pages/interactive-zwa-1-html5.jsx",
-    "pages/interactive-zwa-2-forms.jsx",
-    "pages/interactive-zwa-1/index.jsx",
-    "pages/interactive-zwa-2.jsx",
-    "pages/interactive-zwa-5-css-ii.jsx",
-    "pages/interactive-zwa-5-js.jsx",
-    "pages/interactive-zwa-7.jsx",
-    "pages/interactive-zwa-8-php.jsx",
-    "pages/interactive-zwa-9.jsx",
-    "pages/interactive-zwa-10-sessions-cookies.jsx",
-    "pages/interactive-zwa-11-files-json.jsx",
-    "pages/interactive-zwa-12-auth.jsx",
-  ];
-  for (const file of wrappers) {
-    const source = read(file);
-    assert.match(source, /dynamic\(/, file);
-    assert.match(source, /ssr:\s*false/, file);
-  }
+    await page.goto('/interactive-zwa-1-html5?slide=missing');
+    await expect(page.getByRole('tab', { name: 'Úvod' })).toHaveAttribute('aria-selected', 'true');
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('intro');
+  });
+
+  test('lesson tabs expose accessible relationships and keyboard focus movement', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-1-html5?slide=intro');
+    const tablist = page
+      .getByRole('navigation', { name: 'Navigace mezi snímky' })
+      .getByRole('tablist');
+    const tabs = tablist.getByRole('tab');
+    await expect(tablist).toHaveAttribute('aria-orientation', 'horizontal');
+    await expect(tabs).toHaveCount(4);
+    await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
+    await expect(tabs.nth(0)).toHaveAttribute('tabindex', '0');
+    await expect(tabs.nth(1)).toHaveAttribute('tabindex', '-1');
+
+    await tabs.nth(0).focus();
+    await tabs.nth(0).press('ArrowRight');
+    await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true');
+    await expect(tabs.nth(1)).toBeFocused();
+
+    await tabs.nth(1).press('End');
+    await expect(tabs.nth(3)).toHaveAttribute('aria-selected', 'true');
+    await expect(tabs.nth(3)).toBeFocused();
+
+    const panelId = await tabs.nth(3).getAttribute('aria-controls');
+    await expect(page.locator(`#${panelId}`)).toHaveAttribute(
+      'aria-labelledby',
+      await tabs.nth(3).getAttribute('id'),
+    );
+
+    await tabs.nth(3).press('Home');
+    await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
+    await expect(tabs.nth(0)).toBeFocused();
+  });
 });
