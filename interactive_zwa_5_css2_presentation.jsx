@@ -270,11 +270,14 @@ const slides = [
   {
     id: 'title',
     title: 'CSS II – layout a responzivita',
+    activityType: 'learn',
     subtitle: 'ZWA-5 • Box model, float, position, display, flex, @media, print',
+    presenterNotes: 'Začněte otázkou: kde se v layoutu projeví velikost boxu?',
   },
   {
     id: 'toc',
     title: 'Obsah',
+    activityType: 'learn',
     bullets: [
       'Box model (padding/border/margin)',
       'Float a clear',
@@ -288,6 +291,8 @@ const slides = [
   {
     id: 'theory',
     title: 'Teorie – CSS II',
+    activityType: 'learn',
+    presenterNotes: 'Ukažte rozdíl mezi flow, flexboxem a media query na jednom layoutu.',
     sections: [
       {
         icon: '📦',
@@ -357,6 +362,7 @@ const slides = [
   {
     id: 'links',
     title: 'Odkazy',
+    activityType: 'learn',
     bullets: [
       'Cvičení 5 – CSS II (cw.fel) — https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/05/start',
       'MDN: Box model — https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/The_box_model',
@@ -368,8 +374,20 @@ const slides = [
       'MDN: print styles — https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries/Using_media_queries#printing',
     ],
   },
-  { id: 'quiz-css', title: 'KVÍZ: CSS základy', steps: [] },
-  { id: 'tasks', title: 'Úlohy – CSS II', steps: [] },
+  {
+    id: 'quiz-css',
+    title: 'KVÍZ: CSS základy',
+    activityType: 'quick-check',
+    presenterNotes: 'Nechte studenty nejdřív zdůvodnit volbu, teprve potom zobrazte skóre.',
+    steps: [],
+  },
+  {
+    id: 'tasks',
+    title: 'Úlohy – CSS II',
+    activityType: 'apply',
+    presenterNotes: 'Před kontrolou požádejte o předpověď, jak se změna projeví v náhledu.',
+    steps: [],
+  },
 ];
 
 function Css2SlideContent({ slide, stepIndex, onStepIndexChange }) {
@@ -673,6 +691,7 @@ export default function AppCss2Lesson() {
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-5: Interactive CSS II Presentation"
+      objective="Vytvoříte a ověříte responzivní CSS layout pomocí box modelu, flexboxu, media queries a tisku."
       subtitle={
         <>
           Editor vlevo, náhled vpravo. Úkoly dle{' '}
@@ -690,22 +709,24 @@ export default function AppCss2Lesson() {
       footerText="© 2025 ZWA – Interactive CSS II lesson"
       maxWidthClass="max-w-7xl"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
+      <div className={hasTasks ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : ''}>
+        <div className={hasTasks ? '' : 'max-w-4xl'}>
           <Css2SlideContent
             slide={current}
             stepIndex={stepIndex}
             onStepIndexChange={setStepIndex}
           />
         </div>
-        <div>
-          <div className="lg:sticky lg:top-8">
-            <VsPlayground stepIndex={hasTasks ? stepIndex : 0} />
-            <div className="mt-3 text-xs text-zinc-500">
-              Pozn.: Validace je zjednodušená (heuristiky pomocí computed styles a regex).
+        {hasTasks && (
+          <div>
+            <div className="lg:sticky lg:top-8">
+              <VsPlayground stepIndex={stepIndex} />
+              <div className="mt-3 text-xs text-zinc-500">
+                Pozn.: Validace je zjednodušená (heuristiky pomocí computed styles a regex).
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </LessonShell>
   );

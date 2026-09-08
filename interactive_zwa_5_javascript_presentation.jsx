@@ -158,13 +158,21 @@ const slides = [
   {
     id: 'title',
     title: 'Základy JavaScriptu – interaktivní cvičení',
+    activityType: 'learn',
     subtitle: 'ZWA-6 • JS: Proměnné, funkce, DOM',
+    presenterNotes: 'Začněte krátkou ukázkou události a nechte studenty popsat očekávaný stav DOM.',
   },
-  { id: 'quiz-css', title: 'KVÍZ: CSS základy' },
-  { id: 'meme', title: 'Meme' },
+  {
+    id: 'quiz-css',
+    title: 'KVÍZ: CSS základy',
+    activityType: 'quick-check',
+    presenterNotes: 'Nechte studenty vysvětlit volbu selektoru před vyhodnocením odpovědí.',
+  },
+  { id: 'meme', title: 'Meme', activityType: 'learn' },
   {
     id: 'toc',
     title: 'Obsah',
+    activityType: 'learn',
     bullets: [
       'Přehled jazyka a prostředí',
       'Proměnné, typy a operátory',
@@ -177,6 +185,8 @@ const slides = [
   {
     id: 'theory',
     title: 'Teorie – JS základy',
+    activityType: 'learn',
+    presenterNotes: 'Zdůrazněte tok: vyberu uzel, změním stav, připojím handler.',
     sections: [
       {
         icon: '🌍',
@@ -245,7 +255,13 @@ const slides = [
       },
     ],
   },
-  { id: 'tasks', title: 'Úlohy – JavaScript', steps: [] },
+  {
+    id: 'tasks',
+    title: 'Úlohy – JavaScript',
+    activityType: 'apply',
+    presenterNotes: 'Před spuštěním testů požádejte o předpověď výsledku pro jeden vstup.',
+    steps: [],
+  },
 ];
 
 function JsSlideContent({ slide, stepIndex, onStepIndexChange }) {
@@ -543,6 +559,7 @@ export default function AppJsLesson5() {
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-6: Interactive JavaScript Presentation"
+      objective="Procvičíte proměnné, funkce, DOM a události v JavaScriptu v bezpečném interaktivním playgroundu."
       subtitle={
         <>
           Editor vlevo, DOM + Console vpravo. Exportujte řešení přes <Code>exports</Code>.
@@ -551,19 +568,21 @@ export default function AppJsLesson5() {
       footerText="© 2025 ZWA – Interactive JS lesson"
       maxWidthClass="max-w-7xl"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
+      <div className={hasTasks ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : ''}>
+        <div className={hasTasks ? '' : 'max-w-4xl'}>
           <JsSlideContent slide={current} stepIndex={stepIndex} onStepIndexChange={setStepIndex} />
         </div>
-        <div>
-          <div className="lg:sticky lg:top-8">
-            <JsPlayground stepIndex={hasTasks ? stepIndex : 0} />
-            <div className="mt-3 text-xs text-zinc-500">
-              Pozn.: Toto je výuková simulace pro procvičení JavaScriptu. Výsledky testů jsou
-              zjednodušené kvůli spolehlivému automatickému vyhodnocení.
+        {hasTasks && (
+          <div>
+            <div className="lg:sticky lg:top-8">
+              <JsPlayground stepIndex={stepIndex} />
+              <div className="mt-3 text-xs text-zinc-500">
+                Pozn.: Toto je výuková simulace pro procvičení JavaScriptu. Výsledky testů jsou
+                zjednodušené kvůli spolehlivému automatickému vyhodnocení.
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </LessonShell>
   );

@@ -1201,17 +1201,48 @@ export default function AppJsLesson7() {
 
   const slides = useMemo(
     () => [
-      { id: 'title', title: 'Základy webových aplikací – 7. cvičení', subtitle: 'Třídy a AJAX' },
-      { id: 'quiz', title: 'Kvíz z minulého cvičení' },
-      { id: 'intro', title: 'Úvod' },
-      { id: 'oop-theory', title: 'Teorie OOP' },
-      { id: 'creating-objects', title: 'Vytváření objektů' },
-      { id: 'methods-private', title: 'Metody a soukromá pole' },
-      { id: 'ajax-theory', title: 'Teorie AJAXu' },
-      { id: 'ajax-practice', title: 'AJAX v praxi' },
-      { id: 'task1', title: 'Úkol 1: Třídy' },
-      { id: 'task2', title: 'Úkol 2: AJAX' },
-      { id: 'summary', title: 'Shrnutí' },
+      {
+        id: 'title',
+        title: 'Základy webových aplikací – 7. cvičení',
+        subtitle: 'Třídy a AJAX',
+        activityType: 'learn',
+        presenterNotes: 'Uveďte spojení mezi zapouzdřením dat a asynchronní komunikací.',
+      },
+      {
+        id: 'quiz',
+        title: 'Kvíz z minulého cvičení',
+        activityType: 'quick-check',
+        presenterNotes: 'Nechte studenty zdůvodnit odpověď na rozdíl mezi for...in a for...of.',
+      },
+      { id: 'intro', title: 'Úvod', activityType: 'learn' },
+      {
+        id: 'oop-theory',
+        title: 'Teorie OOP',
+        activityType: 'learn',
+        presenterNotes: 'Na příkladu ukažte, co třída skrývá a jaké rozhraní vystavuje.',
+      },
+      { id: 'creating-objects', title: 'Vytváření objektů', activityType: 'learn' },
+      { id: 'methods-private', title: 'Metody a soukromá pole', activityType: 'learn' },
+      { id: 'ajax-theory', title: 'Teorie AJAXu', activityType: 'learn' },
+      {
+        id: 'ajax-practice',
+        title: 'AJAX v praxi',
+        activityType: 'build',
+        presenterNotes: 'Nechte studenty sledovat stav před požadavkem, během něj a po odpovědi.',
+      },
+      {
+        id: 'task1',
+        title: 'Úkol 1: Třídy',
+        activityType: 'apply',
+        presenterNotes: 'Před řešením požádejte o návrh rozhraní třídy na tabuli.',
+      },
+      {
+        id: 'task2',
+        title: 'Úkol 2: AJAX',
+        activityType: 'apply',
+        presenterNotes: 'Před spuštěním požadavku nechte studenty určit očekávaný tvar odpovědi.',
+      },
+      { id: 'summary', title: 'Shrnutí', activityType: 'learn' },
     ],
     [],
   );
@@ -1228,6 +1259,7 @@ export default function AppJsLesson7() {
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-7: Classes and AJAX"
+      objective="Vysvětlíte základy tříd v JavaScriptu a AJAXu a procvičíte práci s asynchronními požadavky."
       subtitle="Interaktivní prezentace s příklady kódu a úkoly"
       footerText="© 2025 ZWA – Cvičení 7: Třídy a AJAX"
     >

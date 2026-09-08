@@ -77,3 +77,77 @@ test.describe('F1 lesson composition and deep links', () => {
     ).toBeVisible();
   });
 });
+
+test.describe('F2 lesson composition and deep links', () => {
+  test('CSS II lesson keeps its task deep link and learning objective', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-5-css-ii?slide=tasks');
+
+    await expect(page.getByRole('tab', { name: 'Úlohy – CSS II', exact: true })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
+    await expect(
+      page.getByText(
+        'Vytvoříte a ověříte responzivní CSS layout pomocí box modelu, flexboxu, media queries a tisku.',
+        { exact: true },
+      ),
+    ).toBeVisible();
+  });
+
+  test('JavaScript lesson keeps its task deep link and learning objective', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-5-js?slide=tasks');
+
+    await expect(
+      page.getByRole('tab', { name: 'Úlohy – JavaScript', exact: true }),
+    ).toHaveAttribute('aria-selected', 'true');
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
+    await expect(
+      page.getByText(
+        'Procvičíte proměnné, funkce, DOM a události v JavaScriptu v bezpečném interaktivním playgroundu.',
+        { exact: true },
+      ),
+    ).toBeVisible();
+  });
+
+  test('classes and AJAX lesson keeps its task deep link and learning objective', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-7?slide=task1');
+
+    await expect(page.getByRole('tab', { name: 'Úkol 1: Třídy', exact: true })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('task1');
+    await expect(
+      page.getByText(
+        'Vysvětlíte základy tříd v JavaScriptu a AJAXu a procvičíte práci s asynchronními požadavky.',
+        { exact: true },
+      ),
+    ).toBeVisible();
+  });
+
+  test('PHP lesson keeps its task deep link and learning objective', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-8-php?slide=t1');
+
+    await expect(
+      page.getByRole('tab', { name: 'Úkol 1: Výpis aktuálního data', exact: true }),
+    ).toHaveAttribute('aria-selected', 'true');
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('t1');
+    await expect(
+      page.getByText(
+        'Použijete základní PHP syntaxi pro práci s datem, funkcemi, poli a parametry.',
+        { exact: true },
+      ),
+    ).toBeVisible();
+  });
+});

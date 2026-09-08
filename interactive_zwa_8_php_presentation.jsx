@@ -622,20 +622,38 @@ export default function AppPhpLesson8() {
         id: 'title',
         title: 'Základy webových aplikací – 8. cvičení',
         subtitle: 'PHP – Malý test #2 (základy PHP)',
+        activityType: 'learn',
+        presenterNotes:
+          'Začněte krátkým příkladem data a nechte studenty pojmenovat jednotlivé kroky.',
       },
-      { id: 'toc', title: 'Obsah' },
-      { id: 'theory', title: 'Teorie – PHP rychlý přehled' },
-      { id: 'ssh', title: 'Jak se připojit přes SSH + nastavení hesla' },
-      { id: 'filezilla', title: 'Jak se připojit přes FileZilla (SFTP)' },
-      { id: 't1', title: 'Úkol 1: Výpis aktuálního data' },
-      { id: 't2', title: 'Úkol 2: Práce s datem' },
-      { id: 't3', title: 'Úkol 3: Funkce' },
-      { id: 't4', title: 'Úkol 4: Průchod pole' },
-      { id: 't5', title: 'Úkol 5: Vytváření pole měsíců' },
-      { id: 't6', title: 'Úkol 6: Různé měsíce' },
-      { id: 't7', title: 'Úkol 7: Zjištění typu proměnné' },
-      { id: 't8', title: 'Úkol 8: Nepovinné parametry' },
-      { id: 'summary', title: 'Shrnutí' },
+      { id: 'toc', title: 'Obsah', activityType: 'learn' },
+      {
+        id: 'theory',
+        title: 'Teorie – PHP rychlý přehled',
+        activityType: 'learn',
+        presenterNotes: 'Ukažte, jak se datum rozloží na vstup, timestamp a formátovaný výstup.',
+      },
+      { id: 'ssh', title: 'Jak se připojit přes SSH + nastavení hesla', activityType: 'learn' },
+      { id: 'filezilla', title: 'Jak se připojit přes FileZilla (SFTP)', activityType: 'learn' },
+      {
+        id: 't1',
+        title: 'Úkol 1: Výpis aktuálního data',
+        activityType: 'apply',
+        presenterNotes: 'Nechte studenty nejdřív určit formát data, který má výstup splnit.',
+      },
+      { id: 't2', title: 'Úkol 2: Práce s datem', activityType: 'apply' },
+      { id: 't3', title: 'Úkol 3: Funkce', activityType: 'apply' },
+      { id: 't4', title: 'Úkol 4: Průchod pole', activityType: 'apply' },
+      { id: 't5', title: 'Úkol 5: Vytváření pole měsíců', activityType: 'apply' },
+      { id: 't6', title: 'Úkol 6: Různé měsíce', activityType: 'apply' },
+      { id: 't7', title: 'Úkol 7: Zjištění typu proměnné', activityType: 'apply' },
+      {
+        id: 't8',
+        title: 'Úkol 8: Nepovinné parametry',
+        activityType: 'apply',
+        presenterNotes: 'Porovnejte chování funkce bez limitů, s minimem a s oběma limity.',
+      },
+      { id: 'summary', title: 'Shrnutí', activityType: 'learn' },
     ],
     [],
   );
@@ -649,6 +667,7 @@ export default function AppPhpLesson8() {
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-8: PHP Basics – Malý test #2"
+      objective="Použijete základní PHP syntaxi pro práci s datem, funkcemi, poli a parametry."
       subtitle="Interaktivní prezentace s ukázkami kódu pro PHP základy"
       footerText="© 2025 ZWA – Cvičení 8: PHP Basics"
     >
