@@ -1,32 +1,31 @@
-import { neon } from '@neondatabase/serverless';
-import crypto from 'crypto';
-
-const sql = neon(process.env.DATABASE_URL);
-
-function sign(value) {
-  const secret = process.env.STUDENT_COOKIE_SECRET || 'dev-secret';
-  const h = crypto.createHmac('sha256', secret).update(value).digest('hex');
-  return `${value}.${h}`;
-}
+import { createStudentsRepository, verifyAccessCode } from '../../../src/server/repositories/students.js';
+import { validateUsername } from '../../../src/server/repositories/validation.js';
+import { createSessionToken, serializeSessionCookie } from '../../../src/server/auth/session.js';
+import { requireSameOrigin } from '../../../src/server/security/csrf.js';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).end('Method Not Allowed');
-  }
+  if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).end(); }
+  if (!requireSameOrigin(req)) return res.status(403).json({ error: 'Forbidden' });
   try {
-    const { username, code } = req.body || {};
-    if (!username || !code) return res.status(400).json({ error: 'username and code required' });
-    const rows = await sql(`select auth_code from progress where username = $1`, [username]);
-    if (!rows.length || !rows[0].auth_code || rows[0].auth_code !== code) {
+    const username = validateUsername(req.body?.username);
+    const code = req.body?.code;
+    if (typeof code !== 'string' || code.length > 128) return res.status(400).json({ error: 'Invalid request' });
+    const students = createStudentsRepository();
+    const access = await students.getAccess(username);
+    const blocked = !access || access.revoked_at || (access.expires_at && new Date(access.expires_at) <= new Date())
+      || (access.locked_until && new Date(access.locked_until) > new Date());
+    const matches = !blocked && await verifyAccessCode(code, access.auth_code_hash);
+    if (!matches) {
+      if (access) await students.recordFailedLogin(username);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    const token = sign(username);
-    res.setHeader('Set-Cookie', `student_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`);
+    await students.clearFailedLogins(username);
+    const issuedAt = Math.floor(Date.now() / 1000); const maxAge = 30 * 24 * 60 * 60;
+    const token = createSessionToken({ kind: 'student', subject: username, issuedAt, expiresAt: issuedAt + maxAge });
+    res.setHeader('Set-Cookie', serializeSessionCookie('student', token, maxAge));
     return res.status(200).json({ ok: true });
-  } catch (e) {
-    return res.status(500).json({ error: 'Login failed', details: String(e) });
+  } catch (error) {
+    if (error instanceof TypeError) return res.status(400).json({ error: 'Invalid request' });
+    return res.status(500).json({ error: 'Unable to sign in' });
   }
 }
-
-

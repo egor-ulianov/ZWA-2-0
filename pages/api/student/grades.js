@@ -1,62 +1,12 @@
-import { neon } from '@neondatabase/serverless';
-import crypto from 'crypto';
-
-const sql = neon(process.env.DATABASE_URL);
-
-function verify(token) {
-  const secret = process.env.STUDENT_COOKIE_SECRET || 'dev-secret';
-  if (!token) return null;
-  const idx = token.lastIndexOf('.');
-  if (idx <= 0) return null;
-  const value = token.slice(0, idx);
-  const sig = token.slice(idx + 1);
-  const h = crypto.createHmac('sha256', secret).update(value).digest('hex');
-  if (h !== sig) return null;
-  return value; // username
-}
+import { requireStudent } from '../../../src/server/auth/guards.js';
+import { createGradesRepository } from '../../../src/server/repositories/grades.js';
 
 export default async function handler(req, res) {
-  const cookie = req.headers.cookie || '';
-  const match = cookie.match(/(?:^|; )student_session=([^;]+)/);
-  const token = match ? decodeURIComponent(match[1]) : '';
-  const username = verify(token);
-  if (!username) return res.status(401).json({ error: 'Unauthorized' });
+  if (req.method !== 'GET') { res.setHeader('Allow', 'GET'); return res.status(405).end(); }
+  const session = await requireStudent(req, res);
+  if (!session) return undefined;
   try {
-    const rows = await sql(`
-      select distinct on (test_number)
-        username, test_number, points, reasoning, teacher_comment, images_count, graded_at
-      from test_grades
-      where username = $1
-      order by test_number, graded_at desc
-    `, [username]);
-    const byTest = {};
-    for (const r of rows) {
-      // Normalize legacy reasoning that might have been JSON-stringified
-      if (r && typeof r.reasoning === 'string') {
-        const trimmed = r.reasoning.trim();
-        if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith('{') || trimmed.startsWith('['))) {
-          try {
-            const parsed = JSON.parse(trimmed);
-            if (typeof parsed === 'string') {
-              r.reasoning = parsed;
-            } else if (Array.isArray(parsed)) {
-              r.reasoning = parsed.map((x) => (typeof x === 'string' ? `- ${x}` : `- ${JSON.stringify(x)}`)).join('\n');
-            } else if (parsed && typeof parsed === 'object') {
-              r.reasoning = Object.entries(parsed)
-                .map(([k, v]) => `- ${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
-                .join('\n');
-            }
-          } catch (_) {
-            // keep as-is if not valid JSON
-          }
-        }
-      }
-      byTest[r.test_number] = r;
-    }
-    return res.status(200).json({ username, grades: byTest });
-  } catch (e) {
-    return res.status(500).json({ error: 'Failed', details: String(e) });
-  }
+    const rows = await createGradesRepository().getLatestPublished(session.subject);
+    return res.status(200).json({ username: session.subject, grades: Object.fromEntries(rows.map((grade) => [grade.test_number, grade])) });
+  } catch { return res.status(500).json({ error: 'Unable to load grades' }); }
 }
-
-
