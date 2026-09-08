@@ -1,5 +1,5 @@
-const { test, expect } = require('@playwright/test');
-const { installDeterministicNetwork } = require('./helpers/browser.js');
+import { expect, test } from '@playwright/test';
+import { installDeterministicNetwork } from './helpers/browser.js';
 
 test.describe('public catalog and lesson navigation', () => {
   test('homepage catalog navigates to the legacy network lesson route', async ({ page }) => {

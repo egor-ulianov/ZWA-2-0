@@ -11,4 +11,4 @@ async function fulfillJson(route, payload, { status = 200, headers = {} } = {}) 
   });
 }
 
-module.exports = { fulfillJson, installDeterministicNetwork };
+export { fulfillJson, installDeterministicNetwork };

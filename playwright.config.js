@@ -1,8 +1,8 @@
-const { defineConfig, devices } = require('@playwright/test');
+import { defineConfig, devices } from '@playwright/test';
 
 const baseURL = process.env.BASE_URL || 'http://127.0.0.1:3000';
 
-module.exports = defineConfig({
+export default defineConfig({
   testDir: './tests',
   testMatch: '**/*.spec.js',
   fullyParallel: true,

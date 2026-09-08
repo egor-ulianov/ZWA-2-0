@@ -137,7 +137,7 @@ function createSandboxToken() {
   throw new Error("Secure sandbox tokens require Web Crypto");
 }
 
-module.exports = {
+export {
   CHANNEL,
   VERSION,
   MAX_TEXT_LENGTH,

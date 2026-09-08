@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useRef } from "react";
 
-const {
+import {
   createSandboxToken,
   validatePlaygroundEvent,
-} = require("./protocol");
-const {
+} from "./protocol.js";
+import {
   buildInspectionDocument,
   buildJavascriptDocument,
   buildStaticDocument,
   sandboxPolicy,
-} = require("./documents");
+} from "./documents.js";
 
 export function SandboxedPreview({
   html = "",

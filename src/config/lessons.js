@@ -93,4 +93,4 @@ function getLessonBySlug(slug) {
   return lessons.find((lesson) => lesson.slug === slug);
 }
 
-module.exports = { lessons, getLessonByNumber, getLessonBySlug };
+export { lessons, getLessonByNumber, getLessonBySlug };

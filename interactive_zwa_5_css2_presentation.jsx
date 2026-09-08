@@ -4,10 +4,10 @@ import { getLessonByNumber } from "./src/config/lessons.js";
 import LessonShell, { useSlideNavigation } from "./src/components/lesson/LessonShell.jsx";
 import SharedSlideCard from "./src/components/lesson/SlideCard.jsx";
 
-const {
+import {
   CSS_LAYOUT_INSPECTION,
   validateCssLayout,
-} = require("./src/components/playground/validators");
+} from "./src/components/playground/validators.js";
 
 function clsx(...xs) { return xs.filter(Boolean).join(" "); }
 

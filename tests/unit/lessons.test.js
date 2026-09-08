@@ -1,9 +1,13 @@
-const assert = require("node:assert/strict");
-const { existsSync } = require("node:fs");
-const { join } = require("node:path");
-const test = require("node:test");
+import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
 
-const root = join(__dirname, "..", "..");
+import * as catalog from "../../src/config/lessons.js";
+import * as navigation from "../../src/components/lesson/navigation.js";
+
+const root = join(fileURLToPath(new URL("../..", import.meta.url)));
 const catalogPath = join(root, "src", "config", "lessons.js");
 const navigationPath = join(root, "src", "components", "lesson", "navigation.js");
 
@@ -13,12 +17,12 @@ function lessonSourcePath(lesson) {
 
 function loadCatalog() {
   assert.ok(existsSync(catalogPath), "src/config/lessons.js must exist");
-  return require(catalogPath);
+  return catalog;
 }
 
 function loadNavigation() {
   assert.ok(existsSync(navigationPath), "src/components/lesson/navigation.js must exist");
-  return require(navigationPath);
+  return navigation;
 }
 
 test("lesson catalog preserves all twelve ordered public routes", () => {
@@ -90,7 +94,7 @@ test("every catalog lesson uses the shared shell and navigation contract", () =>
   for (const lesson of lessons) {
     const sourcePath = lessonSourcePath(lesson);
     assert.ok(existsSync(sourcePath), `${lesson.componentKey} source must exist`);
-    const source = require("node:fs").readFileSync(sourcePath, "utf8");
+    const source = readFileSync(sourcePath, "utf8");
     assert.match(source, /LessonShell/, lesson.componentKey);
     assert.match(source, /useSlideNavigation/, lesson.componentKey);
     assert.match(source, /<LessonShell\b/, lesson.componentKey);
@@ -108,7 +112,7 @@ test("playground lessons keep their isolated execution adapters", () => {
   ];
 
   for (const componentKey of playgroundComponents) {
-    const source = require("node:fs").readFileSync(join(root, `${componentKey}.jsx`), "utf8");
+    const source = readFileSync(join(root, `${componentKey}.jsx`), "utf8");
     assert.match(source, /src\/components\/playground\/(?:SandboxedPreview|JsSandbox)/, componentKey);
     assert.doesNotMatch(source, /new Function\s*\(/, componentKey);
   }

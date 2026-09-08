@@ -1,5 +1,5 @@
-const { test, expect } = require('@playwright/test');
-const { fulfillJson, installDeterministicNetwork } = require('./helpers/browser.js');
+import { expect, test } from '@playwright/test';
+import { fulfillJson, installDeterministicNetwork } from './helpers/browser.js';
 
 test('teacher can sign in, edit roster data, and retry a conflicted attendance save', async ({
   page,

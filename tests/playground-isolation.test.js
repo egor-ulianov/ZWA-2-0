@@ -1,9 +1,27 @@
-const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
-const { join } = require("node:path");
-const test = require("node:test");
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
 
-const root = join(__dirname, "..");
+import {
+  buildJavascriptDocument,
+  buildStaticDocument,
+  sandboxPolicy,
+} from "../src/components/playground/documents.js";
+import {
+  CHANNEL,
+  VERSION,
+  validatePlaygroundEvent,
+  validatePlaygroundMessage,
+} from "../src/components/playground/protocol.js";
+import {
+  validateCssBasics,
+  validateCssLayout,
+} from "../src/components/playground/validators.js";
+
+const root = join(fileURLToPath(new URL("..", import.meta.url)));
+const documentsPath = join(root, "src/components/playground/documents.js");
 const lessonFiles = [
   "interactive_zwa_1_html5_presentation.jsx",
   "interactive_zwa_2_css_presentation.jsx",
@@ -50,22 +68,13 @@ test("student HTML and CSS are never mounted into a host-page DOM node", () => {
 });
 
 test("sandbox policy never grants student content same-origin, forms, or navigation privileges", () => {
-  const documentsPath = join(
-    root,
-    "src/components/playground/documents.js"
-  );
-  assert.doesNotThrow(() => require(documentsPath));
-  const { sandboxPolicy } = require(documentsPath);
-
+  assert.equal(typeof sandboxPolicy, "function");
   assert.deepEqual(sandboxPolicy("static"), { sandbox: "" });
   assert.deepEqual(sandboxPolicy("inspect"), { sandbox: "allow-scripts" });
   assert.deepEqual(sandboxPolicy("javascript"), { sandbox: "allow-scripts" });
 });
 
 test("static hostile HTML is framed by a no-script, no-network, no-form CSP", () => {
-  const { buildStaticDocument } = require(
-    join(root, "src/components/playground/documents.js")
-  );
   const document = buildStaticDocument({
     html: hostilePayload,
     css: "</style><script>parent.document.body.remove()</script>",
@@ -81,9 +90,6 @@ test("static hostile HTML is framed by a no-script, no-network, no-form CSP", ()
 });
 
 test("script sandbox serializes hostile code as inert data before isolated execution", () => {
-  const { buildJavascriptDocument } = require(
-    join(root, "src/components/playground/documents.js")
-  );
   const document = buildJavascriptDocument({
     code: hostilePayload,
     dom: hostilePayload,
@@ -99,14 +105,6 @@ test("script sandbox serializes hostile code as inert data before isolated execu
 });
 
 test("protocol accepts only bounded messages for the active sandbox token", () => {
-  const protocolPath = join(root, "src/components/playground/protocol.js");
-  assert.doesNotThrow(() => require(protocolPath));
-  const {
-    CHANNEL,
-    VERSION,
-    validatePlaygroundEvent,
-    validatePlaygroundMessage,
-  } = require(protocolPath);
   const base = { channel: CHANNEL, version: VERSION, token: "active-token" };
 
   assert.deepEqual(
@@ -211,12 +209,6 @@ test("preview components enforce iframe, source-window, protocol, and timeout bo
 });
 
 test("CSS validators preserve task outcomes from serialized iframe styles", () => {
-  const validatorsPath = join(
-    root,
-    "src/components/playground/validators.js"
-  );
-  assert.doesNotThrow(() => require(validatorsPath));
-  const { validateCssBasics, validateCssLayout } = require(validatorsPath);
   const inspection = {
     kind: "inspection",
     elements: [

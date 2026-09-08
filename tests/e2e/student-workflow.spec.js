@@ -1,5 +1,5 @@
-const { test, expect } = require('@playwright/test');
-const { fulfillJson, installDeterministicNetwork } = require('./helpers/browser.js');
+import { expect, test } from '@playwright/test';
+import { fulfillJson, installDeterministicNetwork } from './helpers/browser.js';
 
 test('unauthorized student progress redirects back to the login page', async ({ page }) => {
   await installDeterministicNetwork(page);

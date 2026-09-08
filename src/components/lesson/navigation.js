@@ -66,7 +66,7 @@ function buildSlideUrl(location, slideId) {
   return `${current.pathname}${current.search}${current.hash}`;
 }
 
-module.exports = {
+export {
   buildSlideUrl,
   getScrollBehavior,
   getSlideDomIds,

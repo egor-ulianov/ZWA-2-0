@@ -1,4 +1,4 @@
-const { CHANNEL, VERSION } = require("./protocol");
+import { CHANNEL, VERSION } from "./protocol.js";
 
 const BASE_CSP = [
   "default-src 'none'",
@@ -299,7 +299,7 @@ function buildJavascriptDocument({ code = null, dom = "", stepIndex = 0, token }
   });
 }
 
-module.exports = {
+export {
   sandboxPolicy,
   MAX_STUDENT_SOURCE_LENGTH,
   MAX_STUDENT_CODE_LENGTH,

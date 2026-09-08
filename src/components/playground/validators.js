@@ -185,7 +185,7 @@ function validateCssLayout({ stepIndex, inspection, htmlCode, cssCode }) {
   return results;
 }
 
-module.exports = {
+export {
   CSS_BASICS_INSPECTION,
   CSS_LAYOUT_INSPECTION,
   validateCssBasics,

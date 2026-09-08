@@ -1,5 +1,5 @@
-const { test, expect } = require('@playwright/test');
-const { installDeterministicNetwork } = require('../e2e/helpers/browser.js');
+import { expect, test } from '@playwright/test';
+import { installDeterministicNetwork } from '../e2e/helpers/browser.js';
 
 test('homepage renders the lesson catalog and protected workspace entry point', async ({
   page,

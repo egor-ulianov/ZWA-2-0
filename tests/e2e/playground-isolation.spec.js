@@ -1,5 +1,5 @@
-const { test, expect } = require('@playwright/test');
-const { installDeterministicNetwork } = require('./helpers/browser.js');
+import { expect, test } from '@playwright/test';
+import { installDeterministicNetwork } from './helpers/browser.js';
 
 test('hostile student JavaScript cannot mutate the parent or block later sandbox use', async ({
   page,
