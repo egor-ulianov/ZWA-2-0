@@ -1,0 +1,38 @@
+{
+  "root": true,
+  "extends": ["next/core-web-vitals", "prettier"],
+  "env": {
+    "es2022": true,
+    "node": true
+  },
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    "out/",
+    "pages/index.jsx",
+    "interactive_zwa_*.jsx",
+    "src/config/**",
+    "src/components/lesson/**",
+    "src/components/playground/**",
+    "tests/e2e/**",
+    "tests/unit/lessons.test.js"
+  ],
+  "overrides": [
+    {
+      "files": ["*.cjs"],
+      "parserOptions": {
+        "sourceType": "script"
+      }
+    }
+  ],
+  "rules": {
+    "no-console": "off"
+  }
+}

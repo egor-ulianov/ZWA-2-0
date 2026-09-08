@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "preserve",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "strict": false,
+    "incremental": false,
+    "isolatedModules": true
+  },
+  "include": [
+    "next.config.js",
+    "postcss.config.js",
+    "tailwind.config.js",
+    "playwright.config.js",
+    "pages/api/**/*.js",
+    "src/server/**/*.js",
+    "src/lib/**/*.js",
+    "scripts/**/*.mjs",
+    "tests/quality/**/*.mjs",
+    "tests/quality/**/*.js"
+  ],
+  "exclude": ["node_modules", ".next", "out"]
+}

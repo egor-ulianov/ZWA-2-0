@@ -8,23 +8,41 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test:unit": "node --test tests/unit/*.test.js",
+    "test:api": "node --test tests/api/*.test.js",
+    "test:playground": "node --test tests/playground-isolation.test.js",
+    "test:quality": "node --test tests/quality/*.test.mjs",
+    "test": "npm run test:unit && npm run test:api && npm run test:playground && npm run test:quality",
+    "lint": "eslint --max-warnings=0 next.config.js postcss.config.js tailwind.config.js playwright.config.js pages/api src/server src/lib scripts/*.mjs tests/quality",
+    "format:check": "prettier --check package.json package-lock.json .eslintrc.json .prettierrc.json tsconfig.json playwright.config.js .github/workflows/quality.yml tests/quality README.md SECURITY.md",
+    "typecheck": "tsc --noEmit",
+    "security:scan": "node tests/quality/security-scan.mjs",
+    "quality:health": "node tests/quality/health-check.mjs",
+    "quality:docker": "node tests/quality/docker-check.mjs",
+    "test:e2e": "playwright test --config=playwright.config.js",
+    "quality": "npm test && npm run lint && npm run format:check && npm run typecheck && npm run security:scan && npm audit --omit=dev && npm run quality:health && npm run quality:docker && npm run build && npm run test:e2e"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.5",
     "@vercel/analytics": "^1.5.0",
-    "react-markdown": "^9.0.1",
     "next": "14.2.35",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-markdown": "^9.0.1",
     "sharp": "^0.35.4"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
-    "typescript": "^5.6.3",
-    "tailwindcss": "^3.4.17",
+    "autoprefixer": "^10.4.21",
+    "eslint": "8.57.1",
+    "eslint-config-next": "14.2.35",
+    "eslint-config-prettier": "10.1.8",
     "postcss": "^8.5.3",
-    "autoprefixer": "^10.4.21"
+    "prettier": "3.9.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.6.3"
   }
 }

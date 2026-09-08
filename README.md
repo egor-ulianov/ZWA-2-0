@@ -20,7 +20,29 @@ npm run build
 npm run start
 ```
 
-The future quality gates are documented here for CI: `npm run lint`, `npm run test:unit`, and `npm run test:e2e`. They will be introduced with their corresponding test work.
+The release quality gates are available locally and run in CI:
+
+```sh
+npm test
+npm run lint
+npm run format:check
+npm run typecheck
+npm run security:scan
+npm audit --omit=dev
+npm run build
+npm run quality:health
+npm run quality:docker
+docker build -t zwa-presentations .
+npx playwright install chromium
+npm run test:e2e
+```
+
+`npm run quality` runs the complete sequence, including the production build and browser
+smoke test. The health gate validates the endpoint contract by default; set
+`QUALITY_HEALTH_URL` to probe a live deployment and require `{ "ok": true }`.
+
+The browser smoke test expects a completed production build. CI installs Chromium explicitly
+before running it.
 
 ## Database and deployment
 
