@@ -1,10 +1,13 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import PortalFrame from '../portal/PortalFrame.jsx';
 import { getCourseModule } from '../portal/courseMetadata.js';
 import LessonOutline from './LessonOutline.jsx';
 import { createLessonContextValue, LessonContext } from './LessonContext.jsx';
+import PresenterConsole from './PresenterConsole.jsx';
+import ProjectorStage from './ProjectorStage.jsx';
+import { createPresenterChannel } from './presenterChannel.js';
 import SlideNavigation from './SlideNavigation.jsx';
-import { buildSlideUrl, resolveSlideId } from './navigation.js';
+import { buildSlideUrl, resolveLessonMode, resolveSlideId } from './navigation.js';
 
 const LESSON_MODES = Object.freeze(['student', 'projector', 'presenter']);
 
@@ -14,6 +17,13 @@ function normalizeLessonMode(mode) {
 
 function shellId(lesson) {
   return `lesson-${String(lesson?.slug || 'presentation').replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+}
+
+function isEditableTarget(target) {
+  if (!target || typeof target !== 'object') return false;
+  if (target.isContentEditable) return true;
+  const tagName = typeof target.tagName === 'string' ? target.tagName.toLowerCase() : '';
+  return tagName === 'input' || tagName === 'textarea' || tagName === 'select';
 }
 
 export function useSlideNavigation(slides) {
@@ -49,6 +59,45 @@ export function useSlideNavigation(slides) {
   }, [syncFromLocation]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    function handleKeyDown(event) {
+      if (event.defaultPrevented || isEditableTarget(event.target)) return;
+      const direction =
+        event.key === 'ArrowRight' || event.key === 'ArrowDown'
+          ? 1
+          : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+            ? -1
+            : event.key === 'Home'
+              ? 'first'
+              : event.key === 'End'
+                ? 'last'
+                : null;
+      if (!direction) return;
+
+      setActiveSlideState((current) => {
+        const currentIndex = Math.max(
+          0,
+          slides.findIndex((slide) => slide.id === current),
+        );
+        const nextIndex =
+          direction === 'first'
+            ? 0
+            : direction === 'last'
+              ? slides.length - 1
+              : Math.min(Math.max(currentIndex + direction, 0), slides.length - 1);
+        const nextSlide = slides[nextIndex]?.id || fallback;
+        if (nextSlide === current) return current;
+        event.preventDefault();
+        return nextSlide;
+      });
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [fallback, slides]);
+
+  useEffect(() => {
     if (typeof window === 'undefined' || !activeSlide) return;
     const syncUrl = () => {
       const nextUrl = buildSlideUrl(window.location, activeSlide);
@@ -82,7 +131,9 @@ export default function LessonShell({
   mode = 'student',
 }) {
   const idPrefix = shellId(lesson);
-  const resolvedMode = normalizeLessonMode(mode);
+  const locationMode =
+    mode === 'student' && typeof window !== 'undefined' ? resolveLessonMode(window.location) : mode;
+  const resolvedMode = normalizeLessonMode(locationMode);
   const courseModule = getCourseModule(lesson);
   const lessonTitle = title || lesson?.title || 'Lesson';
   const resolvedObjective =
@@ -94,6 +145,54 @@ export default function LessonShell({
     onChange,
     mode: resolvedMode,
   });
+  const channelRef = useRef(null);
+
+  useEffect(() => {
+    if (!['projector', 'presenter'].includes(resolvedMode) || !lesson?.slug) {
+      channelRef.current?.close();
+      channelRef.current = null;
+      return undefined;
+    }
+
+    const channel = createPresenterChannel({
+      lessonSlug: lesson.slug,
+      slides,
+      onSlide: (slideId) => onChange?.(slideId),
+    });
+    channelRef.current = channel;
+    return () => {
+      channel.close();
+      if (channelRef.current === channel) channelRef.current = null;
+    };
+  }, [lesson?.slug, onChange, resolvedMode, slides]);
+
+  useEffect(() => {
+    if (activeSlide) channelRef.current?.publishSlide(activeSlide);
+  }, [activeSlide]);
+
+  if (resolvedMode === 'projector') {
+    const currentSlide = slides.find((slide) => slide.id === activeSlide) || slides[0];
+    const currentIndex = Math.max(
+      0,
+      slides.findIndex((slide) => slide.id === currentSlide?.id),
+    );
+    return (
+      <LessonContext.Provider value={contextValue}>
+        <PortalFrame
+          meta={lesson?.number ? `Lesson ${lesson.number}` : 'Lesson'}
+          className="lesson-shell"
+        >
+          <ProjectorStage
+            lesson={lesson}
+            slides={slides}
+            slide={currentSlide}
+            onPrevious={() => onChange?.(slides[Math.max(0, currentIndex - 1)]?.id)}
+            onNext={() => onChange?.(slides[Math.min(slides.length - 1, currentIndex + 1)]?.id)}
+          />
+        </PortalFrame>
+      </LessonContext.Provider>
+    );
+  }
 
   return (
     <LessonContext.Provider value={contextValue}>
@@ -122,6 +221,15 @@ export default function LessonShell({
               </div>
             )}
           </header>
+
+          {resolvedMode === 'presenter' ? (
+            <PresenterConsole
+              lesson={lesson}
+              slides={slides}
+              activeSlide={activeSlide}
+              onChange={onChange}
+            />
+          ) : null}
 
           <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(12rem,15rem)_minmax(0,1fr)]">
             <LessonOutline

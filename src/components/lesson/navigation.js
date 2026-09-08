@@ -4,6 +4,14 @@ function getSlideIds(slides) {
     : [];
 }
 
+const LESSON_MODES = new Set(['student', 'projector', 'presenter']);
+
+function resolveLessonMode(location = {}) {
+  const search = typeof location.search === 'string' ? location.search : '';
+  const requestedMode = new URLSearchParams(search).get('mode');
+  return LESSON_MODES.has(requestedMode) ? requestedMode : 'student';
+}
+
 function prefersReducedMotion() {
   return (
     typeof window !== 'undefined' &&
@@ -73,6 +81,7 @@ export {
   getScrollBehavior,
   getSlideDomIds,
   getSlideIds,
+  resolveLessonMode,
   resolveSlideId,
   scrollToId,
 };
