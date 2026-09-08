@@ -4,6 +4,17 @@ import { validateScore, validateUsername } from './validation.js';
 const SOURCES = new Set(['ai', 'teacher', 'normalized']);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+export function toStudentGradeDto(grade) {
+  if (!grade) return null;
+  return {
+    test_number: Number(grade.test_number),
+    points: Number(grade.points),
+    max_points: Number(grade.max_points),
+    reasoning: grade.reasoning,
+    graded_at: grade.created_at ?? null,
+  };
+}
+
 function validateAttempt(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new TypeError('Invalid grade attempt');
   const {
@@ -160,7 +171,8 @@ export function createGradesRepository(sql = getDb()) {
            select * from grade_normalization_runs where id = $1 and status = 'previewed' for update
          ), guarded_run as (
            select run.* from run
-           where not exists (
+           where run.actor = $2
+             and not exists (
              select 1 from jsonb_to_recordset(run.original_attempts) as expected(username text, attempt_id bigint)
              left join lateral (
                select current_grade.attempt_id

@@ -5,6 +5,16 @@ const ASSIGNMENT_FIELDS = new Set([
   'assignment_partner', 'assignment_final_points',
 ]);
 
+export function parseAttendanceRevision(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const text = String(value).trim();
+  const numeric = /^\d+$/.test(text) ? text : (/^"\d+"$/.test(text) ? text.slice(1, -1) : null);
+  if (numeric === null) throw new TypeError('Invalid attendance revision');
+  const revision = Number(numeric);
+  if (!Number.isSafeInteger(revision)) throw new TypeError('Invalid attendance revision');
+  return revision;
+}
+
 export function validateUsername(value) {
   const username = typeof value === 'string' ? value.trim().toLowerCase() : '';
   if (!USERNAME.test(username)) throw new TypeError('Invalid username');
@@ -12,14 +22,21 @@ export function validateUsername(value) {
 }
 
 export function validateIsoDate(value) {
-  if (typeof value !== 'string' || !ISO_DATE.test(value) || Number.isNaN(Date.parse(`${value}T00:00:00Z`))) {
+  if (typeof value !== 'string' || !ISO_DATE.test(value)) {
+    throw new TypeError('Invalid attendance date');
+  }
+  const [, yearText, monthText, dayText] = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const year = Number(yearText); const month = Number(monthText); const day = Number(dayText);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  if (year < 1 || parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) {
     throw new TypeError('Invalid attendance date');
   }
   return value;
 }
 
-export function validateAttendanceInput({ attendanceDate, entries, actor }) {
+export function validateAttendanceInput({ attendanceDate, entries, actor, expectedRevision }) {
   const date = validateIsoDate(attendanceDate);
+  const revision = expectedRevision === undefined ? undefined : parseAttendanceRevision(expectedRevision);
   if (!Array.isArray(entries) || entries.length > 500) throw new TypeError('Attendance accepts at most 500 entries');
   if (typeof actor !== 'string' || !actor) throw new TypeError('Actor is required');
   const seen = new Set();
@@ -30,11 +47,12 @@ export function validateAttendanceInput({ attendanceDate, entries, actor }) {
     seen.add(username);
     return { username, present: entry.present };
   });
-  return { attendanceDate: date, entries: normalized, actor };
+  return { attendanceDate: date, entries: normalized, actor, expectedRevision: revision };
 }
 
 export function normalizeRosterRows(rows) {
   if (!Array.isArray(rows)) throw new TypeError('Roster rows must be an array');
+  if (rows.length > 5000) throw new TypeError('Roster accepts at most 5000 rows');
   const users = new Set();
   const normalized = [];
   for (const row of rows) {

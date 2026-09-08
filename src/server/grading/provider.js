@@ -1,5 +1,6 @@
 import { GRADING_LIMITS } from './limits.js';
 import { ModelOutputError, parseGradeOutput } from './schemas.js';
+import { consumeSharedRateLimit, RateLimitExceeded, RateLimitUnavailable } from '../rate-limit.js';
 
 export class GradeProviderError extends Error {
   constructor(message) {
@@ -41,6 +42,28 @@ async function requestModel({ messages, model }, {
   }
 }
 
+async function consumeProviderRateLimit(dependencies = {}) {
+  if (dependencies.rateLimit === false || (process.env.NODE_ENV === 'test' && !dependencies.sql)) return;
+  try {
+    if (typeof dependencies.consumeRateLimit === 'function') {
+      await dependencies.consumeRateLimit();
+      return;
+    }
+    await consumeSharedRateLimit({
+      key: dependencies.rateLimitKey || 'grade:global',
+      limit: 10,
+      windowMs: 5 * 60_000,
+      now: dependencies.now,
+      sql: dependencies.sql,
+      timeoutMs: dependencies.rateLimitTimeoutMs,
+    });
+  } catch (error) {
+    if (error instanceof RateLimitExceeded) throw new GradeProviderError('AI grading temporarily unavailable');
+    if (error instanceof RateLimitUnavailable) throw new GradeProviderError('AI grading unavailable');
+    throw error;
+  }
+}
+
 function gradePrompt({ maxPoints, criteria }) {
   return `You are a careful, fair grader for short-answer and calculation tests. `
     + `Score only semantic correctness; ignore superficial formatting and harmless naming differences. `
@@ -50,6 +73,7 @@ function gradePrompt({ maxPoints, criteria }) {
 
 export async function gradeImages(input, dependencies = {}) {
   try {
+    await consumeProviderRateLimit(dependencies);
     const raw = await requestModel({
       messages: [{ role: 'user', content: [
         { type: 'text', text: gradePrompt(input) },

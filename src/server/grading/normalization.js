@@ -1,8 +1,7 @@
 import { GRADING_LIMITS } from './limits.js';
 import { ModelOutputError, parseNormalizationOutput } from './schemas.js';
 import { GradeProviderError, requestModel } from './provider.js';
-
-const rateWindows = new Map();
+import { consumeSharedRateLimit, RateLimitExceeded, RateLimitUnavailable, rateLimitKey } from '../rate-limit.js';
 
 export class NormalizationProviderError extends Error {
   constructor(message) {
@@ -11,13 +10,23 @@ export class NormalizationProviderError extends Error {
   }
 }
 
-export function consumeNormalizationRateLimit(actor, now = Date.now()) {
+export async function consumeNormalizationRateLimit(actor, now = Date.now(), dependencies = {}) {
   if (typeof actor !== 'string' || !actor.trim()) throw new NormalizationProviderError('AI grading unavailable');
-  const windowStart = now - 5 * 60_000;
-  const current = (rateWindows.get(actor) || []).filter((time) => time > windowStart);
-  if (current.length >= 10) throw new NormalizationProviderError('AI grading temporarily unavailable');
-  current.push(now);
-  rateWindows.set(actor, current);
+  if (dependencies.rateLimit === false || (process.env.NODE_ENV === 'test' && !dependencies.sql)) return;
+  try {
+    await consumeSharedRateLimit({
+      key: rateLimitKey('normalization', actor.trim()),
+      limit: 10,
+      windowMs: 5 * 60_000,
+      now,
+      sql: dependencies.sql,
+      timeoutMs: dependencies.rateLimitTimeoutMs,
+    });
+  } catch (error) {
+    if (error instanceof RateLimitExceeded) throw new NormalizationProviderError('AI grading temporarily unavailable');
+    if (error instanceof RateLimitUnavailable) throw new NormalizationProviderError('AI grading unavailable');
+    throw error;
+  }
 }
 
 function normalizationPrompt({ testNumber, maxPoints, items }) {
@@ -49,12 +58,12 @@ export async function normalizeGrades({ testNumber, maxPoints, items, actor }, d
   }
   const normalized = [];
   for (let index = 0; index < items.length; index += GRADING_LIMITS.normalizationBatchSize) {
-    consumeNormalizationRateLimit(actor, dependencies.now);
+    await consumeNormalizationRateLimit(actor, dependencies.now, dependencies);
     normalized.push(...await normalizeBatch({
       testNumber,
       maxPoints,
       items: items.slice(index, index + GRADING_LIMITS.normalizationBatchSize),
-    }, dependencies));
+    }, { ...dependencies, rateLimit: false }));
   }
   return normalized;
 }

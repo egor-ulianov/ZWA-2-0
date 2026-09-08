@@ -39,13 +39,13 @@ test('accepts a nonzero grade only when the provider returns strict JSON', async
   });
 
   const grade = await gradeImages({ images: [PNG_DATA_URL], maxPoints: 12, criteria: '' }, {
-    apiKey: 'test-key', fetchImpl: fetchResponse('{"points":8,"reasoning":"Dobrá odpověď"}'),
+    apiKey: 'test-key', fetchImpl: fetchResponse('{"points":8,"reasoning":"Dobrá odpověď"}'), rateLimit: false,
   });
   assert.deepEqual(grade, { points: 8, reasoning: 'Dobrá odpověď' });
 
   await assert.rejects(
     gradeImages({ images: [PNG_DATA_URL], maxPoints: 12, criteria: '' }, {
-      apiKey: 'test-key', fetchImpl: fetchResponse('{"points":"0","reasoning":"bad"}'),
+      apiKey: 'test-key', fetchImpl: fetchResponse('{"points":"0","reasoning":"bad"}'), rateLimit: false,
     }),
     /provider output/i,
   );
@@ -55,6 +55,7 @@ test('turns an aborted provider call into a safe unavailable error', async () =>
   await assert.rejects(
     gradeImages({ images: [PNG_DATA_URL], maxPoints: 12, criteria: '' }, {
       apiKey: 'test-key', timeoutMs: 1,
+      rateLimit: false,
       fetchImpl: async (_url, options) => new Promise((_, reject) => {
         options.signal.addEventListener('abort', () => reject(new Error('network timeout')));
       }),
@@ -147,9 +148,14 @@ test('rejects a normalization run whose staged rows do not match its original at
   assert.equal(queried, false);
 });
 
-test('limits normalization provider calls per teacher in a five-minute window', () => {
-  for (let index = 0; index < 10; index += 1) consumeNormalizationRateLimit('rate-limit-test', 1_000 + index);
-  assert.throws(() => consumeNormalizationRateLimit('rate-limit-test', 1_020), /temporarily unavailable/i);
+test('limits normalization provider calls per teacher in a five-minute window', async () => {
+  let count = 0;
+  const sql = async () => [{ request_count: ++count }];
+  for (let index = 0; index < 10; index += 1) await consumeNormalizationRateLimit('rate-limit-test', 1_000 + index, { sql });
+  await assert.rejects(
+    consumeNormalizationRateLimit('rate-limit-test', 1_020, { sql }),
+    /temporarily unavailable/i,
+  );
 });
 
 test('refuses a normalization apply when a published attempt changed after preview', async () => {
@@ -217,6 +223,7 @@ test('batches normalization provider calls at the configured limit', async () =>
       };
     },
     now: 9_000_000,
+    rateLimit: false,
   });
 
   assert.equal(calls.length, 2);

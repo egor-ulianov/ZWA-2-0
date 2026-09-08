@@ -54,7 +54,13 @@ npm run build
 npm run start
 ```
 
-Set `NODE_ENV=production`, configure every required environment variable above, and expose the app only through its configured `APP_ORIGIN`. The `GET /api/health` endpoint checks required configuration and database connectivity without disclosing configuration values.
+For production, use the migration-gated entrypoint after the build so Next cannot serve before migrations finish:
+
+```sh
+node scripts/start.mjs
+```
+
+The entrypoint takes a transaction advisory lock, validates the ordered migration ledger (including checksums), applies pending migrations, and only then starts Next. `npm run start` remains useful for a local build when migrations are managed separately. Set `NODE_ENV=production`, configure every required environment variable above, and expose the app only through its configured `APP_ORIGIN`. The `GET /api/health` endpoint checks required configuration and database connectivity without disclosing configuration values.
 
 Build the production image with:
 

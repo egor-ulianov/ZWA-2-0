@@ -17,10 +17,16 @@ async function isRevoked(session) {
   return rows.length > 0;
 }
 
-async function requireKind(req, res, kind) {
+export async function getAuthenticatedSession(req, kind) {
   const token = readCookie(req, cookieName(kind));
   const session = verifySessionToken(token, kind);
-  if (!session || await isRevoked(session)) {
+  if (!session || await isRevoked(session)) return null;
+  return session;
+}
+
+async function requireKind(req, res, kind) {
+  const session = await getAuthenticatedSession(req, kind);
+  if (!session) {
     res.status(401).json({ error: 'Unauthorized' });
     return null;
   }

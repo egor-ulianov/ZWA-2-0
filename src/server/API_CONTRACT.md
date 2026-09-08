@@ -18,6 +18,19 @@ The teacher UI currently expects names and plaintext `auth_code` values from
 `GET /api/students` and `GET /api/progress`. Its owner must switch rows to the
 username and display `accessCode` only from the successful mutation response.
 
+`GET /api/student/grades` remains keyed by test number, but its values are a
+least-privilege DTO containing only `test_number`, `points`, `max_points`,
+`reasoning`, and `graded_at`. It does not expose attempt IDs, usernames,
+actors, model names, prompt versions, image counts, or other audit metadata.
+
+Attendance reads for a date return a monotonically increasing `revision` and
+the same value as a quoted `ETag`. Attendance snapshot writes must send that
+value as `If-Match: "<revision>"` (or as the numeric `revision` body field).
+Missing preconditions return `428`; a stale revision returns `409` and writes
+nothing. This is an intentional contract tightening for old unversioned full
+snapshot writers; the `date`/`map` payload and successful response remain
+compatible, with the new response also returning the next revision.
+
 Grading routes are teacher-only. `POST /api/grade-test` accepts one test number
 (`1..4`), max points (`1..12`), up to four PNG/JPEG/WebP data URLs (2 MiB
 decoded per image and 8 MiB total), and criteria up to 2,000 characters. It
@@ -56,3 +69,17 @@ A `409` means an underlying published attempt changed after preview, so the
 frontend must request a fresh preview. The previous `{ dryRun: false }` apply
 request without `runId` resolves the latest same-teacher preview when one
 exists; otherwise it returns `400` and the frontend must request a preview.
+
+The production `node scripts/start.mjs` entrypoint runs migrations before Next.
+Migrations are serialized with a PostgreSQL transaction advisory lock and
+recorded in `schema_migrations` with a SHA-256 checksum; a changed
+already-applied migration fails closed. Migration `005` copies valid scores
+from legacy `progress.test1..test4` and `test_grades` into immutable audited
+attempts, deterministically publishes one winner per student/test, then drops
+the legacy grade storage. Migration `006` adds attendance revisions and the
+database-backed rate-limit buckets.
+
+The public HTML validator accepts at most 100,000 characters/120 KiB, uses a
+bounded database-backed per-client throttle, and times out the upstream
+validator. Server failures return a generic error and correlation ID; upstream
+details are logged only on the server.
