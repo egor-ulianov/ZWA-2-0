@@ -20,3 +20,22 @@ username and display `accessCode` only from the successful mutation response.
 The grading-route owner must replace legacy `progress`/`test_grades` writes with
 `createGradesRepository()` and add `requireTeacher` plus `requireSameOrigin` to
 the two deliberately untouched grading routes.
+
+## AI grading
+
+`GET|POST|PUT /api/grade-test` and `POST /api/teacher/normalize-grades` require
+a teacher session. Mutations require a same-origin `Origin` header. Grade image
+submissions accept only 1--4 PNG/JPEG/WebP base64 data URLs (2 MiB decoded each,
+8 MiB total), test numbers 1--4, and integer max points 1--12. Provider and
+configuration failures return stable public errors plus a correlation ID; they
+never publish a fallback score.
+
+Normalization is now explicitly two-phase. `POST /api/teacher/normalize-grades`
+with `{ testNumber, maxPoints, dryRun: true }` returns the existing `ok`,
+`total`, `updated: 0`, and `preview` fields plus a required `runId`. To publish
+that exact preview, the frontend must call the same endpoint with `{ runId }`.
+The apply response retains `ok`, `total`, and `updated`, and additionally returns
+`runId` and `alreadyApplied`; replaying an applied run is a successful no-op.
+A `409` means an underlying published attempt changed after preview, so the
+frontend must request a fresh preview. The previous `{ dryRun: false }` apply
+request without `runId` now returns `400`.

@@ -1,224 +1,160 @@
-import { neon } from '@neondatabase/serverless';
+import crypto from 'node:crypto';
 
-const sql = neon(process.env.DATABASE_URL);
+import { requireTeacher } from '../../src/server/auth/guards.js';
+import { createGradesRepository } from '../../src/server/repositories/grades.js';
+import { validateUsername } from '../../src/server/repositories/validation.js';
+import { requireSameOrigin } from '../../src/server/security/csrf.js';
 
-async function ensureSchema() {
-  await sql(`
-    create table if not exists test_grades (
-      id bigserial primary key,
-      username text not null,
-      test_number int not null,
-      points int not null,
-      reasoning text not null,
-      images_count int default 0,
-      graded_at timestamptz default now()
-    );
-  `);
-  await sql(`alter table test_grades add column if not exists teacher_comment text;`);
+const MAX_IMAGES = 4;
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+const MAX_TOTAL_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_CRITERIA_CHARS = 2000;
+const MAX_REASONING_CHARS = 4000;
+const PROVIDER_TIMEOUT_MS = 30_000;
+const MODEL = process.env.OPENAI_GRADING_MODEL || 'gpt-4.1';
+const PROMPT_VERSION = 'grade-v2';
+const DATA_URL = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/;
+const rateWindows = new Map();
+
+export class GradeValidationError extends Error {}
+export class GradeProviderError extends Error {}
+
+function validateImage(value) {
+  if (typeof value !== 'string') throw new GradeValidationError('Images must be data URLs');
+  const match = DATA_URL.exec(value);
+  if (!match || match[2].length % 4 !== 0) throw new GradeValidationError('Images must be PNG, JPEG, or WebP data URLs');
+  const bytes = Buffer.from(match[2], 'base64');
+  if (!bytes.length || bytes.toString('base64') !== match[2]) throw new GradeValidationError('Images must be valid base64 data URLs');
+  if (bytes.length > MAX_IMAGE_BYTES) throw new GradeValidationError('Each image must be at most 2 MiB');
+  return { url: value, bytes: bytes.length };
 }
 
-function clampPoints(value, maxPoints) {
-  const v = Number.isFinite(value) ? Math.round(value) : 0;
-  if (v < 0) return 0;
-  if (v > maxPoints) return maxPoints;
-  return v;
+export function validateGradeRequest(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) throw new GradeValidationError('Invalid grade request');
+  let username;
+  try { username = validateUsername(body.username); } catch { throw new GradeValidationError('Invalid username'); }
+  const testNumber = body.testNumber;
+  const maxPoints = body.maxPoints;
+  if (!Number.isInteger(testNumber) || testNumber < 1 || testNumber > 4) throw new GradeValidationError('testNumber must be 1..4');
+  if (!Number.isInteger(maxPoints) || maxPoints < 1 || maxPoints > 12) throw new GradeValidationError('maxPoints must be an integer from 1 to 12');
+  if (!Array.isArray(body.images) || !body.images.length) throw new GradeValidationError('At least one image is required');
+  if (body.images.length > MAX_IMAGES) throw new GradeValidationError('At most four images are allowed');
+  const images = body.images.map(validateImage);
+  const totalBytes = images.reduce((total, image) => total + image.bytes, 0);
+  if (totalBytes > MAX_TOTAL_IMAGE_BYTES) throw new GradeValidationError('Images may total at most 8 MiB');
+  if (body.criteria !== undefined && (typeof body.criteria !== 'string' || body.criteria.length > MAX_CRITERIA_CHARS)) {
+    throw new GradeValidationError('criteria must be at most 2000 characters');
+  }
+  return { username, testNumber, maxPoints, images: images.map(({ url }) => url), criteria: (body.criteria || '').trim() };
 }
 
-function getTestColumnName(testNumber) {
-  const n = Number(testNumber);
-  if (n === 1) return 'test1';
-  if (n === 2) return 'test2';
-  if (n === 3) return 'test3';
-  if (n === 4) return 'test4';
-  return null;
+export function parseGradeOutput(raw, maxPoints) {
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch { throw new GradeProviderError('Invalid provider output'); }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)
+    || Object.keys(parsed).length !== 2 || Object.keys(parsed).some((key) => key !== 'points' && key !== 'reasoning')
+    || !Number.isInteger(parsed.points) || parsed.points < 0 || parsed.points > maxPoints
+    || typeof parsed.reasoning !== 'string' || !parsed.reasoning.trim() || parsed.reasoning.length > MAX_REASONING_CHARS) {
+    throw new GradeProviderError('Invalid provider output');
+  }
+  return { points: parsed.points, reasoning: parsed.reasoning.trim() };
 }
 
-async function callOpenAIVision({ images, maxPoints, criteriaText }) {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY not set');
-  }
-  const content = [];
-  content.push({ type: 'text', text: `You are grading a student test. Each task is for 3 points, there are 4 tasks. Give sum of points for all tasks. If there is something at least meaningful, give 1 point. If it is overall ok, but missing some details, give 2 points. If it is ideal, including small syntax errors, give 3 points. IMPORTANT: Do NOT penalize trivial formatting issues (e.g., missing/extra spaces, dots/commas), minor variable or function naming differences, or small stylistic deviations that do not affect correctness. Focus on semantic correctness and required steps/results. If there is an answer which does not make any sense, give 0 points. Score overall from 0 to ${maxPoints}. Respond ONLY as strict JSON with keys: points (integer 0..${maxPoints}), reasoning (concise explanation for each task evaluation with list of mistakes, ideally with right answer in bold as markdown text in Czech, not json).` });
-  if (criteriaText && typeof criteriaText === 'string' && criteriaText.trim()) {
-    content.push({ type: 'text', text: `Grading criteria: ${criteriaText.trim()}` });
-  }
-  for (const url of images) {
-    content.push({ type: 'image_url', image_url: { url } });
-  }
+function prompt({ maxPoints, criteria }) {
+  return `You are a careful, fair grader for short-answer and calculation tests. Score only semantic correctness; ignore superficial formatting and harmless naming differences. Respond only with JSON: {"points": integer 0..${maxPoints}, "reasoning": non-empty concise Czech explanation up to ${MAX_REASONING_CHARS} characters}.${criteria ? `\nGrading criteria: ${criteria}` : ''}`;
+}
 
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-4.1',
-      temperature: 0,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: 'You are a careful, fair grader for short-answer and calculation tests. Ignore superficial style issues that do not change correctness.' },
-        { role: 'user', content }
-      ]
-    })
-  });
-  if (!res.ok) {
-    const txt = await res.text().catch(() => '');
-    throw new Error(`OpenAI error ${res.status}: ${txt}`);
-  }
-  const data = await res.json();
-  const raw = data?.choices?.[0]?.message?.content || '{}';
-  let parsed = {};
+function consumeRateLimit(actor) {
+  const now = Date.now();
+  const windowStart = now - 5 * 60_000;
+  const current = (rateWindows.get(actor) || []).filter((time) => time > windowStart);
+  if (current.length >= 10) throw new GradeProviderError('AI grading temporarily unavailable');
+  current.push(now);
+  rateWindows.set(actor, current);
+}
+
+export async function gradeImages(input, { fetchImpl = fetch, apiKey = process.env.OPENAI_API_KEY, timeoutMs = PROVIDER_TIMEOUT_MS } = {}) {
+  if (!apiKey || !String(apiKey).trim()) throw new GradeProviderError('AI grading is not configured');
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    parsed = JSON.parse(raw);
-  } catch (_) {
-    parsed = {};
+    const response = await fetchImpl('https://api.openai.com/v1/chat/completions', {
+      method: 'POST', signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: MODEL, temperature: 0, response_format: { type: 'json_object' },
+        messages: [{ role: 'user', content: [
+          { type: 'text', text: prompt(input) },
+          ...input.images.map((url) => ({ type: 'image_url', image_url: { url } })),
+        ] }],
+      }),
+    });
+    if (!response.ok) throw new GradeProviderError('AI grading failed');
+    const data = await response.json();
+    return parseGradeOutput(data?.choices?.[0]?.message?.content, input.maxPoints);
+  } catch (error) {
+    if (error instanceof GradeProviderError) throw error;
+    throw new GradeProviderError('AI grading unavailable');
+  } finally {
+    clearTimeout(timeout);
   }
-  const points = clampPoints(Number(parsed.points), maxPoints);
-  // Normalize reasoning to plain markdown string (avoid JSON-stringified content)
-  let reasoning = '';
-  if (typeof parsed.reasoning === 'string') {
-    reasoning = parsed.reasoning;
-  } else if (Array.isArray(parsed.reasoning)) {
-    reasoning = parsed.reasoning
-      .map((item) => (typeof item === 'string' ? `- ${item}` : `- ${JSON.stringify(item)}`))
-      .join('\n');
-  } else if (parsed.reasoning && typeof parsed.reasoning === 'object') {
-    reasoning = Object.entries(parsed.reasoning)
-      .map(([k, v]) => `- ${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
-      .join('\n');
-  }
-  reasoning = String(reasoning).slice(0, 20000);
-  return { points, reasoning };
+}
+
+function sendError(res, status, error, correlationId, cause) {
+  if (status >= 500) console.error('grade-test failed', { correlationId, cause: cause?.name || 'unknown' });
+  return res.status(status).json({ error, correlationId });
 }
 
 export default async function handler(req, res) {
+  const correlationId = crypto.randomUUID();
+  let teacher;
   try {
-    await ensureSchema();
-  } catch (e) {
-    return res.status(500).json({ error: 'DB schema init failed', details: String(e) });
+    teacher = await requireTeacher(req, res);
+    if (!teacher) return;
+    if (!requireSameOrigin(req)) return sendError(res, 403, 'Forbidden', correlationId);
+  } catch (error) {
+    return sendError(res, 500, 'Grade service unavailable', correlationId, error);
   }
+  const repository = createGradesRepository();
 
-  if (req.method === 'GET') {
-    const username = typeof req.query.username === 'string' ? req.query.username : '';
-    const testNumber = req.query.testNumber ? Number(req.query.testNumber) : undefined;
-    if (!username) return res.status(400).json({ error: 'username required' });
-    try {
-      if (testNumber && [1,2,3,4].includes(testNumber)) {
-        const rows = await sql(`
-          select username, test_number, points, reasoning, teacher_comment, images_count, graded_at
-          from test_grades
-          where username = $1 and test_number = $2
-          order by graded_at desc
-          limit 1
-        `, [username, testNumber]);
-        return res.status(200).json({ item: rows[0] || null });
-      }
-      const rows = await sql(`
-        select distinct on (test_number) username, test_number, points, reasoning, teacher_comment, images_count, graded_at
-        from test_grades
-        where username = $1
-        order by test_number, graded_at desc
-      `, [username]);
-      const map = {};
-      for (const r of rows) map[r.test_number] = r;
-      return res.status(200).json({ items: map });
-    } catch (e) {
-      return res.status(500).json({ error: 'DB read failed', details: String(e) });
+  try {
+    if (req.method === 'GET') {
+      const username = typeof req.query?.username === 'string' ? req.query.username : '';
+      if (!username) return sendError(res, 400, 'username required', correlationId);
+      const items = await repository.getLatestPublished(username);
+      const testNumber = req.query?.testNumber === undefined ? null : Number(req.query.testNumber);
+      if (testNumber !== null && (!Number.isInteger(testNumber) || testNumber < 1 || testNumber > 4)) return sendError(res, 400, 'Invalid testNumber', correlationId);
+      const item = testNumber === null ? null : items.find((row) => row.test_number === testNumber) || null;
+      return res.status(200).json(testNumber === null ? { items } : { item });
     }
-  }
-
-  if (req.method === 'POST') {
-    try {
-      const body = req.body || {};
-      const username = String(body.username || '').trim();
-      const testNumber = Number(body.testNumber);
-      const images = Array.isArray(body.images) ? body.images.filter(Boolean) : [];
-      const maxPoints = Number.isFinite(body.maxPoints) ? Number(body.maxPoints) : 10;
-      const criteria = typeof body.criteria === 'string' ? body.criteria : '';
-      if (!username) return res.status(400).json({ error: 'username required' });
-      if (![1,2,3,4].includes(testNumber)) return res.status(400).json({ error: 'testNumber must be 1..4' });
-      if (images.length === 0) return res.status(400).json({ error: 'images required' });
-
-      const { points, reasoning } = await callOpenAIVision({ images, maxPoints, criteriaText: criteria });
-
-      await sql(`
-        insert into test_grades (username, test_number, points, reasoning, images_count)
-        values ($1, $2, $3, $4, $5)
-      `, [username, testNumber, points, reasoning, images.length]);
-
-      const col = getTestColumnName(testNumber);
-      if (col) {
-        await sql(`
-          insert into progress (username, ${col})
-          values ($1, $2)
-          on conflict (username) do update set ${col} = excluded.${col}
-        `, [username, points]);
-      }
-
-      return res.status(200).json({ ok: true, points, reasoning });
-    } catch (e) {
-      return res.status(500).json({ error: 'Grade failed', details: String(e) });
+    if (req.method === 'POST') {
+      let input;
+      try { input = validateGradeRequest(req.body); } catch (error) { return sendError(res, 400, error.message, correlationId); }
+      try { consumeRateLimit(teacher.subject); } catch (error) { return sendError(res, 429, error.message, correlationId); }
+      const result = await gradeImages(input);
+      await repository.recordAndPublish({ ...input, ...result, source: 'ai', actor: teacher.subject, model: MODEL, promptVersion: PROMPT_VERSION, imageCount: input.images.length });
+      return res.status(200).json({ ok: true, points: result.points, reasoning: result.reasoning });
     }
-  }
-
-  if (req.method === 'PUT') {
-    // Teacher-only: update latest reasoning for a user's test
-    try {
-      const cookie = req.headers.cookie || '';
-      const match = cookie.match(/(?:^|; )teacher_session=([^;]+)/);
-      const token = match ? decodeURIComponent(match[1]) : '';
-      // lightweight verify copied from teacher/me.js (no import to keep simple)
-      const crypto = await import('crypto');
-      function verify(t) {
-        const secret = process.env.TEACHER_COOKIE_SECRET || 'dev-secret-teacher';
-        if (!t) return null;
-        const idx = t.lastIndexOf('.');
-        if (idx <= 0) return null;
-        const value = t.slice(0, idx);
-        const sig = t.slice(idx + 1);
-        const h = crypto.createHmac('sha256', secret).update(value).digest('hex');
-        if (h !== sig) return null;
-        return value;
-      }
-      const teacher = verify(token);
-      if (!teacher) return res.status(401).json({ error: 'Unauthorized' });
-
-      const { username, testNumber, reasoning } = req.body || {};
-      const u = String(username || '').trim();
-      const tn = Number(testNumber);
-      const text = String(reasoning || '').slice(0, 20000);
-      if (!u) return res.status(400).json({ error: 'username required' });
-      if (![1,2,3,4].includes(tn)) return res.status(400).json({ error: 'testNumber must be 1..4' });
-
-      // update the latest row for this test
-      const rows = await sql(`
-        update test_grades tg set reasoning = $1
-        where tg.id = (
-          select id from test_grades
-          where username = $2 and test_number = $3
-          order by graded_at desc
-          limit 1
-        )
-        returning username, test_number, points, reasoning, teacher_comment, images_count, graded_at
-      `, [text, u, tn]);
-      if (!rows || rows.length === 0) return res.status(404).json({ error: 'Grade not found' });
-      return res.status(200).json({ ok: true, item: rows[0] });
-    } catch (e) {
-      return res.status(500).json({ error: 'Update failed', details: String(e) });
+    if (req.method === 'PUT') {
+      const username = req.body?.username;
+      const testNumber = req.body?.testNumber;
+      const reasoning = req.body?.reasoning;
+      if (typeof reasoning !== 'string' || !reasoning.trim() || reasoning.length > MAX_REASONING_CHARS) return sendError(res, 400, 'Invalid reasoning', correlationId);
+      const existing = await repository.getPublishedGrade(username, testNumber);
+      if (!existing) return sendError(res, 404, 'Grade not found', correlationId);
+      const item = await repository.recordAndPublish({
+        username: existing.username, testNumber: existing.test_number, points: existing.points, maxPoints: existing.max_points,
+        reasoning: reasoning.trim(), source: 'teacher', actor: teacher.subject, imageCount: existing.image_count || 0,
+      });
+      return res.status(200).json({ ok: true, item });
     }
+    res.setHeader('Allow', 'GET, POST, PUT');
+    return res.status(405).end('Method Not Allowed');
+  } catch (error) {
+    const isValidation = error instanceof GradeValidationError || error instanceof TypeError;
+    const isProvider = error instanceof GradeProviderError;
+    return sendError(res, isValidation ? 400 : 502, isProvider ? 'AI grading failed' : 'Grade service unavailable', correlationId, error);
   }
-
-  res.setHeader('Allow', 'GET, POST');
-  return res.status(405).end('Method Not Allowed');
 }
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb'
-    }
-  }
-};
-
-
+export const config = { api: { bodyParser: { sizeLimit: '12mb' } } };

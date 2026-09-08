@@ -1,229 +1,154 @@
-import { neon } from '@neondatabase/serverless';
+import crypto from 'node:crypto';
 
-const sql = neon(process.env.DATABASE_URL);
+import { requireTeacher } from '../../../src/server/auth/guards.js';
+import { createGradesRepository } from '../../../src/server/repositories/grades.js';
+import { requireSameOrigin } from '../../../src/server/security/csrf.js';
 
-async function ensureSchema() {
-  await sql(`
-    create table if not exists test_grades (
-      id bigserial primary key,
-      username text not null,
-      test_number int not null,
-      points int not null,
-      reasoning text not null,
-      images_count int default 0,
-      graded_at timestamptz default now()
-    );
-  `);
-  await sql(`
-    create table if not exists progress (
-      id bigserial primary key,
-      username text not null,
-      test1 int,
-      test2 int,
-      test3 int,
-      test4 int,
-      assignment_task_checked boolean,
-      assignment_midterm_ok boolean,
-      assignment_topic text,
-      assignment_partner text,
-      assignment_final_points int,
-      auth_code text,
-      unique (username)
-    );
-  `);
+const MODEL = process.env.OPENAI_GRADING_MODEL || 'gpt-4.1';
+const PROMPT_VERSION = 'normalization-v2';
+const MAX_ITEMS = 500;
+const BATCH_SIZE = 50;
+const MAX_REASONING_CHARS = 4000;
+const PROVIDER_TIMEOUT_MS = 30_000;
+const rateWindows = new Map();
+
+export class NormalizationValidationError extends Error {}
+export class NormalizationProviderError extends Error {}
+
+export function consumeNormalizationRateLimit(actor, now = Date.now()) {
+  const windowStart = now - 5 * 60_000;
+  const current = (rateWindows.get(actor) || []).filter((time) => time > windowStart);
+  if (current.length >= 10) throw new NormalizationProviderError('AI grading temporarily unavailable');
+  current.push(now);
+  rateWindows.set(actor, current);
 }
 
-function clamp(value, min, max) {
-  const v = Number.isFinite(value) ? Math.round(value) : 0;
-  if (v < min) return min;
-  if (v > max) return max;
-  return v;
-}
-
-function getTestColumnName(testNumber) {
-  const n = Number(testNumber);
-  if (n === 1) return 'test1';
-  if (n === 2) return 'test2';
-  if (n === 3) return 'test3';
-  if (n === 4) return 'test4';
-  return null;
-}
-
-async function callOpenAINormalize({ items, maxPoints, testNumber }) {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY not set');
+export function parseNormalizationOutput(raw, items, maxPoints) {
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch { throw new NormalizationProviderError('Invalid normalization provider output'); }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new NormalizationProviderError('Invalid normalization provider output');
+  const expected = new Set(items.map((item) => item.username));
+  if (expected.size !== items.length) throw new NormalizationProviderError('Normalization input contains duplicate students');
+  const received = Object.keys(parsed);
+  if (received.length !== expected.size || received.some((username) => !expected.has(username))) {
+    throw new NormalizationProviderError('Normalization output has missing or unknown students');
   }
-  const requestPayload = {
-    meta: {
-      testNumber,
-      tasksCount: 4,
-      pointsPerTask: 3,
-      maxPoints
-    },
-    students: items
-  };
-  const instruction =
-    `Jsi spravedlivý hodnotitel. Normalizuj body napříč všemi studenty pro test ${testNumber}, atˇ studenti jsou hodnocené stejně za stejné chyby. ` +
-    `Maximálně 12 bodů (4 úlohy, 3 body za úlohu). ` +
-    `Nepenalizuj triviální formátovací chyby (mezery, tečky/čárky) ani drobné rozdíly v pojmenování, pokud je řešení věcně správné. ` +
-    `Pro každého studenta vrať nové body (celé číslo 0..${maxPoints}) a nové odůvodnění v češtině, které je přesně stejné jako původní odůvodnění ale bez zmínek triviálních formátovacích chyb. ` +
-    `ODPOVÍDEJ POUZE jako striktní JSON objekt ve tvaru: { "<id>": { "points": <int>, "reasoning": "<string>" }, ... }. ` +
-    `ID je přesně hodnota pole "id" ze vstupu.`;
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-4.1',
-      temperature: 0,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: 'You are a careful, fair grader for short-answer and calculation tests. Ignore superficial style issues that do not change correctness.' },
-        { role: 'user', content: `${instruction}\n\nVstupní data:\n${JSON.stringify(requestPayload, null, 2)}` }
-      ]
-    })
+  return items.map((item) => {
+    const normalized = parsed[item.username];
+    if (!normalized || typeof normalized !== 'object' || Array.isArray(normalized)
+      || Object.keys(normalized).length !== 2 || Object.keys(normalized).some((key) => key !== 'points' && key !== 'reasoning')
+      || !Number.isInteger(normalized.points) || normalized.points < 0 || normalized.points > maxPoints
+      || typeof normalized.reasoning !== 'string' || !normalized.reasoning.trim() || normalized.reasoning.length > MAX_REASONING_CHARS) {
+      throw new NormalizationProviderError('Normalization output contains an invalid student');
+    }
+    return {
+      username: item.username,
+      attemptId: item.attemptId,
+      originalPoints: item.originalPoints,
+      normalizedPoints: normalized.points,
+      reasoning: normalized.reasoning.trim(),
+    };
   });
-  if (!res.ok) {
-    const txt = await res.text().catch(() => '');
-    throw new Error(`OpenAI error ${res.status}: ${txt}`);
-  }
-  const data = await res.json();
-  const raw = data?.choices?.[0]?.message?.content || '{}';
-  let parsed = {};
+}
+
+function validatePreviewRequest(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) throw new NormalizationValidationError('Invalid normalization request');
+  if (!Number.isInteger(body.testNumber) || body.testNumber < 1 || body.testNumber > 4) throw new NormalizationValidationError('testNumber must be 1..4');
+  if (!Number.isInteger(body.maxPoints) || body.maxPoints < 1 || body.maxPoints > 12) throw new NormalizationValidationError('maxPoints must be an integer from 1 to 12');
+  return { testNumber: body.testNumber, maxPoints: body.maxPoints };
+}
+
+function normalizationPrompt({ testNumber, maxPoints, items }) {
+  return [
+    'Normalize these grades for test ' + testNumber + '. Score semantic correctness only; ignore superficial formatting and harmless naming differences.',
+    'Return ONLY a JSON object with exactly one key for every supplied username. Each value must be {"points": integer 0..' + maxPoints + ', "reasoning": non-empty Czech text at most ' + MAX_REASONING_CHARS + ' chars}.',
+    JSON.stringify(items.map(({ username, originalPoints, reasoning }) => ({ username, originalPoints, reasoning }))),
+  ].join('\n');
+}
+
+async function normalizeBatch({ testNumber, maxPoints, items }, { fetchImpl = fetch, apiKey = process.env.OPENAI_API_KEY } = {}) {
+  if (!apiKey || !String(apiKey).trim()) throw new NormalizationProviderError('AI grading is not configured');
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
   try {
-    parsed = JSON.parse(raw);
-  } catch (_) {
-    parsed = {};
+    const response = await fetchImpl('https://api.openai.com/v1/chat/completions', {
+      method: 'POST', signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey },
+      body: JSON.stringify({
+        model: MODEL, temperature: 0, response_format: { type: 'json_object' },
+        messages: [{ role: 'user', content: normalizationPrompt({ testNumber, maxPoints, items }) }],
+      }),
+    });
+    if (!response.ok) throw new NormalizationProviderError('AI grading failed');
+    const data = await response.json();
+    return parseNormalizationOutput(data?.choices?.[0]?.message?.content, items, maxPoints);
+  } catch (error) {
+    if (error instanceof NormalizationProviderError) throw error;
+    throw new NormalizationProviderError('AI grading failed');
+  } finally {
+    clearTimeout(timeout);
   }
-  return parsed;
+}
+
+function sendError(res, status, error, correlationId, cause) {
+  if (status >= 500) console.error('grade-normalization failed', { correlationId, cause: cause?.name || 'unknown' });
+  return res.status(status).json({ error, correlationId });
 }
 
 export default async function handler(req, res) {
-  try {
-    await ensureSchema();
-  } catch (e) {
-    return res.status(500).json({ error: 'DB schema init failed', details: String(e) });
-  }
-
+  const correlationId = crypto.randomUUID();
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).end('Method Not Allowed');
   }
-
-  // Verify teacher session (same logic as teacher/me.js, copied inline)
+  let teacher;
   try {
-    const cookie = req.headers.cookie || '';
-    const match = cookie.match(/(?:^|; )teacher_session=([^;]+)/);
-    const token = match ? decodeURIComponent(match[1]) : '';
-    const crypto = await import('crypto');
-    function verify(t) {
-      const secret = process.env.TEACHER_COOKIE_SECRET || 'dev-secret-teacher';
-      if (!t) return null;
-      const idx = t.lastIndexOf('.');
-      if (idx <= 0) return null;
-      const value = t.slice(0, idx);
-      const sig = t.slice(idx + 1);
-      const h = crypto.createHmac('sha256', secret).update(value).digest('hex');
-      if (h !== sig) return null;
-      return value;
-    }
-    const teacher = verify(token);
-    if (!teacher) return res.status(401).json({ error: 'Unauthorized' });
-  } catch (e) {
-    return res.status(500).json({ error: 'Auth failed', details: String(e) });
+    teacher = await requireTeacher(req, res);
+    if (!teacher) return;
+    if (!requireSameOrigin(req)) return sendError(res, 403, 'Forbidden', correlationId);
+  } catch (error) {
+    return sendError(res, 500, 'Normalization service unavailable', correlationId, error);
   }
-
-  const body = req.body || {};
-  const testNumber = Number(body.testNumber);
-  const maxPoints = Number.isFinite(body.maxPoints) ? Number(body.maxPoints) : 12;
-  const dryRun = Boolean(body.dryRun);
-
-  if (![1, 2, 3, 4].includes(testNumber)) {
-    return res.status(400).json({ error: 'testNumber must be 1..4' });
-  }
-
-  const testCol = getTestColumnName(testNumber);
-  if (!testCol) {
-    return res.status(400).json({ error: 'Unsupported test number' });
-  }
+  const repository = createGradesRepository();
 
   try {
-    // Latest grade per username for this test
-    const rows = await sql(`
-      select distinct on (username)
-        username, test_number, points, reasoning, graded_at
-      from test_grades
-      where test_number = $1
-      order by username, graded_at desc
-    `, [testNumber]);
-
-    if (!rows || rows.length === 0) {
-      return res.status(200).json({ ok: true, total: 0, updated: 0, preview: [] });
+    if (req.body?.runId !== undefined) {
+      if (typeof req.body.runId !== 'string' || !req.body.runId) return sendError(res, 400, 'Invalid runId', correlationId);
+      const result = await repository.applyNormalizationRun({ runId: req.body.runId, actor: teacher.subject });
+      if (!result) return sendError(res, 404, 'Normalization run not found', correlationId);
+      if (result.stale) return sendError(res, 409, 'Normalization run is stale; preview again', correlationId);
+      return res.status(200).json({ ok: true, runId: req.body.runId, total: result.total, updated: result.updated, alreadyApplied: result.alreadyApplied });
     }
-
-    const items = rows.map((r) => ({
-      id: r.username,
-      originalPoints: clamp(Number(r.points) || 0, 0, maxPoints),
-      reasoning: String(r.reasoning || '').slice(0, 20000)
+    if (req.body?.dryRun !== true) return sendError(res, 400, 'runId required to apply normalization', correlationId);
+    const { testNumber, maxPoints } = validatePreviewRequest(req.body);
+    const rows = await repository.getPublishedForTest(testNumber);
+    if (rows.length > MAX_ITEMS) return sendError(res, 400, 'At most ' + MAX_ITEMS + ' grades can be normalized at once', correlationId);
+    const items = rows.map((row) => ({
+      username: row.username,
+      attemptId: row.id,
+      originalPoints: row.points,
+      reasoning: row.reasoning,
     }));
-
-    // Single LLM call to normalize across all students
-    const llmResult = await callOpenAINormalize({ items, maxPoints, testNumber });
-
-    const preview = items.map((it) => {
-      const out = llmResult && typeof llmResult === 'object' ? llmResult[it.id] : undefined;
-      const newPoints = clamp(Number(out?.points), 0, maxPoints);
-      const newReasoning = String(out?.reasoning || it.reasoning).slice(0, 20000);
-      return {
-        username: it.id,
-        originalPoints: it.originalPoints,
-        normalizedPoints: newPoints,
-        reasoning: newReasoning
-      };
+    const normalizedItems = [];
+    for (let index = 0; index < items.length; index += BATCH_SIZE) {
+      consumeNormalizationRateLimit(teacher.subject);
+      normalizedItems.push(...await normalizeBatch({ testNumber, maxPoints, items: items.slice(index, index + BATCH_SIZE) }));
+    }
+    const runId = crypto.randomUUID();
+    await repository.createNormalizationRun({
+      runId, testNumber, maxPoints, actor: teacher.subject, model: MODEL, promptVersion: PROMPT_VERSION,
+      originalAttempts: items.map(({ username, attemptId }) => ({ username, attemptId })),
+      normalizedItems: normalizedItems.map(({ username, normalizedPoints, reasoning }) => ({ username, points: normalizedPoints, reasoning })),
     });
-
-    if (dryRun) {
-      return res.status(200).json({
-        ok: true,
-        total: rows.length,
-        updated: 0,
-        preview
-      });
-    }
-
-    // Apply updates: insert new normalized grade rows and update progress
-    let updated = 0;
-    for (const item of preview) {
-      await sql(`
-        insert into test_grades (username, test_number, points, reasoning, images_count)
-        values ($1, $2, $3, $4, $5)
-      `, [item.username, testNumber, item.normalizedPoints, item.reasoning, 0]);
-      await sql(`
-        insert into progress (username, ${testCol})
-        values ($1, $2)
-        on conflict (username) do update set ${testCol} = excluded.${testCol}
-      `, [item.username, item.normalizedPoints]);
-      updated += 1;
-    }
-
     return res.status(200).json({
-      ok: true,
-      total: rows.length,
-      updated
+      ok: true, runId, total: items.length, updated: 0,
+      preview: normalizedItems.map(({ username, originalPoints, normalizedPoints, reasoning }) => ({ username, originalPoints, normalizedPoints, reasoning })),
     });
-  } catch (e) {
-    return res.status(500).json({ error: 'Normalization failed', details: String(e) });
+  } catch (error) {
+    const validation = error instanceof NormalizationValidationError || error instanceof TypeError;
+    const provider = error instanceof NormalizationProviderError;
+    return sendError(res, validation ? 400 : 502, provider ? 'AI grading failed' : 'Normalization service unavailable', correlationId, error);
   }
 }
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb'
-    }
-  }
-};
-
-
+export const config = { api: { bodyParser: { sizeLimit: '1mb' } } };
