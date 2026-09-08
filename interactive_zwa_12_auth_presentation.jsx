@@ -1,55 +1,15 @@
 import React, { useMemo, useState } from "react";
-import { Analytics } from "@vercel/analytics/react";
+import { getLessonByNumber } from "./src/config/lessons.js";
+import LessonShell, { useSlideNavigation } from "./src/components/lesson/LessonShell.jsx";
+import SharedSlideCard from "./src/components/lesson/SlideCard.jsx";
+import Code from "./src/components/lesson/Code.jsx";
+import InfoBox from "./src/components/lesson/InfoBox.jsx";
+import ClickToRevealSolution from "./src/components/lesson/ClickToRevealSolution.jsx";
+import { clsx } from "./src/components/lesson/classNames.js";
 
-function clsx(...xs) {
-  return xs.filter(Boolean).join(" ");
-}
-
-function Code({ children }) {
+function LessonSlideContent({ slide }) {
   return (
-    <code className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[90%] font-mono">
-      {children}
-    </code>
-  );
-}
-
-function InfoBox({ children, type = "info" }) {
-  const color =
-    type === "info"
-      ? "bg-sky-50/80 dark:bg-sky-950/30 border-sky-200 dark:border-sky-800"
-      : "bg-amber-50/80 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800";
-  return <div className={clsx("rounded-xl border p-4 text-sm", color)}>{children}</div>;
-}
-
-function ClickToRevealSolution({ children, hint }) {
-  const [revealed, setRevealed] = useState(false);
-  return (
-    <div className="rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 p-6">
-      {!revealed ? (
-        <div className="text-center">
-          <div className="text-4xl mb-2">🔒</div>
-          <h4 className="font-semibold text-lg mb-2">Řešení je zamčené</h4>
-          {hint && <div className="text-xs text-zinc-500 mb-3">{hint}</div>}
-          <button
-            className="px-6 py-3 rounded-lg bg-sky-600 text-white font-medium hover:bg-sky-700 transition-all active:scale-95"
-            onClick={() => setRevealed(true)}
-          >
-            Zobrazit řešení
-          </button>
-        </div>
-      ) : (
-        <div>{children}</div>
-      )}
-    </div>
-  );
-}
-
-function SlideCard({ slide }) {
-  return (
-    <div className="p-6 rounded-2xl shadow-lg bg-white/70 dark:bg-zinc-900/60 backdrop-blur border border-zinc-200/60 dark:border-zinc-800">
-      <h2 className="text-3xl font-bold mb-3">{slide.title}</h2>
-      {slide.subtitle && <p className="text-xl text-sky-600 dark:text-sky-400 mb-4">{slide.subtitle}</p>}
-
+    <SharedSlideCard slide={slide} idPrefix="lesson-12">
       {slide.id === "title" && (
         <div className="mt-2 text-zinc-600 dark:text-zinc-400">
           <div>Autor: Bc. Egor Ulianov</div>
@@ -67,7 +27,7 @@ function SlideCard({ slide }) {
 
       {slide.id === "tasks" && <Tasks />}
       {slide.id === "summary" && <SummarySlide />}
-    </div>
+    </SharedSlideCard>
   );
 }
 
@@ -185,7 +145,8 @@ $realm = 'Restricted area';
 $users = ['xklima' => 'martin', 'guest' => 'guest'];
 if (empty($_SERVER['PHP_AUTH_DIGEST'])) {
   header('HTTP/1.1 401 Unauthorized');
-  header('WWW-Authenticate: Digest realm="'. $realm .'",qop="auth",nonce="'. uniqid() .'",opaque="'. md5($realm) .'"');
+  $nonce = bin2hex(random_bytes(16)); // nepředvídatelný jednorázový nonce
+  header('WWW-Authenticate: Digest realm="'. $realm .'",qop="auth",nonce="'. $nonce .'",opaque="'. hash('sha256', $realm) .'"');
   die('Cancel');
 }
 // ... http_digest_parse(...) a ověření MD5(A1:nonce:...:A2) dle slidu ...
@@ -328,7 +289,7 @@ header('Location: /login.php');`}</code>
 
       <div className="text-xs text-zinc-500">
         Materiál vychází z:{" "}
-        <a className="underline" href="file:///Users/egorulanov/Work/ZWA/ZWA-2-0/ZWA-12.pdf" target="_blank" rel="noreferrer noopener">ZWA‑12 PDF</a>{" "}
+        <a className="underline" href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/12/start" target="_blank" rel="noreferrer noopener">Cvičení 12 – zadání</a>{" "}
         • <a className="underline" href="https://cw.fel.cvut.cz/wiki/_media/courses/b6b39zwa/lectures/10a/autentizace_a_autorizace_2020.pdf" target="_blank" rel="noreferrer noopener">Autentizace a autorizace – slidy</a>{" "}
         • <a className="underline" href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/12/start" target="_blank" rel="noreferrer noopener">Cvičení 12 – zadání</a>
       </div>
@@ -348,7 +309,7 @@ function SummarySlide() {
       </ul>
       <div className="text-xs text-zinc-500">
         Odkazy:{" "}
-        <a className="underline" href="file:///Users/egorulanov/Work/ZWA/ZWA-2-0/ZWA-12.pdf" target="_blank" rel="noreferrer noopener">ZWA‑12 PDF</a>{" "}
+        <a className="underline" href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/12/start" target="_blank" rel="noreferrer noopener">Cvičení 12 – zadání</a>{" "}
         • <a className="underline" href="https://cw.fel.cvut.cz/wiki/_media/courses/b6b39zwa/lectures/10a/autentizace_a_autorizace_2020.pdf" target="_blank" rel="noreferrer noopener">Slidy (Basic/Digest)</a>{" "}
         • <a className="underline" href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/12/start" target="_blank" rel="noreferrer noopener">Cvičení 12</a>
       </div>
@@ -358,7 +319,6 @@ function SummarySlide() {
 }
 
 export default function AppPhpLesson12() {
-  const [active, setActive] = useState("title");
   const slides = useMemo(
     () => [
       { id: "title", title: "Základy webových aplikací – 12. cvičení", subtitle: "Autentizace a autorizace v PHP" },
@@ -374,45 +334,20 @@ export default function AppPhpLesson12() {
     ],
     []
   );
-  const current = slides.find((s) => s.id === active) || slides[0];
+  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const current = slides.find((s) => s.id === activeSlide) || slides[0];
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-      <div className="max-w-6xl mx-auto p-4 md:p-8 relative">
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-          <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-sky-300/40 dark:bg-sky-500/20 blur-3xl" />
-          <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-rose-300/40 dark:bg-rose-500/20 blur-3xl" />
-        </div>
-
-        <header className="mb-6">
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">ZWA-12: Autentizace a autorizace</h1>
-          <p className="text-sm text-zinc-500">Interaktivní prezentace podle cvičení 12</p>
-        </header>
-
-        <nav className="flex flex-wrap gap-2 mb-6">
-          {slides.map((s) => (
-            <button
-              key={s.id}
-              className={clsx(
-                "px-3 py-1.5 rounded-full text-sm border transition-all",
-                s.id === active
-                  ? "bg-sky-600 text-white border-sky-600 shadow-lg"
-                  : "bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-800"
-              )}
-              onClick={() => setActive(s.id)}
-            >
-              {s.title}
-            </button>
-          ))}
-        </nav>
-
-        <SlideCard slide={current} />
-
-        <footer className="mt-8 text-sm text-zinc-500 text-center">© 2025 ZWA – Cvičení 12: Autentizace a autorizace</footer>
-        <Analytics />
-      </div>
-    </div>
+    <LessonShell
+      lesson={getLessonByNumber(12)}
+      slides={slides}
+      activeSlide={activeSlide}
+      onChange={setActiveSlide}
+      title="ZWA-12: Autentizace a autorizace"
+      subtitle="Interaktivní prezentace podle cvičení 12"
+      footerText="© 2025 ZWA – Cvičení 12: Autentizace a autorizace"
+    >
+      <LessonSlideContent slide={current} />
+    </LessonShell>
   );
 }
-
-

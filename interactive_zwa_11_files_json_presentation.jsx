@@ -1,55 +1,15 @@
 import React, { useMemo, useState } from "react";
-import { Analytics } from "@vercel/analytics/react";
+import { getLessonByNumber } from "./src/config/lessons.js";
+import LessonShell, { useSlideNavigation } from "./src/components/lesson/LessonShell.jsx";
+import SharedSlideCard from "./src/components/lesson/SlideCard.jsx";
+import Code from "./src/components/lesson/Code.jsx";
+import InfoBox from "./src/components/lesson/InfoBox.jsx";
+import ClickToRevealSolution from "./src/components/lesson/ClickToRevealSolution.jsx";
+import { clsx } from "./src/components/lesson/classNames.js";
 
-function clsx(...xs) {
-  return xs.filter(Boolean).join(" ");
-}
-
-function Code({ children }) {
+function LessonSlideContent({ slide }) {
   return (
-    <code className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[90%] font-mono">
-      {children}
-    </code>
-  );
-}
-
-function InfoBox({ children, type = "info" }) {
-  const color =
-    type === "info"
-      ? "bg-sky-50/80 dark:bg-sky-950/30 border-sky-200 dark:border-sky-800"
-      : "bg-amber-50/80 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800";
-  return <div className={clsx("rounded-xl border p-4 text-sm", color)}>{children}</div>;
-}
-
-function ClickToRevealSolution({ children, hint }) {
-  const [revealed, setRevealed] = useState(false);
-  return (
-    <div className="rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 p-6">
-      {!revealed ? (
-        <div className="text-center">
-          <div className="text-4xl mb-2">🔒</div>
-          <h4 className="font-semibold text-lg mb-2">Řešení je zamčené</h4>
-          {hint && <div className="text-xs text-zinc-500 mb-3">{hint}</div>}
-          <button
-            className="px-6 py-3 rounded-lg bg-sky-600 text-white font-medium hover:bg-sky-700 transition-all active:scale-95"
-            onClick={() => setRevealed(true)}
-          >
-            Zobrazit řešení
-          </button>
-        </div>
-      ) : (
-        <div>{children}</div>
-      )}
-    </div>
-  );
-}
-
-function SlideCard({ slide }) {
-  return (
-    <div className="p-6 rounded-2xl shadow-lg bg-white/70 dark:bg-zinc-900/60 backdrop-blur border border-zinc-200/60 dark:border-zinc-800">
-      <h2 className="text-3xl font-bold mb-3">{slide.title}</h2>
-      {slide.subtitle && <p className="text-xl text-sky-600 dark:text-sky-400 mb-4">{slide.subtitle}</p>}
-
+    <SharedSlideCard slide={slide} idPrefix="lesson-11">
       {slide.id === "title" && (
         <div className="mt-2 text-zinc-600 dark:text-zinc-400">
           <div>Autor: Bc. Egor Ulianov</div>
@@ -65,7 +25,7 @@ function SlideCard({ slide }) {
 
       {slide.id === "tasks" && <Tasks />}
       {slide.id === "summary" && <SummarySlide />}
-    </div>
+    </SharedSlideCard>
   );
 }
 
@@ -149,7 +109,7 @@ function TheoryUsersLibrary() {
         <ul className="list-disc pl-6 space-y-1 text-sm">
           <li>Evidujte: <Code>id</Code>, <Code>name</Code>, <Code>email</Code>, <Code>avatar</Code> (emotikon/krátký text).</li>
           <li>API: <Code>list_users()</Code>, <Code>get_user($id)</Code>, <Code>add_user($name,$email,$avatar)</Code>, <Code>delete_user($id)</Code>, <Code>edit_user($id,...)</Code>.</li>
-          <li>ID generujte přes <Code>uniqid()</Code>. Data ukládejte jako JSON; používejte <Code>LOCK_EX</Code> při zápisu.</li>
+          <li>Pro demo ID použijte <Code>bin2hex(random_bytes(16))</Code>; produkční data obvykle použijí ID generované databází. Používejte <Code>LOCK_EX</Code> při zápisu.</li>
         </ul>
       </InfoBox>
       <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
@@ -188,7 +148,8 @@ function get_user(string $id): ?array {
 
 function add_user(string $name, string $email, string $avatar): string {
   $users = load_all_users();
-  $id = uniqid('', true);
+  // Náhodná hodnota je vhodná pro demo token; produkční CRUD preferuje DB ID.
+  $id = bin2hex(random_bytes(16));
   $users[] = ['id' => $id, 'name' => $name, 'email' => $email, 'avatar' => $avatar];
   save_all_users($users);
   return $id;
@@ -349,7 +310,7 @@ function SummarySlide() {
       <ul className="list-disc pl-6 space-y-2">
         <li><strong>Soubory:</strong> <Code>file_get_contents</Code>/<Code>file_put_contents</Code>, práce s <Code>__DIR__</Code>, <Code>LOCK_EX</Code>.</li>
         <li><strong>JSON:</strong> <Code>json_decode(..., true)</Code> pro asociativní pole, čitelný <Code>json_encode</Code>.</li>
-        <li><strong>Knihovna:</strong> jednoduché CRUD nad <Code>users.json</Code>, ID přes <Code>uniqid()</Code>.</li>
+        <li><strong>Knihovna:</strong> jednoduché CRUD nad <Code>users.json</Code>, demo ID přes <Code>random_bytes()</Code>; v produkci ID generuje databáze.</li>
         <li><strong>Stránkování:</strong> <Code>limit</Code> a <Code>offset</Code> pomocí <Code>array_slice</Code>.</li>
       </ul>
       <div className="text-xs text-zinc-500">
@@ -365,7 +326,6 @@ function SummarySlide() {
 }
 
 export default function AppPhpLesson11() {
-  const [active, setActive] = useState("title");
   const slides = useMemo(
     () => [
       { id: "title", title: "Základy webových aplikací – 11. cvičení", subtitle: "Soubory a JSON v PHP" },
@@ -379,46 +339,20 @@ export default function AppPhpLesson11() {
     ],
     []
   );
-  const current = slides.find((s) => s.id === active) || slides[0];
+  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const current = slides.find((s) => s.id === activeSlide) || slides[0];
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-      <div className="max-w-6xl mx-auto p-4 md:p-8 relative">
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-          <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-sky-300/40 dark:bg-sky-500/20 blur-3xl" />
-          <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-rose-300/40 dark:bg-rose-500/20 blur-3xl" />
-        </div>
-
-        <header className="mb-6">
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">ZWA-11: Soubory a JSON v PHP</h1>
-          <p className="text-sm text-zinc-500">Interaktivní prezentace podle cvičení 11 s ukázkami kódu</p>
-        </header>
-
-        <nav className="flex flex-wrap gap-2 mb-6">
-          {slides.map((s) => (
-            <button
-              key={s.id}
-              className={clsx(
-                "px-3 py-1.5 rounded-full text-sm border transition-all",
-                s.id === active
-                  ? "bg-sky-600 text-white border-sky-600 shadow-lg"
-                  : "bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-800"
-              )}
-              onClick={() => setActive(s.id)}
-            >
-              {s.title}
-            </button>
-          ))}
-        </nav>
-
-        <SlideCard slide={current} />
-
-        <footer className="mt-8 text-sm text-zinc-500 text-center">© 2025 ZWA – Cvičení 11: Soubory a JSON</footer>
-        <Analytics />
-      </div>
-    </div>
+    <LessonShell
+      lesson={getLessonByNumber(11)}
+      slides={slides}
+      activeSlide={activeSlide}
+      onChange={setActiveSlide}
+      title="ZWA-11: Soubory a JSON v PHP"
+      subtitle="Interaktivní prezentace podle cvičení 11 s ukázkami kódu"
+      footerText="© 2025 ZWA – Cvičení 11: Soubory a JSON"
+    >
+      <LessonSlideContent slide={current} />
+    </LessonShell>
   );
 }
-
-
-

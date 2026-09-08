@@ -1,59 +1,19 @@
 import React, { useMemo, useState } from "react";
-import { Analytics } from "@vercel/analytics/react";
 import mvcImg from "./src/interactive-zwa-8/ssr-mvc.png";
 import restImg from "./src/interactive-zwa-8/resful.jpg";
 import gloryImg from "./src/interactive-zwa-8/gloryofrest.png";
 import memeImg from "./src/interactive-zwa-8/meme.png";
+import { getLessonByNumber } from "./src/config/lessons.js";
+import LessonShell, { useSlideNavigation } from "./src/components/lesson/LessonShell.jsx";
+import SharedSlideCard from "./src/components/lesson/SlideCard.jsx";
+import Code from "./src/components/lesson/Code.jsx";
+import InfoBox from "./src/components/lesson/InfoBox.jsx";
+import ClickToRevealSolution from "./src/components/lesson/ClickToRevealSolution.jsx";
+import { clsx } from "./src/components/lesson/classNames.js";
 
-function clsx(...xs) {
-  return xs.filter(Boolean).join(" ");
-}
-
-function Code({ children }) {
+function LessonSlideContent({ slide }) {
   return (
-    <code className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[90%] font-mono">
-      {children}
-    </code>
-  );
-}
-
-function InfoBox({ children, type = "info" }) {
-  const color =
-    type === "info"
-      ? "bg-sky-50/80 dark:bg-sky-950/30 border-sky-200 dark:border-sky-800"
-      : "bg-amber-50/80 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800";
-  return <div className={clsx("rounded-xl border p-4 text-sm", color)}>{children}</div>;
-}
-
-function ClickToRevealSolution({ children, hint }) {
-  const [revealed, setRevealed] = useState(false);
-  return (
-    <div className="rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 p-6">
-      {!revealed ? (
-        <div className="text-center">
-          <div className="text-4xl mb-2">🔒</div>
-          <h4 className="font-semibold text-lg mb-2">Řešení je zamčené</h4>
-          {hint && <div className="text-xs text-zinc-500 mb-3">{hint}</div>}
-          <button
-            className="px-6 py-3 rounded-lg bg-sky-600 text-white font-medium hover:bg-sky-700 transition-all active:scale-95"
-            onClick={() => setRevealed(true)}
-          >
-            Zobrazit řešení
-          </button>
-        </div>
-      ) : (
-        <div>{children}</div>
-      )}
-    </div>
-  );
-}
-
-function SlideCard({ slide }) {
-  return (
-    <div className="p-6 rounded-2xl shadow-lg bg-white/70 dark:bg-zinc-900/60 backdrop-blur border border-zinc-200/60 dark:border-zinc-800">
-      <h2 className="text-3xl font-bold mb-3">{slide.title}</h2>
-      {slide.subtitle && <p className="text-xl text-sky-600 dark:text-sky-400 mb-4">{slide.subtitle}</p>}
-
+    <SharedSlideCard slide={slide} idPrefix="lesson-9">
       {slide.id === "title" && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -91,7 +51,7 @@ function SlideCard({ slide }) {
 
       {slide.id === "tasks" && <TasksFromTutorial />}
       {slide.id === "summary" && <SummarySlide />}
-    </div>
+    </SharedSlideCard>
   );
 }
 
@@ -624,7 +584,10 @@ function TasksFromTutorial() {
         <h4 className="font-semibold">BONUS: potvrzení před smazáním + uložení do session</h4>
         <ClickToRevealSolution hint="confirm() + $_SESSION">
           <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-<code className="language-html">{`<a href="delete.php?id=5" onclick="return confirm('Opravdu smazat?')">Smazat</a>`}</code>
+<code className="language-html">{`<form method="post" action="delete.php" onsubmit="return confirm('Opravdu smazat?')">
+  <input type="hidden" name="_method" value="DELETE">
+  <button type="submit">Smazat</button>
+</form>`}</code>
           </pre>
         </ClickToRevealSolution>
       </section>
@@ -671,7 +634,6 @@ function SummarySlide() {
 }
 
 export default function AppPhpLesson9() {
-  const [active, setActive] = useState("title");
   const slides = useMemo(
     () => [
       { id: "title", title: "Základy webových aplikací – 9. cvičení", subtitle: "Obsluha formulářů, seznam, detail, CRUD" },
@@ -689,45 +651,20 @@ export default function AppPhpLesson9() {
     ],
     []
   );
-  const current = slides.find((s) => s.id === active) || slides[0];
+  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const current = slides.find((s) => s.id === activeSlide) || slides[0];
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-      <div className="max-w-6xl mx-auto p-4 md:p-8 relative">
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-          <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-sky-300/40 dark:bg-sky-500/20 blur-3xl" />
-          <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-rose-300/40 dark:bg-rose-500/20 blur-3xl" />
-        </div>
-
-        <header className="mb-6">
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">ZWA-9: Server-side formuláře & CRUD</h1>
-          <p className="text-sm text-zinc-500">Interaktivní prezentace podle cvičení 09 s ukázkami kódu</p>
-        </header>
-
-        <nav className="flex flex-wrap gap-2 mb-6">
-          {slides.map((s) => (
-            <button
-              key={s.id}
-              className={clsx(
-                "px-3 py-1.5 rounded-full text-sm border transition-all",
-                s.id === active
-                  ? "bg-sky-600 text-white border-sky-600 shadow-lg"
-                  : "bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-800"
-              )}
-              onClick={() => setActive(s.id)}
-            >
-              {s.title}
-            </button>
-          ))}
-        </nav>
-
-        <SlideCard slide={current} />
-
-        <footer className="mt-8 text-sm text-zinc-500 text-center">© 2025 ZWA – Cvičení 9: Formuláře a CRUD</footer>
-        <Analytics />
-      </div>
-    </div>
+    <LessonShell
+      lesson={getLessonByNumber(9)}
+      slides={slides}
+      activeSlide={activeSlide}
+      onChange={setActiveSlide}
+      title="ZWA-9: Server-side formuláře & CRUD"
+      subtitle="Interaktivní prezentace podle cvičení 09 s ukázkami kódu"
+      footerText="© 2025 ZWA – Cvičení 9: Formuláře a CRUD"
+    >
+      <LessonSlideContent slide={current} />
+    </LessonShell>
   );
 }
-
-

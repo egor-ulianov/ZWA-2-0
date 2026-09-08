@@ -1,20 +1,13 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
-import { Analytics } from "@vercel/analytics/react";
+import React, { useState, useRef, useMemo } from "react";
 import lenin1 from "./src/interactive-zwa-7/lenin1.png";
 import lenin2 from "./src/interactive-zwa-7/lenin2.png";
 import lenin3 from "./src/interactive-zwa-7/lenin3.png";
-
-function clsx(...xs) {
-  return xs.filter(Boolean).join(" ");
-}
-
-function Code({ children }) {
-  return (
-    <code className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[90%] font-mono">
-      {children}
-    </code>
-  );
-}
+import { getLessonByNumber } from "./src/config/lessons.js";
+import LessonShell, { useSlideNavigation } from "./src/components/lesson/LessonShell.jsx";
+import SharedSlideCard from "./src/components/lesson/SlideCard.jsx";
+import Code from "./src/components/lesson/Code.jsx";
+import InfoBox from "./src/components/lesson/InfoBox.jsx";
+import { clsx } from "./src/components/lesson/classNames.js";
 
 function QuizSection() {
   const [answers, setAnswers] = useState({});
@@ -200,16 +193,7 @@ function QuizSection() {
   );
 }
 
-function InfoBox({ children, type = "info" }) {
-  const bgColor = type === "info" ? "bg-sky-50/80 dark:bg-sky-950/30 border-sky-200 dark:border-sky-800" : "bg-amber-50/80 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800";
-  return (
-    <div className={clsx("rounded-xl border p-4 text-sm", bgColor)}>
-      {children}
-    </div>
-  );
-}
-
-function ClickToRevealSolution({ children }) {
+function ChallengeReveal({ children }) {
   const [clicks, setClicks] = useState([]);
   const [revealed, setRevealed] = useState(false);
   const REQUIRED_CLICKS = 20;
@@ -246,6 +230,7 @@ function ClickToRevealSolution({ children }) {
       </div>
 
       <button
+        type="button"
         onClick={handleClick}
         className="px-6 py-3 rounded-lg bg-sky-600 text-white font-medium hover:bg-sky-700 transition-all active:scale-95 mb-4"
       >
@@ -268,12 +253,9 @@ function ClickToRevealSolution({ children }) {
   );
 }
 
-function SlideCard({ slide, password, setPassword, isBlacklisted }) {
+function LessonSlideContent({ slide, password, setPassword, isWeakPassword }) {
   return (
-    <div className="p-6 rounded-2xl shadow-lg bg-white/70 dark:bg-zinc-900/60 backdrop-blur border border-zinc-200/60 dark:border-zinc-800">
-      <h2 className="text-3xl font-bold mb-3">{slide.title}</h2>
-      {slide.subtitle && <p className="text-xl text-sky-600 dark:text-sky-400 mb-4">{slide.subtitle}</p>}
-      
+    <SharedSlideCard slide={slide} idPrefix="lesson-7">
       {slide.id === "title" && (
         <div className="mt-6 text-zinc-600 dark:text-zinc-400">
           <div>Autor: Bc. Egor Ulianov</div>
@@ -297,10 +279,10 @@ function SlideCard({ slide, password, setPassword, isBlacklisted }) {
       
       {slide.id === "task1" && <Task1Slide />}
       
-      {slide.id === "task2" && <Task2Slide password={password} setPassword={setPassword} isBlacklisted={isBlacklisted} />}
+      {slide.id === "task2" && <Task2Slide password={password} setPassword={setPassword} isWeakPassword={isWeakPassword} />}
       
       {slide.id === "summary" && <SummarySlide />}
-    </div>
+    </SharedSlideCard>
   );
 }
 
@@ -730,13 +712,13 @@ function AjaxPracticeSlide() {
       console.log(this.responseText);
     }
   };
-  xhttp.open("GET", "https://zwa.toad.cz/passwords.txt", true);
+  xhttp.open("GET", "https://jsonplaceholder.typicode.com/todos/1", true);
   xhttp.send();
 }`
     },
     {
       title: "fetch() (moderní)",
-      code: `fetch("https://zwa.toad.cz/passwords.txt")
+      code: `fetch("https://jsonplaceholder.typicode.com/todos/1")
   .then(response => response.text())
   .then(text => console.log(text))
   .catch(error => console.error('Error:', error));`
@@ -773,7 +755,8 @@ function AjaxPracticeSlide() {
 
       <InfoBox>
         <p className="text-sm">
-          💡 <Code>fetch()</Code> je čitelnější a promise-based. V legacy kódu ale narazíte na <Code>XMLHttpRequest</Code>.
+          💡 <Code>fetch()</Code> je čitelnější a promise-based. Ukázka používá neutrální veřejný JSON soubor;
+          tajná data ani hesla nikdy nestahujte do prohlížeče.
         </p>
       </InfoBox>
     </div>
@@ -817,7 +800,7 @@ const student = new CvutStudent(name, surname, pwd, id, fp);
 console.log(student);`}</code>
       </pre>
 
-      <ClickToRevealSolution>
+      <ChallengeReveal>
         <div className="mt-6 p-6 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border-2 border-emerald-300 dark:border-emerald-800">
           <h4 className="font-semibold text-lg mb-4 text-emerald-900 dark:text-emerald-100">
             ✅ Řešení odhaleno
@@ -951,57 +934,48 @@ document.addEventListener('DOMContentLoaded', () => {
             </pre>
           </div>
         </div>
-      </ClickToRevealSolution>
+      </ChallengeReveal>
     </div>
   );
 }
 
-function Task2Slide({ password, setPassword, isBlacklisted }) {
+function Task2Slide({ password, setPassword, isWeakPassword }) {
   return (
     <div>
       <h3 className="text-lg font-semibold mb-3">Zadání</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-3">
-        Kontrolujte heslo proti blacklistu z <Code>https://zwa.toad.cz/passwords.txt</Code>
+        Vytvořte pouze klientský náhled slabého hesla; skutečnou politiku hesel musí vynucovat server.
       </p>
 
       <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-4">
-<code className="language-js">{`let blacklist = [];
-
-fetch("https://zwa.toad.cz/passwords.txt")
-  .then(res => res.text())
-  .then(text => {
-    blacklist = text.split("\\n");
-  });
-
+<code className="language-js">{`const demoWeakPasswords = new Set(["password", "123456", "qwerty"]);
 passwordInput.addEventListener('input', () => {
-  if (blacklist.includes(passwordInput.value)) {
-    showWarning();
-  }
+  showWarning(demoWeakPasswords.has(passwordInput.value));
 });`}</code>
       </pre>
 
       <div className="rounded-xl bg-zinc-50 dark:bg-zinc-800/60 p-4 mb-6">
-        <h4 className="font-semibold mb-2">Demo:</h4>
+        <h4 className="font-semibold mb-2">Demo hint (není bezpečnostní kontrola):</h4>
         <input
-          type="text"
+          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Zadejte heslo..."
           className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm mb-2"
         />
-        {isBlacklisted && (
+        {isWeakPassword && (
           <div className="text-sm text-rose-600 dark:text-rose-400 font-medium">
-            ⚠️ Your password is in the blacklist!
+            ⚠️ Toto heslo vypadá slabě (demo hint).
           </div>
         )}
-        {!isBlacklisted && password && (
+        {!isWeakPassword && password && (
           <div className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-            ✓ Heslo není v blacklistu
+            ✓ Demo nápověda nenašla známé slabé heslo
           </div>
         )}
       </div>
 
-      <ClickToRevealSolution>
+      <ChallengeReveal>
         <div className="mt-6 p-6 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border-2 border-emerald-300 dark:border-emerald-800">
           <h4 className="font-semibold text-lg mb-4 text-emerald-900 dark:text-emerald-100">
             ✅ Řešení odhaleno
@@ -1015,7 +989,7 @@ passwordInput.addEventListener('input', () => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Password Blacklist Checker</title>
+  <title>Password Strength Hint</title>
   <script src="script.js"></script>
   <style>
     body { font-family: Arial, sans-serif; max-width: 500px; margin: 50px auto; padding: 20px; }
@@ -1034,14 +1008,14 @@ passwordInput.addEventListener('input', () => {
   </style>
 </head>
 <body>
-  <h1>Password Blacklist Checker</h1>
-  <p>Zadejte heslo pro kontrolu proti blacklistu:</p>
+  <h1>Password Strength Hint</h1>
+  <p>Zadejte heslo pro orientační kontrolu slabosti:</p>
   
-  <input type="text" id="password" placeholder="Zadejte heslo...">
+  <input type="password" id="password" placeholder="Zadejte heslo..." autocomplete="new-password">
   
-  <div id="loading">Načítám blacklist...</div>
+  <div id="loading">Kontrola je pouze lokální nápověda pro cvičení.</div>
   <div id="password-warning" class="hidden">
-    Your password is in the blacklist, try another one.
+    This demo hint considers the password weak; validate it again on the server.
   </div>
 </body>
 </html>`}</code>
@@ -1051,8 +1025,8 @@ passwordInput.addEventListener('input', () => {
           <div>
             <h5 className="font-semibold mb-2">JavaScript (script.js)</h5>
             <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-<code className="language-js">{`// Globální proměnná pro blacklist
-let blacklist = [];
+<code className="language-js">{`// Pouze UX nápověda; nikdy nenahrazuje serverovou validaci.
+const demoWeakPasswords = new Set(['password', '123456', 'qwerty']);
 
 // Čekání na načtení DOMu
 document.addEventListener('DOMContentLoaded', () => {
@@ -1061,33 +1035,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Získání elementů
   const passwordInput = document.getElementById('password');
   const warningDiv = document.getElementById('password-warning');
-  const loadingDiv = document.getElementById('loading');
-  
-  // Načtení blacklistu při startu stránky
-  fetch("https://zwa.toad.cz/passwords.txt")
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.text();
-    })
-    .then(text => {
-      // Rozdělení textu na řádky a odstranění prázdných řádků
-      blacklist = text.split("\\n")
-                      .map(password => password.trim())
-                      .filter(password => password.length > 0);
-      
-      console.log(\`Načteno \${blacklist.length} hesel z blacklistu\`);
-      
-      // Skrytí loading zprávy
-      loadingDiv.classList.add('hidden');
-    })
-    .catch(error => {
-      console.error("Chyba při načítání blacklistu:", error);
-      loadingDiv.textContent = 
-        "Chyba při načítání blacklistu. Zkuste stránku obnovit.";
-    });
-  
+
   // Event listener pro kontrolu hesla
   passwordInput.addEventListener('input', () => {
     const password = passwordInput.value;
@@ -1098,10 +1046,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
-    // Kontrola, zda je heslo v blacklistu
-    if (blacklist.includes(password)) {
+    // Jen orientační nápověda; server musí heslo ověřit znovu.
+    if (demoWeakPasswords.has(password)) {
       warningDiv.classList.remove('hidden');
-      console.warn(\`Heslo "\${password}" je v blacklistu!\`);
+      console.warn('Demo nápověda: heslo vypadá slabě; ověřte politiku na serveru.');
     } else {
       warningDiv.classList.add('hidden');
     }
@@ -1124,7 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const checkPassword = debounce(() => {
     const password = passwordInput.value;
-    if (password && blacklist.includes(password)) {
+    if (password && demoWeakPasswords.has(password)) {
       warningDiv.classList.remove('hidden');
     } else {
       warningDiv.classList.add('hidden');
@@ -1137,7 +1085,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </pre>
           </div>
         </div>
-      </ClickToRevealSolution>
+      </ChallengeReveal>
     </div>
   );
 }
@@ -1160,10 +1108,7 @@ function SummarySlide() {
 }
 
 export default function AppJsLesson7() {
-  const [activeSlide, setActiveSlide] = useState("title");
-  const [blacklist, setBlacklist] = useState([]);
   const [password, setPassword] = useState("");
-  const [isBlacklisted, setIsBlacklisted] = useState(false);
 
   const slides = useMemo(() => [
     { id: "title", title: "Základy webových aplikací – 7. cvičení", subtitle: "Třídy a AJAX" },
@@ -1179,71 +1124,27 @@ export default function AppJsLesson7() {
     { id: "summary", title: "Shrnutí" },
   ], []);
 
+  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
   const currentSlide = slides.find((s) => s.id === activeSlide) || slides[0];
-
-  useEffect(() => {
-    fetch("https://zwa.toad.cz/passwords.txt")
-      .then((res) => res.text())
-      .then((text) => setBlacklist(text.split("\n").map((p) => p.trim()).filter(Boolean)))
-      .catch((err) => console.error("Failed to load blacklist:", err));
-  }, []);
-
-  useEffect(() => {
-    if (password && blacklist.length > 0) {
-      setIsBlacklisted(blacklist.includes(password));
-    } else {
-      setIsBlacklisted(false);
-    }
-  }, [password, blacklist]);
+  const demoWeakPasswords = ["password", "123456", "qwerty"];
+  const isWeakPassword = password.length > 0 && demoWeakPasswords.includes(password);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-      <div className="max-w-6xl mx-auto p-4 md:p-8 relative">
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-          <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-sky-300/40 dark:bg-sky-500/20 blur-3xl" />
-          <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-rose-300/40 dark:bg-rose-500/20 blur-3xl" />
-        </div>
-
-        <header className="mb-6">
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">
-            ZWA-7: Classes and AJAX
-          </h1>
-          <p className="text-sm text-zinc-500">
-            Interaktivní prezentace s příklady kódu a úkoly
-          </p>
-        </header>
-
-        <nav className="flex flex-wrap gap-2 mb-6">
-          {slides.map((s) => (
-            <button
-              key={s.id}
-              className={clsx(
-                "px-3 py-1.5 rounded-full text-sm border transition-all",
-                s.id === activeSlide
-                  ? "bg-sky-600 text-white border-sky-600 shadow-lg"
-                  : "bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-800"
-              )}
-              onClick={() => setActiveSlide(s.id)}
-            >
-              {s.title}
-            </button>
-          ))}
-        </nav>
-
-        <SlideCard
+    <LessonShell
+      lesson={getLessonByNumber(7)}
+      slides={slides}
+      activeSlide={activeSlide}
+      onChange={setActiveSlide}
+      title="ZWA-7: Classes and AJAX"
+      subtitle="Interaktivní prezentace s příklady kódu a úkoly"
+      footerText="© 2025 ZWA – Cvičení 7: Třídy a AJAX"
+    >
+        <LessonSlideContent
           slide={currentSlide}
           password={password}
           setPassword={setPassword}
-          isBlacklisted={isBlacklisted}
+          isWeakPassword={isWeakPassword}
         />
-
-
-        <footer className="mt-8 text-sm text-zinc-500 text-center">
-          © 2025 ZWA – Cvičení 7: Třídy a AJAX
-        </footer>
-        <Analytics />
-      </div>
-    </div>
+    </LessonShell>
   );
 }
-

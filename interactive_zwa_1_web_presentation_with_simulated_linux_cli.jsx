@@ -3,7 +3,11 @@ import portraitImg from "./src/interactive-zwa-1/assets/portrait.png";
 import discordLogo from "./src/interactive-zwa-1/assets/discord-logo.png";
 import telegramQr from "./src/interactive-zwa-1/assets/telegram-qr.png";
 import semestralMeme from "./src/interactive-zwa-1/assets/semestral-meme.png";
-import { Analytics } from "@vercel/analytics/react"
+import LessonShell, { useSlideNavigation } from "./src/components/lesson/LessonShell.jsx";
+import SharedSlideCard from "./src/components/lesson/SlideCard.jsx";
+import Code from "./src/components/lesson/Code.jsx";
+import { getLessonByNumber } from "./src/config/lessons.js";
+import { clsx } from "./src/components/lesson/classNames.js";
 
 // Interactive ZWA-1 presentation with a built-in simulated Linux CLI (no external libs)
 // Tailwind is available in canvas preview. All code is self-contained.
@@ -11,18 +15,6 @@ import { Analytics } from "@vercel/analytics/react"
 // ------------------------------
 // Utilities
 // ------------------------------
-function clsx(...xs) {
-  return xs.filter(Boolean).join(" ");
-}
-
-function Code({ children }) {
-  return (
-    <code className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[90%]">
-      {children}
-    </code>
-  );
-}
-
 // Simple virtual filesystem
 class VFS {
   constructor() {
@@ -477,7 +469,7 @@ const slides = [
   },
 ];
 
-function SlideCard({ slide, commandLog }) {
+function LessonSlideContent({ slide, commandLog }) {
   const hasSteps = Array.isArray(slide.steps) && slide.steps.length > 0;
   const hasSections = Array.isArray(slide.sections) && slide.sections.length > 0;
   const [stepIndex, setStepIndex] = useState(0);
@@ -489,9 +481,7 @@ function SlideCard({ slide, commandLog }) {
   const totalSections = hasSections ? slide.sections.length : 0;
   const currentSection = hasSections ? slide.sections[stepIndex] : null;
   return (
-    <div className="p-6 rounded-2xl shadow bg-white/70 dark:bg-zinc-900/60 backdrop-blur border border-zinc-200/60 dark:border-zinc-800">
-      <h2 className="text-2xl font-bold mb-2">{slide.title}</h2>
-      {slide.subtitle && <p className="text-zinc-500 mb-3">{slide.subtitle}</p>}
+    <SharedSlideCard slide={slide} idPrefix="lesson-3">
       {slide.body && !hasSections && (
         <div className={clsx(slide.id === "about-me" ? "grid grid-cols-1 sm:grid-cols-[1fr,180px] gap-4 items-start" : "")}> 
           <pre className="whitespace-pre-wrap leading-relaxed">{slide.body}</pre>
@@ -675,7 +665,7 @@ function SlideCard({ slide, commandLog }) {
           </a>
         </div>
       )}
-    </div>
+    </SharedSlideCard>
   );
 }
 
@@ -912,7 +902,6 @@ function TaskChecklist({ commandLog }) {
 export default function App() {
   const { run } = useInterpreter();
   const [clearKey, setClearKey] = useState(0);
-  const [active, setActive] = useState(slides[0].id);
   const [commandLog, setCommandLog] = useState([]);
 
   async function handleCommand(cmd) {
@@ -927,43 +916,23 @@ export default function App() {
     return out;
   }
 
-  const current = slides.find((s) => s.id === active) || slides[0];
+  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const current = slides.find((s) => s.id === activeSlide) || slides[0];
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-      <div className="max-w-7xl mx-auto p-4 md:p-8 relative">
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-          <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-sky-300/40 dark:bg-sky-500/20 blur-3xl" />
-          <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-fuchsia-300/40 dark:bg-fuchsia-500/20 blur-3xl" />
-        </div>
-
-        <header className="mb-6 flex items-center justify-between">
+    <LessonShell
+      lesson={getLessonByNumber(3)}
+      slides={slides}
+      activeSlide={activeSlide}
+      onChange={setActiveSlide}
+      title="ZWA-1: Interactive Web Presentation"
+      subtitle="Simulated Linux CLI on the right →"
+      footerText="© 2025 ZWA – Interactive demo for teaching (Egor Ulianov)"
+      maxWidthClass="max-w-7xl"
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">ZWA-1: Interactive Web Presentation</h1>
-            <p className="text-xs md:text-sm text-zinc-500 mt-1">Simulated Linux CLI on the right →</p>
-          </div>
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <nav className="flex flex-wrap gap-2 mb-3">
-              {slides.map((s) => (
-                <button
-                  key={s.id}
-                  className={clsx(
-                    "px-3 py-1.5 rounded-full text-sm border",
-                    s.id === active
-                      ? "bg-sky-600 text-white border-sky-600"
-                      : "bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800 hover:bg-white"
-                  )}
-                  onClick={() => setActive(s.id)}
-                >
-                  {s.title.replace(/ –.*$/, "")}
-                </button>
-              ))}
-            </nav>
-
-            <SlideCard slide={current} commandLog={commandLog} />
+            <LessonSlideContent slide={current} commandLog={commandLog} />
             {current.id === "tasks-net" && <TaskHints />}
           </div>
 
@@ -993,11 +962,6 @@ export default function App() {
           </div>
         </div>
 
-        <footer className="mt-8 text-sm text-zinc-500">
-          © 2025 ZWA – Interactive demo for teaching (Egor Ulianov)
-        </footer>
-        <Analytics />
-      </div>
-    </div>
+    </LessonShell>
   );
 }
