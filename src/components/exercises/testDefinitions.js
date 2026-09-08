@@ -1,10 +1,32 @@
+function normalizeJavaScriptResult(result, definitionId, index) {
+  if (!result || typeof result !== 'object') return null;
+
+  const normalized = {
+    id:
+      typeof result.id === 'string' && result.id.length > 0
+        ? result.id
+        : `${definitionId}-${index + 1}`,
+    ok: Boolean(result.ok),
+    text: String(result.text == null ? '' : result.text).slice(0, 2000),
+  };
+
+  if (typeof result.hint === 'string' && result.hint.length > 0) {
+    normalized.hint = result.hint.slice(0, 1000);
+  }
+
+  return normalized;
+}
+
 function createJavaScriptDefinition(stepIndex, label, hint) {
+  const id = `javascript-step-${stepIndex + 1}`;
   return Object.freeze({
-    id: `javascript-step-${stepIndex + 1}`,
+    id,
     label,
     hint,
     run({ result }) {
-      return Array.isArray(result) ? result : [];
+      return (Array.isArray(result) ? result : [])
+        .map((entry, index) => normalizeJavaScriptResult(entry, id, index))
+        .filter(Boolean);
     },
   });
 }
