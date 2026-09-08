@@ -1,5 +1,8 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+
+import PortalFrame from '../../src/components/portal/PortalFrame.jsx';
+import { portalClassNames } from '../../src/components/portal/portalClasses.js';
 import { isUnauthorized, request } from '../../src/lib/apiClient.js';
 
 export default function StudentProgress() {
@@ -49,13 +52,13 @@ export default function StudentProgress() {
 
   if (error) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-        <main className="max-w-4xl mx-auto p-6">
-          <div className="rounded-2xl border border-rose-300/40 dark:border-rose-900/40 bg-white/70 dark:bg-zinc-900/60 p-6">
-            <p className="text-rose-600 dark:text-rose-400">{error}</p>
+      <PortalFrame meta="Student progress">
+        <main className="mx-auto w-full max-w-4xl px-4 py-10 md:px-8 md:py-14">
+          <section className="portal-panel max-w-2xl p-6" role="alert">
+            <p className="text-[var(--portal-coral)]">{error}</p>
             <button
               type="button"
-              className="mt-3 rounded bg-zinc-200 px-3 py-1 dark:bg-zinc-800"
+              className={`${portalClassNames.action} mt-5`}
               onClick={() => {
                 setError('');
                 setLoadAttempt((attempt) => attempt + 1);
@@ -63,21 +66,21 @@ export default function StudentProgress() {
             >
               Retry
             </button>
-          </div>
+          </section>
         </main>
-      </div>
+      </PortalFrame>
     );
   }
 
   if (!data) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-        <main className="max-w-4xl mx-auto p-6">
-          <div className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-6">
-            <p className="text-zinc-600 dark:text-zinc-300">Loading…</p>
-          </div>
+      <PortalFrame meta="Student progress">
+        <main className="mx-auto w-full max-w-4xl px-4 py-10 md:px-8 md:py-14">
+          <section className="portal-panel p-6">
+            <p className="text-[var(--portal-text-muted)]">Loading…</p>
+          </section>
         </main>
-      </div>
+      </PortalFrame>
     );
   }
 
@@ -86,42 +89,36 @@ export default function StudentProgress() {
   const total = dates.reduce((acc, d) => acc + (attendance[d] ? 1 : 0), 0);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-      <div className="max-w-5xl mx-auto p-4 md:p-8 relative">
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-          <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-sky-300/40 dark:bg-sky-500/20 blur-3xl" />
-          <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-fuchsia-300/40 dark:bg-fuchsia-500/20 blur-3xl" />
-        </div>
-
-        <header className="mb-6 flex items-center justify-between">
+    <PortalFrame meta="Student progress">
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8 md:py-14">
+        <header className="flex flex-wrap items-start justify-between gap-5">
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Your Progress</h1>
-            <p className="text-xs md:text-sm text-zinc-500 mt-1">
+            <p className={portalClassNames.kicker}>Student access</p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+              Your Progress
+            </h1>
+            <p className="mt-2 text-sm text-[var(--portal-text-muted)]">
               Username:{' '}
-              <span className="font-semibold text-zinc-700 dark:text-zinc-200">
-                {data.username}
-              </span>
+              <span className="font-semibold text-[var(--portal-text)]">{data.username}</span>
             </p>
           </div>
-          <button
-            type="button"
-            className="px-3 py-1 rounded bg-zinc-200 dark:bg-zinc-800"
-            onClick={logout}
-          >
+          <button type="button" className={portalClassNames.action} onClick={logout}>
             Logout
           </button>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <section className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 shadow">
-            <div className="px-4 py-3 border-b border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between">
-              <h2 className="text-lg font-bold">Scores & Assignment</h2>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
-                updated
+        <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <section className="portal-panel" aria-labelledby="scores-title">
+            <div className="flex items-center justify-between gap-4 border-b border-[var(--portal-border)] px-4 py-3">
+              <h2 id="scores-title" className="text-lg font-semibold">
+                Scores & Assignment
+              </h2>
+              <span className="text-xs font-semibold uppercase tracking-wide text-[var(--portal-text-muted)]">
+                Updated
               </span>
             </div>
             <div className="p-4">
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-2 gap-4 text-sm">
                 <DataItem label="Task checked" value={p.assignment_task_checked ? 'Yes' : 'No'} />
                 <DataItem label="Mid‑term" value={p.assignment_midterm_ok ? 'OK' : '—'} />
                 <DataItem
@@ -135,35 +132,32 @@ export default function StudentProgress() {
                   className="col-span-2"
                 />
               </div>
-              <div className="mt-4 space-y-3">
+              <div className="mt-6 space-y-3">
                 {[1, 2, 3, 4].map((tn) => {
                   const g = grades[tn] || null;
                   if (!g) return null;
                   return (
-                    <div
-                      key={tn}
-                      className="rounded-lg border border-zinc-200/60 dark:border-zinc-800 p-3 bg-white/60 dark:bg-zinc-900/40"
-                    >
-                      <div className="text-sm font-semibold mb-1">Evaluation – Test {tn}</div>
+                    <div key={tn} className="rounded border border-[var(--portal-border)] p-3">
+                      <div className="mb-1 text-sm font-semibold">Evaluation – Test {tn}</div>
                       <div className="text-sm">
                         <span className="font-medium">Points:</span> {g.points ?? '—'}
                       </div>
                       {g.reasoning ? (
-                        <div className="mt-1">
-                          <div className="text-xs uppercase tracking-wide text-zinc-500">
+                        <div className="mt-2">
+                          <div className="text-xs font-semibold uppercase tracking-wide text-[var(--portal-text-muted)]">
                             AI reasoning
                           </div>
-                          <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <div className="prose prose-sm dark:prose-invert mt-1 max-w-none">
                             <ReactMarkdown>{g.reasoning}</ReactMarkdown>
                           </div>
                         </div>
                       ) : null}
                       {g.teacher_comment ? (
-                        <div className="mt-2">
-                          <div className="text-xs uppercase tracking-wide text-zinc-500">
+                        <div className="mt-3">
+                          <div className="text-xs font-semibold uppercase tracking-wide text-[var(--portal-text-muted)]">
                             Teacher comment
                           </div>
-                          <div className="text-sm whitespace-pre-wrap text-zinc-800 dark:text-zinc-200">
+                          <div className="mt-1 whitespace-pre-wrap text-sm text-[var(--portal-text)]">
                             {g.teacher_comment}
                           </div>
                         </div>
@@ -175,33 +169,33 @@ export default function StudentProgress() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 shadow">
-            <div className="px-4 py-3 border-b border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between">
-              <h2 className="text-lg font-bold">Attendance</h2>
-              <div className="text-xs text-zinc-600 dark:text-zinc-300">
-                Total present: <span className="font-semibold">{total}</span>
+          <section className="portal-panel" aria-labelledby="attendance-title">
+            <div className="flex items-center justify-between gap-4 border-b border-[var(--portal-border)] px-4 py-3">
+              <h2 id="attendance-title" className="text-lg font-semibold">
+                Attendance
+              </h2>
+              <div className="text-sm text-[var(--portal-text-muted)]">
+                Total present:{' '}
+                <span className="font-semibold text-[var(--portal-text)]">{total}</span>
               </div>
             </div>
             <div className="p-4">
               {dates.length === 0 ? (
-                <div className="text-sm text-zinc-600 dark:text-zinc-300">
+                <div className="text-sm text-[var(--portal-text-muted)]">
                   No attendance recorded yet.
                 </div>
               ) : (
-                <ul className="divide-y divide-zinc-200/60 dark:divide-zinc-800 rounded-xl overflow-hidden">
+                <ul className="divide-y divide-[var(--portal-border)] overflow-hidden rounded border border-[var(--portal-border)]">
                   {dates.map((d) => {
                     const present = !!attendance[d];
                     return (
-                      <li
-                        key={d}
-                        className="flex items-center justify-between px-3 py-2 bg-white/60 dark:bg-zinc-900/40"
-                      >
+                      <li key={d} className="flex items-center justify-between gap-4 px-3 py-2.5">
                         <span className="text-sm">{d}</span>
                         <span
                           className={
                             present
-                              ? 'text-emerald-600 text-sm font-medium'
-                              : 'text-zinc-500 text-sm'
+                              ? 'text-sm font-semibold text-emerald-700 dark:text-emerald-300'
+                              : 'text-sm text-[var(--portal-text-muted)]'
                           }
                         >
                           {present ? 'Present' : 'Absent'}
@@ -214,20 +208,18 @@ export default function StudentProgress() {
             </div>
           </section>
         </div>
-
-        <footer className="mt-8 text-sm text-zinc-500">© 2025 ZWA – Student view</footer>
-      </div>
-    </div>
+      </main>
+    </PortalFrame>
   );
 }
 
 function DataItem({ label, value, className }) {
   return (
     <div className={className}>
-      <div className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <div className="text-xs font-semibold uppercase tracking-wide text-[var(--portal-text-muted)]">
         {label}
       </div>
-      <div className="mt-0.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100">{value}</div>
+      <div className="mt-1 text-sm font-semibold text-[var(--portal-text)]">{value}</div>
     </div>
   );
 }

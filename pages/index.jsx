@@ -1,35 +1,23 @@
 import React from 'react';
 import Link from 'next/link';
+
+import CourseRoadmap from '../src/components/portal/CourseRoadmap.jsx';
+import PortalFrame from '../src/components/portal/PortalFrame.jsx';
 import { lessons } from '../src/config/lessons.js';
 
 export default function Home() {
   return (
-    <main className="max-w-3xl mx-auto p-6">
-      <header className="mb-6">
-        <h1 className="text-3xl font-extrabold">ZWA Presentations</h1>
-        <p className="text-zinc-600">Select a presentation:</p>
-      </header>
-      <ul className="space-y-3">
-        {lessons.map((lesson) => (
-          <li key={lesson.slug}>
-            <Link
-              className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50"
-              href={lesson.href}
-            >
-              {lesson.number}) {lesson.title}
-            </Link>
-          </li>
-        ))}
-        <li>
-          <Link
-            prefetch={false}
-            className="block p-4 rounded-xl bg-white shadow border hover:bg-zinc-50"
-            href="/attendance"
-          >
-            Attendance (protected)
-          </Link>
-        </li>
-      </ul>
-    </main>
+    <PortalFrame meta="Course catalogue">
+      <CourseRoadmap lessons={lessons} />
+      <footer className="mx-auto flex w-full max-w-6xl justify-end px-4 pb-10 md:px-8">
+        <Link
+          className="text-sm font-semibold text-[var(--portal-indigo)] underline decoration-[var(--portal-focus)] underline-offset-4"
+          href="/attendance"
+          prefetch={false}
+        >
+          Attendance (protected)
+        </Link>
+      </footer>
+    </PortalFrame>
   );
 }

@@ -11,13 +11,9 @@ test.describe('public catalog and lesson navigation', () => {
     const response = await page.goto('/');
     expect(response).not.toBeNull();
     expect(response.ok()).toBe(true);
-    await expect(page.getByRole('heading', { name: 'ZWA Presentations' })).toBeVisible();
+    await expect(page.getByText('ZWA · Web Applications', { exact: true })).toBeVisible();
 
-    const lessonLinks = page
-      .getByRole('main')
-      .getByRole('link')
-      .filter({ hasText: /^\d+\)/ });
-    await expect(lessonLinks).toHaveCount(12);
+    await expect(page.getByRole('main').getByRole('link')).toHaveCount(12);
     await expect(
       page.getByRole('link', { name: /Web Presentation with Simulated Linux CLI/ }),
     ).toHaveAttribute('href', '/interactive-zwa-1');
