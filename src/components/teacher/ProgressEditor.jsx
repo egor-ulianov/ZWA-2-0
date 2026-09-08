@@ -17,7 +17,7 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
 
   React.useEffect(() => {
     setDraft({ ...EMPTY_PROGRESS, ...(value || {}) });
-  }, [username]);
+  }, [username, value]);
 
   React.useEffect(() => () => clearTimeout(timerRef.current), []);
 
