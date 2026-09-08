@@ -1,4 +1,5 @@
 import React from 'react';
+import { request } from '../../src/lib/apiClient.js';
 
 export default function StudentLogin() {
   const [username, setUsername] = React.useState('');
@@ -6,18 +7,23 @@ export default function StudentLogin() {
   const [error, setError] = React.useState('');
   const [loading, setLoading] = React.useState(false);
 
+  React.useEffect(() => {
+    const controller = new AbortController();
+    request('/api/student/me', { signal: controller.signal }).then(() => {
+      window.location.replace('/student/progress');
+    }).catch(() => {});
+    return () => controller.abort();
+  }, []);
+
   async function submit(e) {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const res = await fetch('/api/student/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, code }) });
-    if (res.ok) {
+    try {
+      await request('/api/student/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, code }) });
       window.location.href = '/student/progress';
-    } else {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error || 'Login failed');
-    }
-    setLoading(false);
+    } catch (cause) { setError(cause.message || 'Login failed'); }
+    finally { setLoading(false); }
   }
 
   return (
@@ -40,8 +46,9 @@ export default function StudentLogin() {
             </div>
             <form onSubmit={submit} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-1">Username</label>
+                <label htmlFor="student-username" className="block text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-1">Username</label>
                 <input
+                  id="student-username"
                   className="w-full px-3 py-2 rounded-lg border border-zinc-200/60 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/70 outline-none focus:ring-2 focus:ring-sky-500"
                   placeholder="e.g. IHNATILL"
                   value={username}
@@ -51,8 +58,9 @@ export default function StudentLogin() {
                 />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-1">Auth code</label>
+                <label htmlFor="student-code" className="block text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-1">Auth code</label>
                 <input
+                  id="student-code"
                   className="w-full px-3 py-2 rounded-lg border border-zinc-200/60 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/70 outline-none focus:ring-2 focus:ring-sky-500"
                   placeholder="6-char code from your teacher"
                   value={code}
@@ -62,7 +70,7 @@ export default function StudentLogin() {
                 />
               </div>
               {!!error && (
-                <div className="text-sm text-rose-600 dark:text-rose-400">{error}</div>
+                <div className="text-sm text-rose-600 dark:text-rose-400" role="alert">{error}</div>
               )}
               <button
                 className="w-full px-4 py-2 rounded-lg bg-sky-600 text-white disabled:opacity-50"
@@ -86,5 +94,4 @@ export default function StudentLogin() {
     </div>
   );
 }
-
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Analytics } from "@vercel/analytics/next"
+import { isUnauthorized, request } from '../../src/lib/apiClient.js';
 
 export default function StudentProgress() {
   const [data, setData] = React.useState(null);
@@ -9,30 +10,31 @@ export default function StudentProgress() {
   const [grades, setGrades] = React.useState({});
   React.useEffect(() => {
     let mounted = true;
+    const controller = new AbortController();
     async function load() {
       try {
-        const res = await fetch('/api/student/me');
-        if (!res.ok) throw new Error('Unauthorized');
-        const d = await res.json();
+        const [d, at, gj] = await Promise.all([
+          request('/api/student/me', { signal: controller.signal }),
+          request('/api/student/attendance', { signal: controller.signal }),
+          request('/api/student/grades', { signal: controller.signal }),
+        ]);
         if (!mounted) return;
         setData(d);
-        const a = await fetch('/api/student/attendance');
-        if (a.ok) {
-          const at = await a.json();
-          if (mounted) setAttendance(at.attendance || {});
-        }
-        const g = await fetch('/api/student/grades');
-        if (g.ok) {
-          const gj = await g.json();
-          if (mounted) setGrades(gj.grades || {});
-        }
+        setAttendance(at.attendance || {});
+        setGrades(gj.grades || {});
       } catch (e) {
-        if (mounted) setError('Unauthorized');
+        if (e.name === 'AbortError') return;
+        if (isUnauthorized(e)) { window.location.replace('/student'); return; }
+        if (mounted) setError('Unable to load your progress. Please try again.');
       }
     }
     load();
-    return () => { mounted = false; };
+    return () => { mounted = false; controller.abort(); };
   }, []);
+
+  async function logout() {
+    try { await request('/api/student/logout', { method: 'POST' }); } finally { window.location.replace('/student'); }
+  }
 
   if (error) {
     return (
@@ -75,6 +77,7 @@ export default function StudentProgress() {
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Your Progress</h1>
             <p className="text-xs md:text-sm text-zinc-500 mt-1">Username: <span className="font-semibold text-zinc-700 dark:text-zinc-200">{data.username}</span></p>
           </div>
+          <button type="button" className="px-3 py-1 rounded bg-zinc-200 dark:bg-zinc-800" onClick={logout}>Logout</button>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -85,10 +88,6 @@ export default function StudentProgress() {
             </div>
             <div className="p-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <DataItem label="Test 1" value={p.test1 ?? '—'} />
-                <DataItem label="Test 2" value={p.test2 ?? '—'} />
-                <DataItem label="Test 3" value={p.test3 ?? '—'} />
-                <DataItem label="Test 4" value={p.test4 ?? '—'} />
                 <DataItem label="Task checked" value={p.assignment_task_checked ? 'Yes' : 'No'} />
                 <DataItem label="Mid‑term" value={p.assignment_midterm_ok ? 'OK' : '—'} />
                 <DataItem label="Partner" value={p.assignment_partner || '—'} className="col-span-2" />
@@ -167,5 +166,3 @@ function DataItem({ label, value, className }) {
     </div>
   );
 }
-
-
