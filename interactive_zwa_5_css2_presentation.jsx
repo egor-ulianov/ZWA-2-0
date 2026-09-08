@@ -180,7 +180,10 @@ function VsPlayground({ stepIndex }) {
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 shadow overflow-hidden">
+    <div
+      data-projector-private="css-exercise"
+      className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 shadow overflow-hidden"
+    >
       <div className="grid grid-cols-1 lg:grid-cols-2">
         <div className="p-3 border-b lg:border-b-0 lg:border-r border-zinc-200/60 dark:border-zinc-800">
           <div className="font-semibold text-sm mb-2">HTML</div>

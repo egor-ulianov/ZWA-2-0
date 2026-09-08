@@ -11,7 +11,7 @@ test.describe('lesson projector and presenter modes', () => {
     await expect(page.getByRole('navigation', { name: /Course outline/i })).toHaveCount(0);
     await expect(page.getByText('01 / 04')).toBeVisible();
     await expect(page.getByText('Organizace a prostředí')).toBeVisible();
-    await expect(page.locator('textarea, iframe, [aria-label="Test results"]')).toHaveCount(0);
+    await expect(page.locator('textarea, iframe')).toHaveCount(0);
 
     await page.keyboard.press('ArrowRight');
     await expect(page).toHaveURL(/mode=projector.*slide=sections/);
@@ -33,7 +33,21 @@ test.describe('lesson projector and presenter modes', () => {
     await page.goto('/interactive-zwa-5-js?mode=projector&slide=tasks');
     await expect(page.getByRole('heading', { name: 'Úlohy – JavaScript' }).first()).toBeVisible();
     await expect(page.getByText(/Vytvořte proměnnou greeting/)).toBeVisible();
-    await expect(page.locator('textarea, iframe, [aria-label="Test results"]')).toHaveCount(0);
+    await expect(page.locator('textarea, iframe')).toHaveCount(0);
+    await expect(page.getByText('In this browser session', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Files', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Preview', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Console', { exact: true })).toHaveCount(0);
+  });
+
+  test('projector keeps CSS teaching text without editor mirrors or controls', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-2?mode=projector&slide=linking');
+    await expect(page.getByText(/Vytvořte link na stylopis/)).toBeVisible();
+    await expect(page.locator('textarea, iframe, pre[aria-hidden="true"]')).toHaveCount(0);
+    await expect(page.getByText('Editor', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Preview', { exact: true })).toHaveCount(0);
   });
 
   test('arrow keys in editable fields do not change the active slide', async ({ page }) => {

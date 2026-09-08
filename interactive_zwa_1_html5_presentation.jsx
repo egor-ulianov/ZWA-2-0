@@ -95,7 +95,7 @@ function Playground() {
   const [html, setHtml] = useState(initial);
   const [showPreview, setShowPreview] = useState(true);
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div data-projector-private="html-exercise" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="flex flex-col">
         <label className="text-sm font-medium mb-1">HTML editor</label>
         <textarea
@@ -194,7 +194,7 @@ function TaskEditorHtml() {
   const local = runLocalChecks(html);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div data-projector-private="html-exercise" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="flex flex-col">
         <label className="text-sm font-medium mb-1">HTML – Úkoly editor</label>
         <textarea

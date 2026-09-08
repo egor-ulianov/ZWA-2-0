@@ -1,64 +1,17 @@
 import React, { useMemo } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-
-const PRIVATE_PROJECTOR_SELECTORS = [
-  'textarea',
-  'input',
-  'select',
-  'button',
-  'iframe',
-  'script',
-  'style',
-  'object',
-  'embed',
-  'link',
-  '[aria-label="Course outline"]',
-  '[aria-label="Presenter outline"]',
-  '[aria-label="Presenter console"]',
-  '[aria-label="Exercise workspace"]',
-  '[aria-label="Test results"]',
-  '[role="tablist"]',
-  '[role="tab"]',
-].join(',');
-
-function sanitizeProjectorMarkup(markup) {
-  if (!markup || typeof DOMParser === 'undefined') return '';
-  const document = new DOMParser().parseFromString(
-    `<div data-projector-content="root">${markup}</div>`,
-    'text/html',
-  );
-  const root = document.body.firstElementChild;
-  if (!root) return '';
-
-  root.querySelectorAll(PRIVATE_PROJECTOR_SELECTORS).forEach((element) => element.remove());
-  root.querySelectorAll('[role="tabpanel"]').forEach((element) => {
-    element.removeAttribute('role');
-    element.removeAttribute('aria-labelledby');
-    element.removeAttribute('tabindex');
-  });
-  root.querySelectorAll('*').forEach((element) => {
-    Array.from(element.attributes).forEach((attribute) => {
-      if (attribute.name.toLowerCase().startsWith('on')) element.removeAttribute(attribute.name);
-    });
-  });
-  root.querySelectorAll('[href], [src]').forEach((element) => {
-    for (const attributeName of ['href', 'src']) {
-      const value = element.getAttribute(attributeName);
-      if (value && /^(?:javascript|data):/i.test(value.trim())) {
-        element.removeAttribute(attributeName);
-      }
-    }
-  });
-
-  return root.innerHTML;
-}
+import { projectDomChildren } from './projectorContent.js';
 
 function renderProjectedContent(children) {
-  if (!children) return '';
+  if (!children || typeof DOMParser === 'undefined') return [];
   try {
-    return sanitizeProjectorMarkup(renderToStaticMarkup(children));
+    const document = new DOMParser().parseFromString(
+      `<div data-projector-content="root">${renderToStaticMarkup(children)}</div>`,
+      'text/html',
+    );
+    return projectDomChildren(document.body.firstElementChild);
   } catch {
-    return '';
+    return [];
   }
 }
 
@@ -100,11 +53,8 @@ export default function ProjectorStage({ lesson, slides, slide, onPrevious, onNe
               {slide.subtitle}
             </p>
           ) : null}
-          {projectedMarkup ? (
-            <div
-              className="projector-teaching-content mt-10"
-              dangerouslySetInnerHTML={{ __html: projectedMarkup }}
-            />
+          {projectedMarkup.length > 0 ? (
+            <div className="projector-teaching-content mt-10">{projectedMarkup}</div>
           ) : null}
         </div>
       </div>
@@ -133,4 +83,4 @@ export default function ProjectorStage({ lesson, slides, slide, onPrevious, onNe
   );
 }
 
-export { renderProjectedContent, sanitizeProjectorMarkup };
+export { renderProjectedContent };

@@ -130,7 +130,7 @@ function JsPlayground({ stepIndex }) {
           />
         }
       />
-      <div className="mt-3">
+      <div className="mt-3" data-projector-private="console">
         <div className="font-semibold text-sm mb-1">Console</div>
         <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 min-h-[80px] max-h-[180px] overflow-auto text-xs">
           {logs.length === 0 && <div className="text-zinc-500">(žádné výstupy)</div>}

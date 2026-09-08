@@ -85,7 +85,10 @@ function FormsPlayground() {
   );
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-[1.2fr,0.8fr] gap-6">
+    <div
+      data-projector-private="forms-exercise"
+      className="grid grid-cols-1 xl:grid-cols-[1.2fr,0.8fr] gap-6"
+    >
       <div className="space-y-4">
         <form className="space-y-3" onSubmit={onSubmitLocal}>
           <fieldset className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 p-3">
@@ -506,7 +509,7 @@ function FormValidationEditor({ initialHtml, localCheck, showPreview = false }) 
   const lc = (localCheck || defaultLocalChecks)(html);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+    <div data-projector-private="forms-exercise" className="grid grid-cols-1 lg:grid-cols-2 gap-3">
       <div className="flex flex-col">
         <textarea
           value={html}
