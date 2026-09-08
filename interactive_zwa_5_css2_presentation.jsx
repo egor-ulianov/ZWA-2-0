@@ -1,5 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Analytics } from "@vercel/analytics/react";
+import SandboxedPreview from "./src/components/playground/SandboxedPreview";
+
+const {
+  CSS_LAYOUT_INSPECTION,
+  validateCssLayout,
+} = require("./src/components/playground/validators");
 
 function clsx(...xs) { return xs.filter(Boolean).join(" "); }
 
@@ -136,62 +142,11 @@ function getTaskTemplates(stepIndex) {
   return { step: steps[idx], all: steps };
 }
 
-function runValidation({ container, htmlCode, cssCode, stepIndex }) {
-  const results = [];
-  try {
-    if (!container) return results;
-    if (stepIndex === 0) {
-      const ids = ["#site-header", "#menu", "#article", "#footer"];
-      ids.forEach((sel) => {
-        const el = container.querySelector(sel);
-        const cs = el ? window.getComputedStyle(el) : null;
-        const ok = cs && (parseInt(cs.paddingTop) > 0 || parseInt(cs.borderTopWidth) > 0 || parseInt(cs.marginTop) > 0);
-        results.push({ ok: !!ok, text: `${sel} has some box model styling` });
-      });
-    } else if (stepIndex === 1) {
-      const img = container.querySelector('#pic');
-      const cs = img ? window.getComputedStyle(img) : null;
-      const ok = cs && (cs.float === 'left' || cs.float === 'right');
-      results.push({ ok: !!ok, text: "#pic floats left/right" });
-      const hasClearfix = /clear\s*:\s*both/i.test(cssCode) || /::after[\s\S]*clear\s*:\s*both/i.test(cssCode);
-      results.push({ ok: !!hasClearfix, text: "clearfix (clear: both) present" });
-    } else if (stepIndex === 2) {
-      const img = container.querySelector('#pic');
-      const cs = img ? window.getComputedStyle(img) : null;
-      const ok = cs && cs.position && cs.position !== 'static';
-      results.push({ ok: !!ok, text: "#pic position is not static" });
-    } else if (stepIndex === 3) {
-      const el = container.querySelector('.hl');
-      const cs = el ? window.getComputedStyle(el) : null;
-      const ok = cs && (cs.display === 'inline-block' || cs.display === 'block');
-      results.push({ ok: !!ok, text: ".hl display changed (block/inline-block)" });
-      const hasBg = /\.hl[\s\S]*background/i.test(cssCode);
-      results.push({ ok: !!hasBg, text: ".hl has background color" });
-    } else if (stepIndex === 4) {
-      const hdr = container.querySelector('#site-header');
-      const cs = hdr ? window.getComputedStyle(hdr) : null;
-      const ok = cs && cs.display === 'flex';
-      results.push({ ok: !!ok, text: "#site-header uses display:flex" });
-      const hasAuto = /#site-header\s+button[\s\S]*margin-left\s*:\s*auto/i.test(cssCode);
-      results.push({ ok: !!hasAuto, text: "#site-header button has margin-left:auto" });
-    } else if (stepIndex === 5) {
-      const hasMedia = /@media\s*\(min-width:\s*800px\)/i.test(cssCode);
-      results.push({ ok: !!hasMedia, text: "@media(min-width:800px) present" });
-    } else if (stepIndex === 6) {
-      const okLink = /<link[^>]*rel=["']stylesheet["'][^>]*media=["']print["'][^>]*>/i.test(htmlCode);
-      results.push({ ok: !!okLink, text: "<link rel=stylesheet media=print> present" });
-    }
-  } catch (e) {
-    results.push({ ok: false, text: `Validation error: ${e?.message || e}` });
-  }
-  return results;
-}
-
 function VsPlayground({ stepIndex }) {
-  const previewRef = useRef(null);
   const [htmlCode, setHtmlCode] = useState("");
   const [cssCode, setCssCode] = useState("");
   const [applyVersion, setApplyVersion] = useState(0);
+  const [validationVersion, setValidationVersion] = useState(0);
   const [results, setResults] = useState([]);
   const templates = useMemo(() => getTaskTemplates(stepIndex), [stepIndex]);
 
@@ -202,21 +157,22 @@ function VsPlayground({ stepIndex }) {
     setApplyVersion((v) => v + 1);
   }, [templates]);
 
-  useEffect(() => {
-    if (!previewRef.current) return;
-    let html = htmlCode || "";
-    if (/<\/head>/i.test(html)) {
-      html = html.replace(/<\/head>/i, `<style>${cssCode}</style></head>`);
-    } else {
-      html = `<style>${cssCode}</style>` + html;
-    }
-    previewRef.current.innerHTML = html;
-  }, [htmlCode, cssCode, applyVersion]);
-
   function applyOnce() { setApplyVersion((v) => v + 1); }
   function validate() {
-    const r = runValidation({ container: previewRef.current, htmlCode, cssCode, stepIndex });
-    setResults(r);
+    setResults([]);
+    setValidationVersion((version) => version + 1);
+  }
+  function handleInspection(message) {
+    if (message.type === "result") {
+      setResults(validateCssLayout({
+        inspection: message.value,
+        htmlCode,
+        cssCode,
+        stepIndex,
+      }));
+    } else if (message.type === "error") {
+      setResults([{ ok: false, text: `Validation error: ${message.message}` }]);
+    }
   }
 
   return (
@@ -244,7 +200,28 @@ function VsPlayground({ stepIndex }) {
         </div>
         <div className="p-3">
           <div className="font-semibold text-sm mb-2">Preview</div>
-          <div ref={previewRef} className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 min-h-[320px]" />
+          <SandboxedPreview
+            key={applyVersion}
+            html={htmlCode}
+            css={cssCode}
+            mode="static"
+            title="CSS layout playground preview"
+            className="w-full rounded-xl border border-zinc-200/60 bg-white min-h-[320px]"
+          />
+          {validationVersion > 0 && (
+            <div className="fixed -left-[10000px] top-0 h-[768px] w-[1024px] overflow-hidden" aria-hidden="true">
+              <SandboxedPreview
+                key={validationVersion}
+                html={htmlCode}
+                css={cssCode}
+                mode="inspect"
+                inspection={CSS_LAYOUT_INSPECTION}
+                onMessage={handleInspection}
+                title="CSS layout validation sandbox"
+                className="h-[768px] w-[1024px]"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -491,5 +468,4 @@ export default function AppCss2Lesson() {
     </div>
   );
 }
-
 

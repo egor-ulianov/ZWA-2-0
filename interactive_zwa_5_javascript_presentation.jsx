@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import memeImg from "./src/interactive-zwa-6/image.png";
+import JsSandbox from "./src/components/playground/JsSandbox";
 
 function clsx(...xs) {
   return xs.filter(Boolean).join(" ");
@@ -10,17 +11,6 @@ function Code({ children }) {
   return (
     <code className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[90%]">{children}</code>
   );
-}
-
-function useConsoleCapture() {
-  const [logs, setLogs] = useState([]);
-  const clear = () => setLogs([]);
-  const api = useMemo(() => ({
-    log: (...args) => setLogs((l) => [...l, { type: "log", text: args.map(String).join(" ") }]),
-    error: (...args) => setLogs((l) => [...l, { type: "error", text: args.map(String).join(" ") }]),
-    warn: (...args) => setLogs((l) => [...l, { type: "warn", text: args.map(String).join(" ") }]),
-  }), []);
-  return { logs, api, clear };
 }
 
 function getJsTemplates(stepIndex) {
@@ -108,104 +98,35 @@ function getJsTemplates(stepIndex) {
   return { step: steps[idx], all: steps };
 }
 
-function runJsAndValidate({ code, consoleApi, domRef, stepIndex }) {
-  const results = [];
-  const exportsObj = {};
-  // Spy on alerts for validation without disruptive popups
-  const alertCalls = [];
-  const originalAlert = typeof window !== 'undefined' ? window.alert : undefined;
-  if (typeof window !== 'undefined') {
-    window.alert = (msg) => { alertCalls.push(String(msg)); };
-  }
-  try {
-    // Execute user code with captured console and provided exports
-    const fn = new Function("exports", "console", code);
-    fn(exportsObj, consoleApi);
-    results.push({ ok: true, text: "Code executed" });
-  } catch (e) {
-    results.push({ ok: false, text: `Runtime error: ${e?.message || e}` });
-    if (typeof window !== 'undefined') window.alert = originalAlert;
-    return { results, exportsObj };
-  }
-
-  try {
-    // Per-step validations
-    if (stepIndex === 0) {
-      const ok1 = exportsObj.greeting === "Ahoj";
-      const ok2 = typeof exportsObj.double === "function" && exportsObj.double(10) === 20;
-      results.push({ ok: !!ok1, text: "exports.greeting === 'Ahoj'" });
-      results.push({ ok: !!ok2, text: "exports.double(10) === 20" });
-    } else if (stepIndex === 1) {
-      const ok = typeof exportsObj.classify === "function" && exportsObj.classify(6) === "even" && exportsObj.classify(7) === "odd";
-      results.push({ ok: !!ok, text: "classify(6) -> even, classify(7) -> odd" });
-    } else if (stepIndex === 2) {
-      const ok = typeof exportsObj.sumTo === "function" && exportsObj.sumTo(5) === 15;
-      results.push({ ok: !!ok, text: "sumTo(5) === 15" });
-    } else if (stepIndex === 3) {
-      const ok = typeof exportsObj.total === "function" && exportsObj.total([1, 2, 3]) === 6;
-      results.push({ ok: !!ok, text: "total([1,2,3]) === 6" });
-    } else if (stepIndex === 4) {
-      const el = domRef?.current?.querySelector?.('#app');
-      const ok = el && String(el.textContent).includes('Hello JS');
-      results.push({ ok: !!ok, text: "#app has text 'Hello JS'" });
-    } else if (stepIndex === 5) {
-      const btn = domRef?.current?.querySelector?.('#btn');
-      const cnt = domRef?.current?.querySelector?.('#cnt');
-      if (btn && cnt) {
-        btn.dispatchEvent(new Event('click', { bubbles: true }));
-        const after = Number(cnt.textContent || '0');
-        results.push({ ok: after >= 1, text: "Click increments #cnt" });
-      } else {
-        results.push({ ok: false, text: "DOM elements #btn/#cnt not found" });
-      }
-    } else if (stepIndex === 6) {
-      const fn = exportsObj.notify;
-      if (typeof fn === 'function') {
-        alertCalls.length = 0;
-        fn(true);
-        const okTrue = alertCalls.includes('OK');
-        alertCalls.length = 0;
-        fn(false);
-        const okFalse = alertCalls.includes('Cancelled');
-        results.push({ ok: !!okTrue, text: "notify(true) -> alert('OK')" });
-        results.push({ ok: !!okFalse, text: "notify(false) -> alert('Cancelled')" });
-      } else {
-        results.push({ ok: false, text: "exports.notify není funkce" });
-      }
-    }
-  } catch (e) {
-    results.push({ ok: false, text: `Validation error: ${e?.message || e}` });
-  }
-  if (typeof window !== 'undefined') window.alert = originalAlert;
-  return { results, exportsObj };
-}
-
 function JsPlayground({ stepIndex }) {
-  const domRef = useRef(null);
-  const { logs, api: consoleApi, clear: clearLogs } = useConsoleCapture();
   const templates = useMemo(() => getJsTemplates(stepIndex), [stepIndex]);
   const [code, setCode] = useState(templates.step.js);
+  const [appliedCode, setAppliedCode] = useState(null);
   const [validateResults, setValidateResults] = useState([]);
-  const [appliedVersion, setAppliedVersion] = useState(0);
+  const [logs, setLogs] = useState([]);
+  const [executionKey, setExecutionKey] = useState(0);
 
   useEffect(() => {
     setCode(templates.step.js);
+    setAppliedCode(null);
     setValidateResults([]);
-    clearLogs();
-    setAppliedVersion((v) => v + 1);
+    setLogs([]);
+    setExecutionKey((key) => key + 1);
   }, [templates]);
-
-  useEffect(() => {
-    if (!domRef.current) return;
-    domRef.current.innerHTML = templates.step.dom || "";
-  }, [templates, appliedVersion]);
 
   function run() {
     setValidateResults([]);
-    clearLogs();
-    const out = runJsAndValidate({ code, consoleApi, domRef, stepIndex });
-    setValidateResults(out.results);
-    setAppliedVersion((v) => v + 1);
+    setLogs([]);
+    setAppliedCode(code);
+    setExecutionKey((key) => key + 1);
+  }
+
+  function handleResult(result) {
+    setValidateResults(Array.isArray(result) ? result : []);
+  }
+
+  function handleConsole(message) {
+    setLogs((current) => [...current, message].slice(-100));
   }
 
   return (
@@ -234,8 +155,17 @@ function JsPlayground({ stepIndex }) {
           )}
         </div>
         <div className="p-3">
-          <div className="font-semibold text-sm mb-2">DOM preview</div>
-          <div ref={domRef} className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 min-h-[160px]" />
+              <div className="font-semibold text-sm mb-2">DOM preview</div>
+              <JsSandbox
+                key={executionKey}
+                code={appliedCode}
+                dom={templates.step.dom}
+                stepIndex={stepIndex}
+                onResult={handleResult}
+                onConsole={handleConsole}
+                title="JavaScript DOM sandbox"
+                className="w-full min-h-[160px] rounded-xl border bg-white"
+              />
           <div className="mt-3">
             <div className="font-semibold text-sm mb-1">Console</div>
             <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 min-h-[80px] max-h-[180px] overflow-auto text-xs">
@@ -527,6 +457,5 @@ export default function AppJsLesson5() {
     </div>
   );
 }
-
 
 

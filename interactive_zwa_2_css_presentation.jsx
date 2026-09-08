@@ -2,51 +2,64 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import heroImg from "./src/interactive-zwa-1/assets/semestral-meme.png";
 import memeImg from "./src/interactive-zwa-2/assets/image.png";
 import { Analytics } from "@vercel/analytics/react";
+import SandboxedPreview from "./src/components/playground/SandboxedPreview";
+
+const {
+  CSS_BASICS_INSPECTION,
+  validateCssBasics,
+} = require("./src/components/playground/validators");
 
 function clsx(...xs) {
   return xs.filter(Boolean).join(" ");
 }
 
-// very small CSS highlighter (regex-based, not a full parser)
-function highlightCss(source) {
-  if (!source) return "";
-  const escape = (s) => s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  let html = escape(source);
-  // comments
-  html = html.replace(/\/\*[\s\S]*?\*\//g, (m) => `<span class=\"text-zinc-400\">${escape(m)}</span>`);
-  // at-rules (@media, @keyframes, ...)
-  html = html.replace(/@([a-zA-Z-]+)/g, (m) => `<span class=\"text-purple-600\">${m}</span>`);
-  // selectors (before opening brace)
-  html = html.replace(/([^{}\n]+)\{/g, (match, sel) => `<span class=\"text-sky-700 font-medium\">${sel.trim()}</span>{`);
-  // property names
-  html = html.replace(/([a-zA-Z-]+)(\s*):/g, (match, prop, ws) => `<span class=\"text-amber-700\">${prop}</span>${ws}:`);
-  // hex colors
-  html = html.replace(/#([0-9a-fA-F]{3,6})\b/g, (m) => `<span class=\"text-pink-600\">${m}</span>`);
-  // numbers with units
-  html = html.replace(/(-?\d*\.?\d+)(px|%|em|rem|vh|vw|ms|s)\b/g, (match, n, u) => `<span class=\"text-emerald-700\">${n}${u}</span>`);
-  // keywords
-  html = html.replace(/\b(transparent|none|solid|ease|inherit|initial|unset|auto|block|inline|flex)\b/g, (m) => `<span class=\"text-indigo-700\">${m}</span>`);
-  // !important
-  html = html.replace(/!important/g, `<span class=\"text-rose-700\">!important</span>`);
-  return html;
+// Small React-token based highlighters. Student text stays text; React escapes it.
+function tokenizeCode(source, pattern, getClassName) {
+  if (!source) return null;
+  const nodes = [];
+  let cursor = 0;
+  let match;
+  let key = 0;
+  pattern.lastIndex = 0;
+  while ((match = pattern.exec(source)) !== null) {
+    if (match.index > cursor) nodes.push(source.slice(cursor, match.index));
+    const token = match[0];
+    const className = getClassName(token, source.slice(match.index + token.length));
+    nodes.push(
+      className ? <span key={`token-${key++}`} className={className}>{token}</span> : token
+    );
+    cursor = match.index + token.length;
+  }
+  if (cursor < source.length) nodes.push(source.slice(cursor));
+  return nodes;
 }
 
-// very small HTML highlighter (regex-based)
+const CSS_TOKEN_PATTERN = /\/\*[\s\S]*?\*\/|@[a-zA-Z-]+|!important\b|#[0-9a-fA-F]{3,8}\b|-?\d*\.?\d+(?:px|%|em|rem|vh|vw|ms|s)\b|\b(?:transparent|none|solid|ease|inherit|initial|unset|auto|block|inline|flex)\b|[a-zA-Z-]+(?=\s*:)|[^{}\n]+(?=\s*\{)/gi;
+
+function highlightCss(source) {
+  return tokenizeCode(source, CSS_TOKEN_PATTERN, (token, following) => {
+    if (token.startsWith("/*")) return "text-zinc-400";
+    if (/^@/.test(token)) return "text-purple-600";
+    if (/^!important$/i.test(token)) return "text-rose-700";
+    if (/^#[0-9a-f]/i.test(token)) return "text-pink-600";
+    if (/^-?\d*\.?\d+(?:px|%|em|rem|vh|vw|ms|s)$/i.test(token)) return "text-emerald-700";
+    if (/^(transparent|none|solid|ease|inherit|initial|unset|auto|block|inline|flex)$/i.test(token)) {
+      return "text-indigo-700";
+    }
+    if (/^\s*:/.test(following)) return "text-amber-700";
+    return "text-sky-700 font-medium";
+  });
+}
+
+const HTML_TOKEN_PATTERN = /<!--[\s\S]*?-->|<\/?[a-zA-Z][\w:-]*|[a-zA-Z_:][\w:.-]*(?=\s*=)|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\/?\s*>/g;
+
 function highlightHtml(source) {
-  if (!source) return "";
-  const escape = (s) => s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  let html = escape(source);
-  // attributes and values (first, so we don't mutate our own injected spans later)
-  html = html.replace(/([a-zA-Z-:]+)(=)(\"[^\"]*\"|'[^']*')/g, (m, attr, eq, val) => `<span class=\"text-amber-700\">${attr}</span>${eq}<span class=\"text-emerald-700\">${val}</span>`);
-  // tags (wrap only the tag name)
-  html = html.replace(/(&lt;\/?)([a-zA-Z0-9-]+)([^&]*?&gt;)/g, (m, open, tag, rest) => `${open}<span class=\"text-purple-600\">${tag}</span>${rest}`);
-  return html;
+  return tokenizeCode(source, HTML_TOKEN_PATTERN, (token) => {
+    if (token.startsWith("<!--")) return "text-zinc-400";
+    if (token.startsWith("<") || /^\/?\s*>$/.test(token)) return "text-purple-600";
+    if (/^(?:"|')/.test(token)) return "text-emerald-700";
+    return "text-amber-700";
+  });
 }
 
 // Task templates provider (HTML/CSS per slide + step)
@@ -119,88 +132,11 @@ function getTaskTemplates(slideId, stepIndex) {
   return { html: baseHtml, css: cssPlaceholders[idx] };
 }
 
-// Validation provider (returns list of results for current slide+step)
-function runValidation({ slideId, stepIndex, container, htmlCode, cssCode }) {
-  const results = [];
-  if (!container) return results;
-
-  if (slideId === "linking") {
-    // Check link tag exists and targets styles.css
-    try {
-      const okLink = /<link[^>]*rel=["']stylesheet["'][^>]*href=["']styles\.css["'][^>]*>/i.test(htmlCode);
-      results.push({ ok: !!okLink, text: 'Task: <link rel="stylesheet" href="styles.css"> is present' });
-    } catch (_) {
-      results.push({ ok: false, text: "Task: Error checking <link> tag" });
-    }
-    // Check green applied to #title (#16a34a)
-    try {
-      const el = container.querySelector("#title");
-      const cs = el ? window.getComputedStyle(el) : null;
-      const ok = cs && cs.color === "rgb(22, 163, 74)";
-      results.push({ ok: !!ok, text: "Task: #title color is green from styles.css" });
-    } catch (_) {
-      results.push({ ok: false, text: "Task: Error checking applied styles" });
-    }
-    return results;
-  }
-
-  // CSS tasks: evaluate all five, but highlight current step first
-  // 1: h1 color and size
-  try {
-    const titleEl = container.querySelector("#title");
-    const cs = titleEl ? window.getComputedStyle(titleEl) : null;
-    const okColor = cs && cs.color === "rgb(29, 78, 216)"; // #1d4ed8
-    const okSize = cs && cs.fontSize === "36px";
-    results.push({ ok: !!(okColor && okSize), text: "Task 1: h1 is blue and 36px" });
-  } catch (_) {
-    results.push({ ok: false, text: "Task 1: Error checking styles" });
-  }
-  // 2: footer links font and color (+ visited)
-  try {
-    const link = container.querySelector("footer a");
-    const cs = link ? window.getComputedStyle(link) : null;
-    const okFamily = cs && /georgia/i.test(cs.fontFamily || "");
-    const okColor = cs && cs.color === "rgb(37, 99, 235)"; // #2563eb
-    const hasVisitedRule = /footer\s+a\s*:\s*visited[\s\S]*?color\s*:\s*#?2563eb/i.test(cssCode);
-    results.push({ ok: !!(okFamily && okColor && hasVisitedRule), text: "Task 2: footer links styled incl. visited" });
-  } catch (_) {
-    results.push({ ok: false, text: "Task 2: Error checking styles" });
-  }
-  // 3: first-letter styled
-  try {
-    const hasSelector = /p\s*\.excerpt\s*::\s*first-letter/i.test(cssCode);
-    const hasSize = /::\s*first-letter[\s\S]*font-size\s*:\s*200%/i.test(cssCode);
-    const hasBg = /::\s*first-letter[\s\S]*background\s*:\s*#?fef08a/i.test(cssCode);
-    results.push({ ok: !!(hasSelector && hasSize && hasBg), text: "Task 3: first-letter styled" });
-  } catch (_) {
-    results.push({ ok: false, text: "Task 3: Error checking styles" });
-  }
-  // 4: list style type lower-alpha
-  try {
-    const list = container.querySelector("ol.submenu");
-    const cs = list ? window.getComputedStyle(list) : null;
-    const ok = cs && (cs.listStyleType === "lower-alpha" || cs.listStyleType === "lower-alpha outside");
-    results.push({ ok: !!ok, text: "Task 4: submenu uses lower-alpha" });
-  } catch (_) {
-    results.push({ ok: false, text: "Task 4: Error checking styles" });
-  }
-  // 5: hover rule present
-  try {
-    const hasHover = /\.hero\s+img\s*:\s*hover/i.test(cssCode);
-    const hasScale = /transform\s*:\s*scale\s*\(/i.test(cssCode);
-    const hasTransition = /transition\s*:\s*transform/i.test(cssCode);
-    results.push({ ok: !!(hasHover && hasScale && hasTransition), text: "Task 5: hover transform + transition" });
-  } catch (_) {
-    results.push({ ok: false, text: "Task 5: Error checking styles" });
-  }
-  return results;
-}
-
 function VsPlayground({ slideId, stepIndex }) {
-  const previewRef = useRef(null);
   const [activeTab, setActiveTab] = useState("css");
   const [autoApply, setAutoApply] = useState(true);
   const [applyVersion, setApplyVersion] = useState(0);
+  const [validationVersion, setValidationVersion] = useState(0);
   const [results, setResults] = useState([]);
 
   // Editors state
@@ -217,7 +153,6 @@ function VsPlayground({ slideId, stepIndex }) {
 
   const preRef = useRef(null);
   const textRef = useRef(null);
-  const highlighted = useMemo(() => activeTab === "css" ? highlightCss(cssCode) : highlightHtml(htmlCode), [activeTab, htmlCode, cssCode]);
 
   function syncScroll() {
     if (!textRef.current || !preRef.current) return;
@@ -225,26 +160,11 @@ function VsPlayground({ slideId, stepIndex }) {
     preRef.current.scrollLeft = textRef.current.scrollLeft;
   }
 
-  // Render preview
-  useEffect(() => {
-    if (!previewRef.current) return;
-    let html = htmlCode || "";
-    if (slideId === "linking") {
-      // Inject styles only if correct <link> is present (simulates real linking)
-      const hasLink = /<link[^>]*rel=["']stylesheet["'][^>]*href=["']styles\.css["'][^>]*>/i.test(html);
-      if (hasLink) {
-        if (/<\/head>/i.test(html)) {
-          html = html.replace(/<\/head>/i, `<style>${cssCode}</style></head>`);
-        } else {
-          html = `<style>${cssCode}</style>` + html;
-        }
-      }
-    } else {
-      // Always inline styles for CSS tasks
-      html = `<style>${cssCode}</style>` + html;
-    }
-    previewRef.current.innerHTML = html;
-  }, [htmlCode, cssCode, slideId, applyVersion]);
+  const previewCss = useMemo(() => {
+    if (slideId !== "linking") return cssCode;
+    const hasLink = /<link[^>]*rel=["']stylesheet["'][^>]*href=["']styles\.css["'][^>]*>/i.test(htmlCode);
+    return hasLink ? cssCode : "";
+  }, [cssCode, htmlCode, slideId, applyVersion]);
 
   function applyOnce() {
     setApplyVersion((v) => v + 1);
@@ -261,9 +181,22 @@ function VsPlayground({ slideId, stepIndex }) {
   }
 
   function validate() {
-    const container = previewRef.current;
-    const pass = runValidation({ slideId, stepIndex, container, htmlCode, cssCode });
-    setResults(pass);
+    setResults([]);
+    setValidationVersion((version) => version + 1);
+  }
+
+  function handleInspection(message) {
+    if (message.type === "result") {
+      setResults(validateCssBasics({
+        slideId,
+        stepIndex,
+        inspection: message.value,
+        htmlCode,
+        cssCode,
+      }));
+    } else if (message.type === "error") {
+      setResults([{ ok: false, text: "Task: Error checking applied styles" }]);
+    }
   }
 
   return (
@@ -306,8 +239,9 @@ function VsPlayground({ slideId, stepIndex }) {
               ref={preRef}
               aria-hidden
               className="pointer-events-none whitespace-pre-wrap font-mono text-xs p-3 text-zinc-800 dark:text-zinc-200 bg-white/70 dark:bg-zinc-900/60 min-h-[450px] max-h-[450px] overflow-auto"
-              dangerouslySetInnerHTML={{ __html: highlighted }}
-            />
+            >
+              {activeTab === "css" ? highlightCss(cssCode) : highlightHtml(htmlCode)}
+            </pre>
             <textarea
               ref={textRef}
               value={activeTab === "css" ? cssCode : htmlCode}
@@ -337,7 +271,27 @@ function VsPlayground({ slideId, stepIndex }) {
         </div>
         <div className="p-3">
           <div className="font-semibold text-sm mb-2">Preview</div>
-          <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 min-h-[320px]" ref={previewRef} />
+          <SandboxedPreview
+            html={htmlCode}
+            css={previewCss}
+            mode="static"
+            title="CSS playground preview"
+            className="w-full rounded-xl border border-zinc-200/60 bg-white min-h-[320px]"
+          />
+          {validationVersion > 0 && (
+            <div className="fixed -left-[10000px] top-0 h-[768px] w-[1024px] overflow-hidden" aria-hidden="true">
+              <SandboxedPreview
+                key={validationVersion}
+                html={htmlCode}
+                css={previewCss}
+                mode="inspect"
+                inspection={CSS_BASICS_INSPECTION}
+                onMessage={handleInspection}
+                title="CSS validation sandbox"
+                className="h-[768px] w-[1024px]"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -800,5 +754,3 @@ function QuizCssBasics() {
     </div>
   );
 }
-
-

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Analytics } from "@vercel/analytics/react";
+import SandboxedPreview from "./src/components/playground/SandboxedPreview";
 
 function clsx(...xs) {
   return xs.filter(Boolean).join(" ");
@@ -360,7 +361,14 @@ function FormValidationEditor({ initialHtml, localCheck, showPreview = false }) 
       </div>
       <div className="flex flex-col">
         {!showPreview && (<div className="text-xs text-zinc-500 mb-1">Pozn.: Náhled se nezobrazuje – editor je zaměřen na strukturu a validitu.</div>)}
-        {showPreview ? (<div dangerouslySetInnerHTML={{ __html: html }} className="rounded border p-2 bg-white/70 dark:bg-zinc-900/60 text-xs" />) : (<pre className="rounded border p-2 bg-white/70 dark:bg-zinc-900/60 text-xs whitespace-pre-wrap">{html}</pre>)}
+        {showPreview ? (
+          <SandboxedPreview
+            html={html}
+            mode="static"
+            title="Form HTML preview"
+            className="w-full min-h-[280px] rounded border bg-white text-xs"
+          />
+        ) : (<pre className="rounded border p-2 bg-white/70 dark:bg-zinc-900/60 text-xs whitespace-pre-wrap">{html}</pre>)}
         {results?.type === 'online' && (
           <div className="mt-2 text-xs rounded border p-2 bg-white/70 dark:bg-zinc-900/60">
             <div className="font-medium mb-1">Výsledky W3C (shrnutí)</div>
@@ -666,5 +674,4 @@ export default function AppFormsLesson2() {
     </div>
   );
 }
-
 

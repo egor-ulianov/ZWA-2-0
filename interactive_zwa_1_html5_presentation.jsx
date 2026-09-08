@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Analytics } from "@vercel/analytics/react";
+import SandboxedPreview from "./src/components/playground/SandboxedPreview";
 
 function clsx(...xs) {
   return xs.filter(Boolean).join(" ");
@@ -13,23 +14,14 @@ function Code({ children }) {
   );
 }
 
-function HtmlPreview({ html, onError }) {
-  const [error, setError] = useState(null);
-  function setHtml(node) {
-    if (!node) return;
-    try {
-      node.innerHTML = html || "";
-      setError(null);
-    } catch (e) {
-      setError(String(e.message));
-      onError?.(e);
-    }
-  }
+function HtmlPreview({ html }) {
   return (
-    <div>
-      <div ref={setHtml} className="w-full min-h-40 p-3 rounded-lg border bg-white dark:bg-zinc-900" />
-      {error && <div className="text-xs text-rose-600 mt-1">{error}</div>}
-    </div>
+    <SandboxedPreview
+      html={html}
+      mode="static"
+      title="HTML playground preview"
+      className="w-full min-h-40 rounded-lg border bg-white"
+    />
   );
 }
 
@@ -516,5 +508,4 @@ export default function AppHtml5() {
     </div>
   );
 }
-
 
