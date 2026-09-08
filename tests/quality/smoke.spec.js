@@ -12,12 +12,7 @@ test('homepage renders the lesson catalog and protected workspace entry point', 
 
   expect(response).not.toBeNull();
   expect(response.ok()).toBe(true);
-  await expect(page.getByRole('heading', { name: 'ZWA Presentations' })).toBeVisible();
-  await expect(
-    page
-      .getByRole('main')
-      .getByRole('link')
-      .filter({ hasText: /^\d+\)/ }),
-  ).toHaveCount(12);
+  await expect(page.getByText('ZWA · Web Applications', { exact: true })).toBeVisible();
+  await expect(page.getByRole('main').getByRole('link')).toHaveCount(12);
   await expect(page.getByRole('link', { name: 'Attendance (protected)' })).toBeVisible();
 });
