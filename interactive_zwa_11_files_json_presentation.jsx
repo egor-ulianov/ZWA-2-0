@@ -461,14 +461,23 @@ export default function AppPhpLesson11() {
         id: 'title',
         title: 'Základy webových aplikací – 11. cvičení',
         subtitle: 'Soubory a JSON v PHP',
+        activityType: 'learn',
       },
-      { id: 'toc', title: 'Obsah' },
-      { id: 'theory-files', title: 'Teorie – Práce se soubory' },
-      { id: 'theory-json', title: 'Teorie – JSON (encode/decode)' },
-      { id: 'theory-library', title: 'Teorie – Knihovna uživatelů (users.json)' },
-      { id: 'theory-pagination', title: 'Teorie – Stránkování (limit/offset)' },
-      { id: 'tasks', title: 'Úkoly' },
-      { id: 'summary', title: 'Shrnutí a odkazy' },
+      { id: 'toc', title: 'Obsah', activityType: 'learn' },
+      { id: 'theory-files', title: 'Teorie – Práce se soubory', activityType: 'learn' },
+      { id: 'theory-json', title: 'Teorie – JSON (encode/decode)', activityType: 'learn' },
+      {
+        id: 'theory-library',
+        title: 'Teorie – Knihovna uživatelů (users.json)',
+        activityType: 'learn',
+      },
+      {
+        id: 'theory-pagination',
+        title: 'Teorie – Stránkování (limit/offset)',
+        activityType: 'learn',
+      },
+      { id: 'tasks', title: 'Úkoly', activityType: 'apply' },
+      { id: 'summary', title: 'Shrnutí a odkazy', activityType: 'learn' },
     ],
     [],
   );
@@ -482,6 +491,7 @@ export default function AppPhpLesson11() {
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-11: Soubory a JSON v PHP"
+      objective="Použijete PHP pro bezpečnou práci se soubory, JSON daty a stránkovaným úložištěm uživatelů."
       subtitle="Interaktivní prezentace podle cvičení 11 s ukázkami kódu"
       footerText="© 2025 ZWA – Cvičení 11: Soubory a JSON"
     >

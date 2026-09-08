@@ -580,15 +580,32 @@ export default function AppPhpLesson10() {
         id: 'title',
         title: 'Základy webových aplikací – 10. cvičení',
         subtitle: 'Session a cookies v PHP',
+        activityType: 'learn',
       },
-      { id: 'toc', title: 'Obsah' },
-      { id: 'theory-basics', title: 'Teorie – Cookies vs Session, superglobály' },
-      { id: 'theory-cookies-api', title: 'Teorie – Cookies API v PHP' },
-      { id: 'theory-session-lifecycle', title: 'Teorie – Session lifecycle a konfigurace' },
-      { id: 'theory-security', title: 'Teorie – Bezpečnost (HttpOnly, Secure, SameSite, CSRF)' },
-      { id: 'theory-examples', title: 'Teorie – Praktické vzory (login, flash, remember‑me)' },
-      { id: 'tasks', title: 'Úkoly' },
-      { id: 'summary', title: 'Shrnutí a odkazy' },
+      { id: 'toc', title: 'Obsah', activityType: 'learn' },
+      {
+        id: 'theory-basics',
+        title: 'Teorie – Cookies vs Session, superglobály',
+        activityType: 'learn',
+      },
+      { id: 'theory-cookies-api', title: 'Teorie – Cookies API v PHP', activityType: 'learn' },
+      {
+        id: 'theory-session-lifecycle',
+        title: 'Teorie – Session lifecycle a konfigurace',
+        activityType: 'learn',
+      },
+      {
+        id: 'theory-security',
+        title: 'Teorie – Bezpečnost (HttpOnly, Secure, SameSite, CSRF)',
+        activityType: 'learn',
+      },
+      {
+        id: 'theory-examples',
+        title: 'Teorie – Praktické vzory (login, flash, remember‑me)',
+        activityType: 'learn',
+      },
+      { id: 'tasks', title: 'Úkoly', activityType: 'apply' },
+      { id: 'summary', title: 'Shrnutí a odkazy', activityType: 'learn' },
     ],
     [],
   );
@@ -602,6 +619,7 @@ export default function AppPhpLesson10() {
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-10: Session a cookies v PHP"
+      objective="Vysvětlíte cookies a session v PHP a použijete jejich bezpečnostní atributy v praktických vzorech."
       subtitle="Interaktivní prezentace o cookies, session a bezpečnosti"
       footerText="© 2025 ZWA – Cvičení 10: Session a cookies"
     >

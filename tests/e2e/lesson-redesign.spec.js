@@ -179,3 +179,84 @@ test.describe('F2 lesson composition and deep links', () => {
     ).toBeVisible();
   });
 });
+
+test.describe('F3 lesson composition and deep links', () => {
+  test('forms and CRUD lesson keeps its task deep link and learning objective', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-9?slide=tasks');
+
+    await expect(
+      page.getByRole('tab', { name: 'Úkoly dle tutoriálu', exact: true }),
+    ).toHaveAttribute('aria-selected', 'true');
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
+    await expect(
+      page.getByText(
+        'Vysvětlíte životní cyklus serverového formuláře a procvičíte validaci vstupů i základní CRUD operace.',
+        { exact: true },
+      ),
+    ).toBeVisible();
+  });
+
+  test('sessions and cookies lesson keeps its task deep link and learning objective', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-10-sessions-cookies?slide=tasks');
+
+    await expect(page.getByRole('tab', { name: 'Úkoly', exact: true })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
+    await expect(
+      page.getByText(
+        'Vysvětlíte cookies a session v PHP a použijete jejich bezpečnostní atributy v praktických vzorech.',
+        { exact: true },
+      ),
+    ).toBeVisible();
+  });
+
+  test('files and JSON lesson keeps its task deep link and learning objective', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-11-files-json?slide=tasks');
+
+    await expect(page.getByRole('tab', { name: 'Úkoly', exact: true })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
+    await expect(
+      page.getByText(
+        'Použijete PHP pro bezpečnou práci se soubory, JSON daty a stránkovaným úložištěm uživatelů.',
+        { exact: true },
+      ),
+    ).toBeVisible();
+  });
+
+  test('authentication lesson keeps its task deep link and learning objective', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-12-auth?slide=tasks');
+
+    await expect(page.getByRole('tab', { name: 'Úkoly', exact: true })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
+    await expect(
+      page.getByText(
+        'Rozlišíte autentizaci a autorizaci, bezpečně uložíte hesla a ochráníte session po přihlášení.',
+        { exact: true },
+      ),
+    ).toBeVisible();
+  });
+});

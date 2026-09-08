@@ -450,16 +450,25 @@ export default function AppPhpLesson12() {
         id: 'title',
         title: 'Základy webových aplikací – 12. cvičení',
         subtitle: 'Autentizace a autorizace v PHP',
+        activityType: 'learn',
       },
-      { id: 'toc', title: 'Obsah' },
-      { id: 'theory-terms', title: 'Teorie – Pojmy (authn vs authz)' },
-      { id: 'theory-methods', title: 'Teorie – Způsoby autentikace' },
-      { id: 'theory-passwords', title: 'Teorie – Ukládání hesel' },
-      { id: 'theory-http-auth', title: 'Teorie – HTTP Basic/Digest' },
-      { id: 'theory-login-session', title: 'Teorie – Login přes formulář + session' },
-      { id: 'theory-security', title: 'Teorie – Bezpečnost (CSRF, fixation, hijacking)' },
-      { id: 'tasks', title: 'Úkoly' },
-      { id: 'summary', title: 'Shrnutí a odkazy' },
+      { id: 'toc', title: 'Obsah', activityType: 'learn' },
+      { id: 'theory-terms', title: 'Teorie – Pojmy (authn vs authz)', activityType: 'learn' },
+      { id: 'theory-methods', title: 'Teorie – Způsoby autentikace', activityType: 'learn' },
+      { id: 'theory-passwords', title: 'Teorie – Ukládání hesel', activityType: 'learn' },
+      { id: 'theory-http-auth', title: 'Teorie – HTTP Basic/Digest', activityType: 'learn' },
+      {
+        id: 'theory-login-session',
+        title: 'Teorie – Login přes formulář + session',
+        activityType: 'learn',
+      },
+      {
+        id: 'theory-security',
+        title: 'Teorie – Bezpečnost (CSRF, fixation, hijacking)',
+        activityType: 'learn',
+      },
+      { id: 'tasks', title: 'Úkoly', activityType: 'apply' },
+      { id: 'summary', title: 'Shrnutí a odkazy', activityType: 'learn' },
     ],
     [],
   );
@@ -473,6 +482,7 @@ export default function AppPhpLesson12() {
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-12: Autentizace a autorizace"
+      objective="Rozlišíte autentizaci a autorizaci, bezpečně uložíte hesla a ochráníte session po přihlášení."
       subtitle="Interaktivní prezentace podle cvičení 12"
       footerText="© 2025 ZWA – Cvičení 12: Autentizace a autorizace"
     >

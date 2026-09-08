@@ -881,18 +881,27 @@ export default function AppPhpLesson9() {
         id: 'title',
         title: 'Základy webových aplikací – 9. cvičení',
         subtitle: 'Obsluha formulářů, seznam, detail, CRUD',
+        activityType: 'learn',
       },
-      { id: 'toc', title: 'Obsah' },
-      { id: 'theory-lifecycle', title: 'Teorie – Životní cyklus formuláře' },
-      { id: 'theory-methods', title: 'Teorie – Superglobály, GET vs POST, $_REQUEST' },
-      { id: 'theory-inputs', title: 'Teorie – Radio/Checkbox, name[], multi-select' },
-      { id: 'theory-validation', title: 'Teorie – Validace a sanitizace' },
-      { id: 'theory-session', title: 'Teorie – Session (BONUS)' },
-      { id: 'theory-crud', title: 'Teorie – Mini CRUD' },
-      { id: 'theory-arch', title: 'Kontekst – SSR/MVC a REST' },
-      { id: 'rest-glory', title: 'REST Maturity – Glory of REST' },
-      { id: 'tasks', title: 'Úkoly dle tutoriálu' },
-      { id: 'summary', title: 'Shrnutí a odkazy' },
+      { id: 'toc', title: 'Obsah', activityType: 'learn' },
+      { id: 'theory-lifecycle', title: 'Teorie – Životní cyklus formuláře', activityType: 'learn' },
+      {
+        id: 'theory-methods',
+        title: 'Teorie – Superglobály, GET vs POST, $_REQUEST',
+        activityType: 'learn',
+      },
+      {
+        id: 'theory-inputs',
+        title: 'Teorie – Radio/Checkbox, name[], multi-select',
+        activityType: 'learn',
+      },
+      { id: 'theory-validation', title: 'Teorie – Validace a sanitizace', activityType: 'learn' },
+      { id: 'theory-session', title: 'Teorie – Session (BONUS)', activityType: 'learn' },
+      { id: 'theory-crud', title: 'Teorie – Mini CRUD', activityType: 'learn' },
+      { id: 'theory-arch', title: 'Kontekst – SSR/MVC a REST', activityType: 'learn' },
+      { id: 'rest-glory', title: 'REST Maturity – Glory of REST', activityType: 'learn' },
+      { id: 'tasks', title: 'Úkoly dle tutoriálu', activityType: 'apply' },
+      { id: 'summary', title: 'Shrnutí a odkazy', activityType: 'learn' },
     ],
     [],
   );
@@ -906,6 +915,7 @@ export default function AppPhpLesson9() {
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-9: Server-side formuláře & CRUD"
+      objective="Vysvětlíte životní cyklus serverového formuláře a procvičíte validaci vstupů i základní CRUD operace."
       subtitle="Interaktivní prezentace podle cvičení 09 s ukázkami kódu"
       footerText="© 2025 ZWA – Cvičení 9: Formuláře a CRUD"
     >
