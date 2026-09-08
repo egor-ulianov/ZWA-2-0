@@ -8,6 +8,7 @@ const packageJson = JSON.parse(
 
 test('package exposes the release quality gates', () => {
   assert.equal(packageJson.type, 'module');
+
   const requiredScripts = [
     'test',
     'test:unit',

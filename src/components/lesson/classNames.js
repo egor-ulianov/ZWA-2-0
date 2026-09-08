@@ -1,5 +1,5 @@
 function clsx(...values) {
-  return values.filter(Boolean).join(" ");
+  return values.filter(Boolean).join(' ');
 }
 
 export { clsx };

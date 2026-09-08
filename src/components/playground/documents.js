@@ -1,4 +1,4 @@
-import { CHANNEL, VERSION } from "./protocol.js";
+import { CHANNEL, VERSION } from './protocol.js';
 
 const BASE_CSP = [
   "default-src 'none'",
@@ -6,18 +6,18 @@ const BASE_CSP = [
   "connect-src 'none'",
   "frame-ancestors 'none'",
   "child-src 'none'",
-  "font-src data:",
+  'font-src data:',
   "form-action 'none'",
   "frame-src 'none'",
-  "img-src data: blob:",
+  'img-src data: blob:',
   "manifest-src 'none'",
-  "media-src data: blob:",
+  'media-src data: blob:',
   "navigate-to 'none'",
   "object-src 'none'",
   "script-src-attr 'none'",
   "style-src 'unsafe-inline'",
   "worker-src 'none'",
-].join("; ");
+].join('; ');
 
 const MAX_STUDENT_SOURCE_LENGTH = 100000;
 const MAX_STUDENT_CODE_LENGTH = 24000;
@@ -31,39 +31,39 @@ const FRAME_STYLE = `
 `;
 
 function sandboxPolicy(mode) {
-  if (mode === "static") return { sandbox: "" };
-  if (mode === "inspect" || mode === "javascript") {
-    return { sandbox: "allow-scripts" };
+  if (mode === 'static') return { sandbox: '' };
+  if (mode === 'inspect' || mode === 'javascript') {
+    return { sandbox: 'allow-scripts' };
   }
   throw new Error(`Unsupported sandbox mode: ${mode}`);
 }
 
 function escapeAttribute(value) {
   return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 function serializePayload(value) {
   return JSON.stringify(value)
-    .replace(/&/g, "\\u0026")
-    .replace(/</g, "\\u003c")
-    .replace(/>/g, "\\u003e")
-    .replace(/\u2028/g, "\\u2028")
-    .replace(/\u2029/g, "\\u2029");
+    .replace(/&/g, '\\u0026')
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
 }
 
 function escapeStyleText(value) {
-  return String(value || "").replace(/<\/(style)/gi, "<\\/$1");
+  return String(value || '').replace(/<\/(style)/gi, '<\\/$1');
 }
 
 function boundedText(value, maxLength = MAX_STUDENT_SOURCE_LENGTH) {
-  return String(value == null ? "" : value).slice(0, maxLength);
+  return String(value == null ? '' : value).slice(0, maxLength);
 }
 
-function htmlShell({ csp, head = "", body = "" }) {
+function htmlShell({ csp, head = '', body = '' }) {
   return `<!doctype html>
 <html>
 <head>
@@ -78,7 +78,7 @@ function htmlShell({ csp, head = "", body = "" }) {
 </html>`;
 }
 
-function buildStaticDocument({ html = "", css = "" } = {}) {
+function buildStaticDocument({ html = '', css = '' } = {}) {
   return htmlShell({
     csp: `${BASE_CSP}; script-src 'none'`,
     head: `<style>${escapeStyleText(boundedText(css))}</style>`,
@@ -89,14 +89,13 @@ function buildStaticDocument({ html = "", css = "" } = {}) {
 function normalizeInspection(inspection) {
   if (!Array.isArray(inspection)) return [];
   return inspection.slice(0, 16).flatMap((entry) => {
-    if (!entry || typeof entry.selector !== "string") return [];
+    if (!entry || typeof entry.selector !== 'string') return [];
     if (!entry.selector || entry.selector.length > 200) return [];
     const properties = Array.isArray(entry.properties)
       ? entry.properties
           .filter(
             (property) =>
-              typeof property === "string" &&
-              /^[a-zA-Z][a-zA-Z0-9-]{0,49}$/.test(property)
+              typeof property === 'string' && /^[a-zA-Z][a-zA-Z0-9-]{0,49}$/.test(property),
           )
           .slice(0, 16)
       : [];
@@ -144,13 +143,8 @@ const INSPECTION_BOOTSTRAP = String.raw`(() => {
   }
 })();`;
 
-function buildInspectionDocument({
-  html = "",
-  css = "",
-  inspection = [],
-  token,
-} = {}) {
-  if (!token) throw new Error("A sandbox token is required");
+function buildInspectionDocument({ html = '', css = '', inspection = [], token } = {}) {
+  if (!token) throw new Error('A sandbox token is required');
   const payload = serializePayload({
     channel: CHANNEL,
     version: VERSION,
@@ -281,8 +275,8 @@ const JAVASCRIPT_BOOTSTRAP = String.raw`(() => {
   }
 })();`;
 
-function buildJavascriptDocument({ code = null, dom = "", stepIndex = 0, token } = {}) {
-  if (!token) throw new Error("A sandbox token is required");
+function buildJavascriptDocument({ code = null, dom = '', stepIndex = 0, token } = {}) {
+  if (!token) throw new Error('A sandbox token is required');
   const payload = serializePayload({
     channel: CHANNEL,
     version: VERSION,
