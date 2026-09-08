@@ -1134,9 +1134,9 @@ function FormsSections() {
 }
 
 const slides = [
-  { id: 'overview', title: 'Přehled' },
-  { id: 'playground', title: 'Sekce' },
-  { id: 'tasks', title: 'Úkoly' },
+  { id: 'overview', title: 'Přehled', activityType: 'learn' },
+  { id: 'playground', title: 'Sekce', activityType: 'build' },
+  { id: 'tasks', title: 'Úkoly', activityType: 'apply' },
 ];
 
 export default function AppFormsLesson2() {
@@ -1157,6 +1157,7 @@ export default function AppFormsLesson2() {
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-2: Client-side Forms (Lesson 2)"
+      objective="Rozpoznáte HTML5 prvky formulářů a ověříte jejich atributy i klientskou validaci."
       subtitle={
         <>
           Interaktivní přehled formulářů dle{' '}

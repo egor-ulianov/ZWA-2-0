@@ -353,22 +353,26 @@ const slides = [
   {
     id: 'title',
     title: 'Základy CSS – interaktivní cvičení',
+    activityType: 'learn',
     subtitle: 'ZWA-4 • Selektory, třídy, odkazy',
     body: 'Krátká praktická hřiště pro procvičení základních selektorů, pseudo-elementů a jednoduchých efektů.',
   },
   {
     id: 'toc',
     title: 'Obsah',
+    activityType: 'learn',
     bullets: ['Selektory a specifita', 'Třídy a znovupoužitelnost', 'Pseudo-elementy a odkazy'],
   },
   {
     id: 'quiz-css',
     title: 'KVÍZ: CSS základy',
+    activityType: 'quick-check',
     body: null,
   },
   {
     id: 'theory',
     title: 'Teorie – CSS základy',
+    activityType: 'learn',
     sections: [
       {
         icon: '🎯',
@@ -420,11 +424,13 @@ const slides = [
   {
     id: 'meme',
     title: 'CSS Meme',
+    activityType: 'learn',
     body: 'Krátké odlehčení: proč CSS patří ke každému webu.',
   },
   {
     id: 'linking',
     title: 'Propojení HTML a CSS',
+    activityType: 'build',
     steps: [
       {
         title: '1) Vytvořte link na stylopis',
@@ -443,6 +449,7 @@ const slides = [
   {
     id: 'tasks',
     title: 'Úlohy – CSS',
+    activityType: 'build',
     steps: [
       {
         title: '1) Nadpis',
@@ -683,6 +690,7 @@ export default function App() {
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-2: Interactive CSS Presentation"
+      objective="Použijete základní CSS selektory, pseudo-elementy a propojení stylopisu v praktickém playgroundu."
       subtitle="Editor vlevo, náhled vpravo. Upravit → Run → Check."
       footerText="© 2025 ZWA – Interactive demo for teaching (Egor Ulianov)"
       maxWidthClass="max-w-7xl"

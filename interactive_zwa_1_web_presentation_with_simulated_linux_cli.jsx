@@ -340,22 +340,26 @@ const slides = [
   {
     id: 'title',
     title: 'Základy webových aplikací – 3. cvičení',
+    activityType: 'learn',
     subtitle: 'FEL ČVUT, DCGI – 8. 10. 2025',
     body: `Bc. Egor Ulianov`,
   },
   {
     id: 'quiz-html',
     title: 'KVÍZ: HTML základy',
+    activityType: 'quick-check',
     body: `Krátký kvíz k opakování základů HTML5 (elementy, atributy, formuláře a sémantika).`,
   },
   {
     id: 'about-me',
     title: 'KDO JSEM JÁ?',
+    activityType: 'learn',
     body: `Jazyky: Čeština, Angličtina, Ruština\nZkušenost: 2019–2025 Misterine (Fullstack), 2025–… DEVEON.ai (Leading SE)\nStudium: OI FEL ČVUT (Bc.), MFF UK (Mgr.)\nCvičící ZWA na FEL ČVUT\nOblasti: Angular, NestJS, NodeJS, .NET, Architektura, Unity, AR, Počítačové vidění`,
   },
   {
     id: 'about-course',
     title: 'O ČEM JE PŘEDMĚT?',
+    activityType: 'learn',
     bullets: [
       'KLIENT: Design, Logika, Architektura',
       'SERVER: Logika, Bezpečnost, Architektura',
@@ -365,6 +369,7 @@ const slides = [
   {
     id: 'tips',
     title: 'DOPORUČENÍ PRO SEMESTRÁLKU',
+    activityType: 'learn',
     bullets: [
       'Pracujte průběžně – vyhnete se stresu',
       'Zvolte jednoduché zadání a udělejte ho kvalitně',
@@ -374,11 +379,13 @@ const slides = [
   {
     id: 'extras',
     title: 'DODATEČNÉ INFO',
+    activityType: 'learn',
     bullets: ['Telegram skupina cvičení (odkazy, Q&A)', 'FEL ČVUT Discord – odpovědi 1× týdně'],
   },
   {
     id: 'theory',
     title: 'TEORIE: Síť pro web',
+    activityType: 'learn',
     sections: [
       {
         icon: '🌐',
@@ -448,6 +455,7 @@ const slides = [
   {
     id: 'tasks-net',
     title: 'Úlohy – síť (v terminálu vpravo)',
+    activityType: 'diagnose',
     body: `Na této stránce si vyzkoušíte základní síťové příkazy. Terminál vpravo je simulovaný – nevytváří skutečná síťová spojení, ale ukazuje typické výstupy, které uvidíte na reálném Linuxu. Využijte ho k pochopení principů DNS, směrování a TCP/HTTP.`,
     steps: [
       {
@@ -1025,6 +1033,7 @@ export default function App() {
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-1: Interactive Web Presentation"
+      objective="Vysvětlíte cestu požadavku od DNS přes TCP až po HTTP a procvičíte diagnostické příkazy v simulovaném terminálu."
       subtitle="Simulated Linux CLI on the right →"
       footerText="© 2025 ZWA – Interactive demo for teaching (Egor Ulianov)"
       maxWidthClass="max-w-7xl"

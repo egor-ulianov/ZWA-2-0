@@ -520,10 +520,10 @@ function HtmlSections() {
   );
 }
 const slides = [
-  { id: 'intro', title: 'Úvod' },
-  { id: 'sections', title: 'Sekce' },
-  { id: 'validator', title: 'Validátor' },
-  { id: 'tasks', title: 'Úkoly' },
+  { id: 'intro', title: 'Úvod', activityType: 'learn' },
+  { id: 'sections', title: 'Sekce', activityType: 'learn' },
+  { id: 'validator', title: 'Validátor', activityType: 'diagnose' },
+  { id: 'tasks', title: 'Úkoly', activityType: 'apply' },
 ];
 
 export default function AppHtml5() {
@@ -544,6 +544,7 @@ export default function AppHtml5() {
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-1: Interactive HTML5 Presentation"
+      objective="Vytvoříte validní HTML5 dokument se sémantickou strukturou a ověříte jej validátorem."
       subtitle={
         <>
           Cvičení 1 – HTML5 témata a živý playground (
