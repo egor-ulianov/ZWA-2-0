@@ -13,9 +13,8 @@ import { getLessonByNumber } from './src/config/lessons.js';
 import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
-import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
-import LessonTaskTabs from './src/components/exercises/LessonTaskTabs.jsx';
+import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
 
 function SectionCard({ title, children, footer }) {
@@ -509,16 +508,10 @@ const FormTaskProvider = forwardRef(function FormTaskProvider({ initialHtml, chi
   );
 });
 
-function FormTaskEditor({ tasks, activeTaskId, onTaskChange }) {
+function FormTaskFileEditor() {
   const { html, setHtml, checking, validateOnline, local } = useContext(FormTaskContext);
   return (
     <div className="space-y-2">
-      <LessonTaskTabs
-        tasks={tasks}
-        activeTaskId={activeTaskId}
-        onChange={onTaskChange}
-        label="Kroky úlohy formulářů"
-      />
       <label className="block text-sm font-medium">Editor HTML formuláře</label>
       <SyntaxCodeEditor
         value={html}
@@ -734,49 +727,19 @@ const FormValidationEditor = forwardRef(function FormValidationEditor(
   );
 });
 
-function Block({ id, title, theory, example, Try, validate }) {
-  const [subTab, setSubTab] = useState('theory');
-  const subTabs = [
-    { id: 'theory', label: 'Teorie' },
-    { id: 'examples', label: 'Příklady' },
-    { id: 'try', label: 'Vyzkoušet' },
-    { id: 'task', label: 'Úkol' },
-  ];
+function Block({ id, title, theory, example }) {
   return (
     <div id={id}>
       <SectionCard title={title} footer={null}>
-        <div className="mb-2 flex flex-wrap gap-2">
-          {subTabs.map((st) => (
-            <button
-              key={st.id}
-              onClick={() => setSubTab(st.id)}
-              className={clsx(
-                'px-2 py-1 rounded border text-xs',
-                subTab === st.id
-                  ? 'bg-sky-600 text-white border-sky-600'
-                  : 'bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800',
-              )}
-            >
-              {st.label}
-            </button>
-          ))}
-        </div>
-        {subTab === 'theory' && (
-          <div className="text-sm text-zinc-700 dark:text-zinc-300">{theory}</div>
-        )}
-        {subTab === 'examples' && (
-          <pre className="text-xs bg-zinc-100/80 dark:bg-zinc-800/80 rounded p-2 whitespace-pre-wrap">
+        <div className="text-sm text-zinc-700 dark:text-zinc-300">{theory}</div>
+        <div className="mt-3">
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Ukázka
+          </h3>
+          <pre className="whitespace-pre-wrap rounded bg-zinc-100/80 p-3 text-xs dark:bg-zinc-800/80">
             {example}
           </pre>
-        )}
-        {subTab === 'try' && <Try />}
-        {subTab === 'task' && (
-          <FormValidationEditor
-            initialHtml={validate.initial}
-            localCheck={validate.check}
-            showPreview={false}
-          />
-        )}
+        </div>
       </SectionCard>
     </div>
   );
@@ -1285,56 +1248,130 @@ function FormsSections() {
   );
 }
 
-const slides = [
-  { id: 'overview', title: 'Přehled', activityType: 'learn' },
-  { id: 'playground', title: 'Sekce', activityType: 'build' },
-  { id: 'tasks', title: 'Úkoly', activityType: 'apply' },
-];
-
 const FORM_TASKS = [
   {
-    id: 'standard',
+    id: 'forms-task-standard',
     label: 'Standardní prvky',
     description: 'Vytvořte formulář s label, textovým vstupem, textarea, select a tlačítkem.',
   },
   {
-    id: 'grouping',
+    id: 'forms-task-grouping',
     label: 'Seskupení polí',
     description: 'Seskupte související ovládací prvky do fieldset a pojmenujte je pomocí legend.',
   },
   {
-    id: 'attributes',
+    id: 'forms-task-attributes',
     label: 'Atributy',
     description: 'Vyzkoušejte readonly, disabled, autocomplete, autofocus a přístupové klávesy.',
   },
   {
-    id: 'inputs',
+    id: 'forms-task-inputs',
     label: 'HTML5 inputy',
     description: 'Použijte vhodné typy inputů, například email, date, color, range nebo url.',
   },
   {
-    id: 'meter',
+    id: 'forms-task-meter',
     label: 'Meter a progress',
     description: 'Doplňte meter a progress s hodnotami, které dávají čtenáři smysl.',
   },
   {
-    id: 'datalist',
+    id: 'forms-task-datalist',
     label: 'Datalist',
     description: 'Propojte input s datalist přes atribut list a unikátní id.',
   },
 ];
 
+const FORM_REFERENCE_SOLUTIONS = {
+  'forms-task-standard': [
+    '<!doctype html>',
+    '<html lang="cs"><head><meta charset="utf-8"><title>Standardní prvky</title></head>',
+    '<body><form>',
+    '  <label for="name">Jméno</label><input id="name" name="name" type="text">',
+    '  <label for="message">Zpráva</label><textarea id="message" name="message"></textarea>',
+    '  <label for="choice">Volba</label><select id="choice" name="choice"><option>A</option></select>',
+    '  <button type="submit">Odeslat</button>',
+    '</form></body></html>',
+  ].join('\n'),
+  'forms-task-grouping': [
+    '<!doctype html>',
+    '<html lang="cs"><head><meta charset="utf-8"><title>Seskupení</title></head>',
+    '<body><form><fieldset><legend>Kontaktní údaje</legend>',
+    '  <label for="email">E-mail</label><input id="email" name="email" type="email" required>',
+    '</fieldset><button type="submit">Odeslat</button></form></body></html>',
+  ].join('\n'),
+  'forms-task-attributes': [
+    '<!doctype html>',
+    '<html lang="cs"><head><meta charset="utf-8"><title>Atributy</title></head>',
+    '<body><form autocomplete="on">',
+    '  <input type="text" name="readonly" value="jen pro čtení" readonly>',
+    '  <input type="text" name="name" required autofocus>',
+    '  <button type="button" disabled>Nelze odeslat</button>',
+    '</form></body></html>',
+  ].join('\n'),
+  'forms-task-inputs': [
+    '<!doctype html>',
+    '<html lang="cs"><head><meta charset="utf-8"><title>HTML5 inputy</title></head>',
+    '<body><form>',
+    '  <input type="email" name="email" required><input type="url" name="web">',
+    '  <input type="tel" name="phone" pattern="^\\+?[0-9\\s-]{7,}$">',
+    '  <input type="date" name="date"><input type="color" name="color">',
+    '  <input type="range" name="level" min="0" max="100" step="1" value="50">',
+    '</form></body></html>',
+  ].join('\n'),
+  'forms-task-meter': [
+    '<!doctype html>',
+    '<html lang="cs"><head><meta charset="utf-8"><title>Meter a progress</title></head>',
+    '<body><meter min="0" max="100" low="30" high="80" optimum="60" value="42"></meter>',
+    '<progress max="100" value="42"></progress></body></html>',
+  ].join('\n'),
+  'forms-task-datalist': [
+    '<!doctype html>',
+    '<html lang="cs"><head><meta charset="utf-8"><title>Datalist</title></head>',
+    '<body><label for="city">Město</label><input id="city" list="cities" name="city">',
+    '<datalist id="cities"><option value="Praha"><option value="Brno"></datalist>',
+    '</body></html>',
+  ].join('\n'),
+};
+
+const slides = [
+  { id: 'overview', title: 'Přehled', activityType: 'learn' },
+  { id: 'playground', title: 'Sekce', activityType: 'build' },
+  ...FORM_TASKS.map((task) => ({ id: task.id, title: task.label, activityType: 'apply' })),
+];
+
+function useLegacyTaskAlias(slideList, legacyId, firstTaskId) {
+  const aliasRequested =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('slide') === legacyId;
+  const navigationSlides = useMemo(
+    () =>
+      aliasRequested
+        ? slideList.map((slide) =>
+            slide.id === firstTaskId ? { ...slide, id: legacyId } : slide,
+          )
+        : slideList,
+    [aliasRequested, firstTaskId, legacyId, slideList],
+  );
+  return { ...useSlideNavigation(navigationSlides), slides: navigationSlides };
+}
+
 export default function AppFormsLesson2() {
-  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const { activeSlide, setActiveSlide, slides: navigationSlides } = useLegacyTaskAlias(
+    slides,
+    'tasks',
+    FORM_TASKS[0].id,
+  );
   const formsTaskRef = useRef(null);
-  const [activeTaskId, setActiveTaskId] = useState(FORM_TASKS[0].id);
-  const currentSlide = slides.find((slide) => slide.id === activeSlide) || slides[0];
-  const activeTask = FORM_TASKS.find((task) => task.id === activeTaskId) || FORM_TASKS[0];
+  const currentSlide =
+    navigationSlides.find((slide) => slide.id === activeSlide) || navigationSlides[0];
+  const activeTask =
+    FORM_TASKS.find((task) => task.id === activeSlide) ||
+    (activeSlide === 'tasks' ? FORM_TASKS[0] : null);
 
   return (
     <LessonShell
       lesson={getLessonByNumber(2)}
-      slides={slides}
+      slides={navigationSlides}
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-2: Klientské formuláře (lekce 2)"
@@ -1424,7 +1461,7 @@ export default function AppFormsLesson2() {
 
         {activeSlide === 'playground' && <FormsSections />}
 
-        {activeSlide === 'tasks' && (
+        {activeTask && (
           <div className="space-y-3">
             <FormTaskProvider
               ref={formsTaskRef}
@@ -1454,11 +1491,27 @@ export default function AppFormsLesson2() {
                   </>
                 }
                 onRunTests={() => formsTaskRef.current?.runValidation()}
-                editor={
-                  <FormTaskEditor
-                    tasks={FORM_TASKS}
-                    activeTaskId={activeTaskId}
-                    onTaskChange={setActiveTaskId}
+                ideTabs={
+                  <WorkspaceIdeTabs
+                    files={[
+                      {
+                        id: 'index-html',
+                        label: 'index.html',
+                        panel: <FormTaskFileEditor />,
+                      },
+                    ]}
+                    solution={{
+                      label: 'Řešení',
+                      panel: (
+                        <SyntaxCodeEditor
+                          value={FORM_REFERENCE_SOLUTIONS[activeTask.id]}
+                          language="html"
+                          label="Referenční řešení formuláře"
+                          minHeight="280px"
+                          readOnly
+                        />
+                      ),
+                    }}
                   />
                 }
                 preview={<FormTaskPreview />}

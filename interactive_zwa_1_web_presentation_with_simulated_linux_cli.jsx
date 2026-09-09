@@ -9,6 +9,8 @@ import Code from './src/components/lesson/Code.jsx';
 import { getLessonByNumber } from './src/config/lessons.js';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
+import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
 
 // Interactive ZWA-1 presentation with a built-in simulated Linux CLI (no external libs)
 // Tailwind is available in canvas preview. All code is self-contained.
@@ -218,9 +220,7 @@ Tipy:
   function doPing(host) {
     if (!host) return 'použití: ping <host>';
     const ip = NET.dns[host]?.A?.[0] || host;
-    const rtts = [Math.random() * 10 + 10, Math.random() * 10 + 10, Math.random() * 10 + 10].map(
-      (n) => n.toFixed(2),
-    );
+    const rtts = [12.4, 13.1, 12.8].map((n) => n.toFixed(2));
     return rtts
       .map((r, i) => `64 bajtů od ${ip}: icmp_seq=${i + 1} ttl=56 čas=${r} ms`)
       .concat(`--- statistika pingu ${host} ---`, `odeslány 3 pakety, přijaty 3, ztráta 0 %`)
@@ -339,6 +339,41 @@ Content-Length: 32\n\n<html><body>Hello ZWA!</body></html>`;
 // ------------------------------
 // Slides data (from the original PPT) – condensed into sections
 // ------------------------------
+const NETWORK_TASKS = [
+  {
+    id: 'network-task-dns',
+    title: 'DNS: host / nslookup',
+    body: 'Pomocí simulátoru ověřte A, NS nebo TXT záznam domény cvut.cz příkazem host či nslookup.',
+    requirement: 'dns',
+    examples: ['host cvut.cz', 'nslookup -type=ns cvut.cz', 'host 147.32.85.229'],
+    solution: '$ host cvut.cz\ncvut.cz má adresu 147.32.0.1\n$ nslookup -type=ns cvut.cz\nNS\tcvut.cz\tns.cvut.cz',
+  },
+  {
+    id: 'network-task-local',
+    title: 'Lokální síť a konektivita: ifconfig / ping',
+    body: 'Zobrazte lokální rozhraní a ověřte, že rozumíte IP adrese, masce, MAC a latenci.',
+    requirement: 'ifconfig',
+    examples: ['ifconfig', 'ifconfig > ifconfigresult.txt', 'grep 192.168. ifconfigresult.txt', 'ping seznam.cz'],
+    solution: '$ ifconfig\neth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n        inet 192.168.1.57  netmask 255.255.255.0  broadcast 192.168.1.255\n        ether 02:42:ac:11:00:02  txqueuelen 1000  (Ethernet)',
+  },
+  {
+    id: 'network-task-traceroute',
+    title: 'Směrování: traceroute',
+    body: 'Vypište jednotlivé směrovače, přes které simulovaný paket putuje k cíli.',
+    requirement: 'traceroute',
+    examples: ['traceroute fel.cvut.cz', 'traceroute seznam.cz'],
+    solution: '$ traceroute fel.cvut.cz\n1\t192.168.1.1\t1.0 ms\n2\t10.0.0.1\t3.2 ms\n3\t147.32.85.229\t13.0 ms',
+  },
+  {
+    id: 'network-task-telnet',
+    title: 'TCP/HTTP: telnet',
+    body: 'Připojte se v simulátoru na port 80 a prohlédněte si ukázku syrové HTTP odpovědi.',
+    requirement: 'telnet',
+    examples: ['telnet zwa.toad.cz 80'],
+    solution: '$ telnet zwa.toad.cz 80\nPřipojeno k zwa.toad.cz.\nGET / HTTP/1.1\nHost: zwa.toad.cz\n\nHTTP/1.1 200 OK\nContent-Type: text/html; charset=utf-8',
+  },
+];
+
 const slides = [
   {
     id: 'title',
@@ -455,40 +490,24 @@ const slides = [
       },
     ],
   },
-  {
-    id: 'tasks-net',
-    title: 'Úlohy – síť (v terminálu vpravo)',
-    activityType: 'diagnose',
-    body: `Na této stránce si vyzkoušíte základní síťové příkazy. Terminál vpravo je simulovaný – nevytváří skutečná síťová spojení, ale ukazuje typické výstupy, které uvidíte na reálném Linuxu. Využijte ho k pochopení principů DNS, směrování a TCP/HTTP.`,
-    steps: [
-      {
-        title: 'DNS: host / nslookup',
-        desc: 'Překládá doménová jména na IP adresy (A), zobrazuje nameservery (NS), textové záznamy (TXT) a další. Ukazuje, jak DNS vrací různé typy záznamů.',
-        examples: ['host cvut.cz', 'nslookup -type=ns cvut.cz', 'host 147.32.85.229'],
-      },
-      {
-        title: 'Lokální síť a konektivita: ifconfig / ping',
-        desc: 'ifconfig zobrazí IP adresu, masku a MAC vašeho rozhraní. ping měří zpoždění (RTT) k cíli a ztrátu paketů – rychlá kontrola dostupnosti.',
-        examples: [
-          'ifconfig',
-          'ifconfig > ifconfigresult.txt',
-          'grep 192.168. ifconfigresult.txt',
-          'ping seznam.cz',
-        ],
-      },
-      {
-        title: 'Směrování: traceroute',
-        desc: 'Ukazuje jednotlivé směrovače (hopy), přes které paket prochází k cílovému serveru. Pomáhá najít, kde se zpoždění nebo výpadek děje.',
-        examples: ['traceroute fel.cvut.cz', 'traceroute seznam.cz'],
-      },
-      {
-        title: 'TCP/HTTP: telnet',
-        desc: 'Naváže TCP spojení na zadaný port a v demu pošle jednoduché HTTP GET /. Výstup simuluje základní HTTP odpověď (status, hlavičky, tělo).',
-        examples: ['telnet zwa.toad.cz 80'],
-      },
-    ],
-  },
+  ...NETWORK_TASKS,
 ];
+
+function useLegacyTaskAlias(slideList, legacyId, firstTaskId) {
+  const aliasRequested =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('slide') === legacyId;
+  const navigationSlides = useMemo(
+    () =>
+      aliasRequested
+        ? slideList.map((slide) =>
+            slide.id === firstTaskId ? { ...slide, id: legacyId } : slide,
+          )
+        : slideList,
+    [aliasRequested, firstTaskId, legacyId, slideList],
+  );
+  return { ...useSlideNavigation(navigationSlides), slides: navigationSlides };
+}
 
 function LessonSlideContent({ slide, commandLog }) {
   const hasSteps = Array.isArray(slide.steps) && slide.steps.length > 0;
@@ -603,34 +622,6 @@ function LessonSlideContent({ slide, commandLog }) {
         </ul>
       )}
       {slide.id === 'quiz-html' && <QuizHtmlBasics />}
-      {slide.id === 'tasks-net' && (
-        <SectionTabs
-          theory={
-            <div className="text-sm text-zinc-700 dark:text-zinc-300 space-y-2">
-              <p>
-                Terminál vpravo je simulátor: příkazy nic neodesílají do sítě, ale vrací typické
-                výstupy. Zaměřte se na porozumění – co znamená A/NS/TXT v DNS, co je{' '}
-                <em>mask of network</em>, proč má traceroute více <em>hopů</em>, a proč u HTTPS
-                nejde jen poslat
-                <Code>GET /</Code> jako v čistém TCP.
-              </p>
-              <p>
-                Doporučený postup: nejprve si přečtěte teoretické snímky, projděte příklady a až
-                potom plňte úkoly. U každého úkolu zkuste vysvětlit vlastními slovy, co daný výstup
-                znamená.
-              </p>
-            </div>
-          }
-          examples={<TaskHints />}
-          tryContent={
-            <div className="text-sm text-zinc-700 dark:text-zinc-300">
-              Použijte terminál vpravo. Začněte příkazy <Code>host cvut.cz</Code>,{' '}
-              <Code>ifconfig</Code>, <Code>traceroute fel.cvut.cz</Code>.
-            </div>
-          }
-          task={<TaskChecklist commandLog={commandLog} />}
-        />
-      )}
       {hasSteps && currentStep && (
         <div className="mt-4">
           <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4">
@@ -720,37 +711,6 @@ function LessonSlideContent({ slide, commandLog }) {
         </div>
       )}
     </SharedSlideCard>
-  );
-}
-
-function TaskHints() {
-  return (
-    <div className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">
-      <details className="mb-2">
-        <summary className="cursor-pointer font-semibold">1) host / nslookup – příklady</summary>
-        <pre className="mt-2">{`host cvut.cz
-host -t txt cvut.cz  (use nslookup -type=txt cvut.cz)
-host fel.cvut.cz
-host 147.32.85.229
-nslookup -type=ns cvut.cz`}</pre>
-      </details>
-      <details className="mb-2">
-        <summary className="cursor-pointer font-semibold">2) ifconfig / ping – příklady</summary>
-        <pre className="mt-2">{`ifconfig > ifconfigresult.txt
-cat ifconfigresult.txt
-grep 192.168. ifconfigresult.txt
-ping seznam.cz`}</pre>
-      </details>
-      <details className="mb-2">
-        <summary className="cursor-pointer font-semibold">3) traceroute – příklady</summary>
-        <pre className="mt-2">{`traceroute fel.cvut.cz
-traceroute seznam.cz`}</pre>
-      </details>
-      <details>
-        <summary className="cursor-pointer font-semibold">4) telnet – příklady</summary>
-        <pre className="mt-2">{`telnet zwa.toad.cz 80`}</pre>
-      </details>
-    </div>
   );
 }
 
@@ -926,52 +886,7 @@ function QuizHtmlBasics() {
   );
 }
 
-// Media is embedded per-slide instead of a global gallery
-
-function SectionTabs({ theory, examples, tryContent, task }) {
-  const [tab, setTab] = useState('theory');
-
-  function keepTaskChoiceKeyboardLocal(event) {
-    if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  }
-
-  return (
-    <div className="mt-4">
-      <div className="mb-2 flex flex-wrap gap-2">
-        {[
-          { id: 'theory', label: 'Teorie' },
-          { id: 'examples', label: 'Příklady' },
-          { id: 'try', label: 'Vyzkoušet' },
-          { id: 'task', label: 'Úkol' },
-        ].map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className={clsx(
-              'px-2 py-1 rounded border text-xs',
-              tab === t.id
-                ? 'bg-sky-600 text-white border-sky-600'
-                : 'bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800',
-            )}
-            onClick={() => setTab(t.id)}
-            onKeyDown={keepTaskChoiceKeyboardLocal}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-      {tab === 'theory' && <div>{theory}</div>}
-      {tab === 'examples' && <div>{examples}</div>}
-      {tab === 'try' && <div>{tryContent}</div>}
-      {tab === 'task' && <div>{task}</div>}
-    </div>
-  );
-}
-
-function TaskChecklist({ commandLog, checked = false }) {
+function TaskChecklist({ commandLog, checked = false, requirementIds }) {
   const reqs = [
     {
       id: 'dns',
@@ -994,7 +909,10 @@ function TaskChecklist({ commandLog, checked = false }) {
       test: (log) => /^telnet\s+.+\s+80/i.test(log),
     },
   ];
-  const checks = reqs.map((requirement) => ({
+  const selectedRequirements = requirementIds?.length
+    ? reqs.filter((requirement) => requirementIds.includes(requirement.id))
+    : reqs;
+  const checks = selectedRequirements.map((requirement) => ({
     ...requirement,
     ok: commandLog.some((command) => requirement.test(command)),
   }));
@@ -1084,13 +1002,20 @@ export default function App() {
     return out;
   }
 
-  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
-  const current = slides.find((s) => s.id === activeSlide) || slides[0];
+  const { activeSlide, setActiveSlide, slides: navigationSlides } = useLegacyTaskAlias(
+    slides,
+    'tasks-net',
+    NETWORK_TASKS[0].id,
+  );
+  const current = navigationSlides.find((s) => s.id === activeSlide) || navigationSlides[0];
+  const activeNetworkTask =
+    NETWORK_TASKS.find((task) => task.id === current.id) ||
+    (activeSlide === 'tasks-net' ? NETWORK_TASKS[0] : null);
 
   return (
     <LessonShell
       lesson={getLessonByNumber(3)}
-      slides={slides}
+      slides={navigationSlides}
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-1: Interaktivní webová prezentace"
@@ -1102,27 +1027,52 @@ export default function App() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <LessonSlideContent slide={current} commandLog={commandLog} />
-          {current.id === 'tasks-net' && <TaskHints />}
         </div>
 
         <div>
-          {current.id === 'tasks-net' ? (
+          {activeNetworkTask ? (
             <LessonTaskWorkspace
               privateMarker="network-exercise"
               onRunTests={() => setChecklistChecked(true)}
               task={
                 <>
-                  <p>
-                    V simulovaném Linux terminálu splňte čtyři kontroly: DNS pro{' '}
-                    <Code>cvut.cz</Code>, místní konfiguraci přes <Code>ifconfig</Code>, trasu přes{' '}
-                    <Code>traceroute fel.cvut.cz</Code> a TCP/HTTP přes{' '}
-                    <Code>telnet zwa.toad.cz 80</Code>.
-                  </p>
+                  <p>{activeNetworkTask.body}</p>
+                  <pre className="whitespace-pre-wrap rounded bg-zinc-100/70 p-2 text-xs dark:bg-zinc-800/70">
+                    {activeNetworkTask.examples.join('\n')}
+                  </pre>
                   <p>Poté v části Náhled a testy spusťte kontrolní seznam.</p>
                 </>
               }
-              editor={<TerminalPanel clearKey={clearKey} onCommand={handleCommand} />}
-              preview={<TaskChecklist commandLog={commandLog} checked={checklistChecked} />}
+              ideTabs={
+                <WorkspaceIdeTabs
+                  files={[
+                    {
+                      id: 'terminal',
+                      label: 'terminál',
+                      panel: <TerminalPanel clearKey={clearKey} onCommand={handleCommand} />,
+                    },
+                  ]}
+                  solution={{
+                    label: 'Řešení',
+                    panel: (
+                      <SyntaxCodeEditor
+                        value={activeNetworkTask.solution}
+                        language="text"
+                        label="Referenční přepis příkazů terminálu"
+                        minHeight="260px"
+                        readOnly
+                      />
+                    ),
+                  }}
+                />
+              }
+              preview={
+                <TaskChecklist
+                  commandLog={commandLog}
+                  checked={checklistChecked}
+                  requirementIds={[activeNetworkTask.requirement]}
+                />
+              }
             />
           ) : (
             <TerminalPanel clearKey={clearKey} onCommand={handleCommand} />

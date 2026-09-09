@@ -13,9 +13,8 @@ import { getLessonByNumber } from './src/config/lessons.js';
 import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
-import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
-import LessonTaskTabs from './src/components/exercises/LessonTaskTabs.jsx';
+import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
 
 function HtmlPreview({ html, title = 'Náhled HTML playgroundu' }) {
@@ -113,8 +112,8 @@ function runHtmlTaskChecks(text) {
 
 const HtmlTaskContext = createContext(null);
 
-const HtmlTaskProvider = forwardRef(function HtmlTaskProvider({ children }, ref) {
-  const [html, setHtml] = useState(MinimalTaskTemplate());
+const HtmlTaskProvider = forwardRef(function HtmlTaskProvider({ children, initialHtml }, ref) {
+  const [html, setHtml] = useState(() => initialHtml || MinimalTaskTemplate());
   const [checking, setChecking] = useState(false);
   const [results, setResults] = useState(null);
 
@@ -146,16 +145,10 @@ const HtmlTaskProvider = forwardRef(function HtmlTaskProvider({ children }, ref)
   );
 });
 
-function HtmlTaskEditor({ tasks, activeTaskId, onTaskChange }) {
+function HtmlTaskFileEditor() {
   const { html, setHtml, checking, validateOnline, local } = useContext(HtmlTaskContext);
   return (
     <div className="space-y-2">
-      <LessonTaskTabs
-        tasks={tasks}
-        activeTaskId={activeTaskId}
-        onChange={onTaskChange}
-        label="Kroky úlohy HTML"
-      />
       <label className="block text-sm font-medium">Editor HTML pro úkol</label>
       <SyntaxCodeEditor
         value={html}
@@ -408,49 +401,19 @@ const TaskEditorHtml = forwardRef(function TaskEditorHtml(_, ref) {
   );
 });
 
-function SectionTabs({ theory, example, Try, validate, id, taskText }) {
-  const [tab, setTab] = useState('theory');
+function SectionTabs({ theory, example, id }) {
   return (
-    <div id={id} className="space-y-2">
-      <div className="mb-1 flex flex-wrap gap-2">
-        {[
-          { id: 'theory', label: 'Teorie' },
-          { id: 'examples', label: 'Příklady' },
-          { id: 'try', label: 'Vyzkoušet' },
-          { id: 'task', label: 'Úkol' },
-        ].map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={clsx(
-              'px-2 py-1 rounded border text-xs',
-              tab === t.id
-                ? 'bg-sky-600 text-white border-sky-600'
-                : 'bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800',
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-      {tab === 'theory' && <div className="text-sm text-zinc-700 dark:text-zinc-300">{theory}</div>}
-      {tab === 'examples' && (
-        <pre className="text-xs bg-zinc-100/80 dark:bg-zinc-800/80 rounded p-2 whitespace-pre-wrap">
+    <section id={id} className="space-y-3 rounded-2xl border border-zinc-200/60 bg-white/70 p-5 dark:border-zinc-800 dark:bg-zinc-900/60">
+      <div className="text-sm text-zinc-700 dark:text-zinc-300">{theory}</div>
+      <div>
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          Ukázka
+        </h3>
+        <pre className="whitespace-pre-wrap rounded bg-zinc-100/80 p-3 text-xs dark:bg-zinc-800/80">
           {example}
         </pre>
-      )}
-      {tab === 'try' && <Try />}
-      {tab === 'task' && (
-        <div className="space-y-2">
-          {taskText && (
-            <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-3 text-sm">
-              {taskText}
-            </div>
-          )}
-          <TaskEditorHtml />
-        </div>
-      )}
-    </div>
+      </div>
+    </section>
   );
 }
 
@@ -674,43 +637,134 @@ function HtmlSections() {
     </div>
   );
 }
+const HTML_TASKS = [
+  {
+    id: 'html-task-skeleton',
+    label: 'Kostra dokumentu',
+    description: 'Doplňte doctype, element html, head s metadaty a přehledné tělo dokumentu.',
+    initialHtml: MinimalTaskTemplate(),
+  },
+  {
+    id: 'html-task-semantic',
+    label: 'Sémantická struktura',
+    description:
+      'Doplňte sémantickou strukturu pomocí header, nav, main, section, article, aside a footer.',
+    initialHtml: MinimalTaskTemplate(),
+  },
+  {
+    id: 'html-task-media',
+    label: 'Média a tabulka',
+    description: 'Přidejte obrázek s alt a tabulku s hlavičkami th, buňkami td, colspan a rowspan.',
+    initialHtml: MinimalTaskTemplate(),
+  },
+];
+
+const HTML_REFERENCE_SOLUTIONS = {
+  'html-task-skeleton': [
+    '<!doctype html>',
+    '<html lang="cs">',
+    '  <head>',
+    '    <meta charset="utf-8">',
+    '    <meta name="viewport" content="width=device-width, initial-scale=1">',
+    '    <title>Moje stránka</title>',
+    '  </head>',
+    '  <body>',
+    '    <header><h1>Moje stránka</h1></header>',
+    '    <nav><a href="#obsah">Obsah</a></nav>',
+    '    <main id="obsah"><p>Obsah stránky.</p></main>',
+    '    <footer>© 2025</footer>',
+    '  </body>',
+    '</html>',
+  ].join('\n'),
+  'html-task-semantic': [
+    '<!doctype html>',
+    '<html lang="cs">',
+    '  <head>',
+    '    <meta charset="utf-8">',
+    '    <meta name="viewport" content="width=device-width, initial-scale=1">',
+    '    <title>Sémantická stránka</title>',
+    '  </head>',
+    '  <body>',
+    '    <header><h1>Semantický web</h1></header>',
+    '    <nav><a href="#clanek">Článek</a></nav>',
+    '    <main>',
+    '      <section>',
+    '        <article id="clanek"><h2>Článek</h2><p>Smysluplný obsah.</p></article>',
+    '        <aside>Souvisící poznámka</aside>',
+    '      </section>',
+    '    </main>',
+    '    <footer>© 2025</footer>',
+    '  </body>',
+    '</html>',
+  ].join('\n'),
+  'html-task-media': [
+    '<!doctype html>',
+    '<html lang="cs">',
+    '  <head>',
+    '    <meta charset="utf-8">',
+    '    <meta name="viewport" content="width=device-width, initial-scale=1">',
+    '    <title>Média a tabulka</title>',
+    '  </head>',
+    '  <body>',
+    '    <header><h1>Výsledky</h1></header>',
+    '    <nav><a href="#tabulka">Tabulka</a></nav>',
+    '    <main>',
+    '      <section><article><h2>Výsledky testu</h2><p>Přehled výsledků.</p></article>',
+    '        <aside>Aktualizováno dnes</aside>',
+    '      </section>',
+    '      <figure><img src="image.png" alt="Náhled výsledků"><figcaption>Výsledky</figcaption></figure>',
+    '      <table id="tabulka">',
+    '        <tr><th colspan="2">Výsledky</th></tr>',
+    '        <tr><th scope="row">Ada</th><td rowspan="2">10</td></tr>',
+    '        <tr><th scope="row">Jan</th></tr>',
+    '      </table>',
+    '    </main>',
+    '    <footer>© 2025</footer>',
+    '  </body>',
+    '</html>',
+  ].join('\n'),
+};
+
 const slides = [
   { id: 'intro', title: 'Úvod', activityType: 'learn' },
   { id: 'sections', title: 'Sekce', activityType: 'learn' },
   { id: 'validator', title: 'Validátor', activityType: 'diagnose' },
-  { id: 'tasks', title: 'Úkoly', activityType: 'apply' },
+  ...HTML_TASKS.map((task) => ({ id: task.id, title: task.label, activityType: 'apply' })),
 ];
 
-const HTML_TASKS = [
-  {
-    id: 'skeleton',
-    label: 'Kostra dokumentu',
-    description: 'Doplňte doctype, element html, head s metadaty a přehledné tělo dokumentu.',
-  },
-  {
-    id: 'semantic',
-    label: 'Sémantická struktura',
-    description:
-      'Doplňte sémantickou strukturu pomocí header, nav, main, section, article, aside a footer.',
-  },
-  {
-    id: 'media',
-    label: 'Média a tabulka',
-    description: 'Přidejte obrázek s alt a tabulku s hlavičkami th, buňkami td, colspan a rowspan.',
-  },
-];
+function useLegacyTaskAlias(slideList, legacyId, firstTaskId) {
+  const aliasRequested =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('slide') === legacyId;
+  const navigationSlides = useMemo(
+    () =>
+      aliasRequested
+        ? slideList.map((slide) =>
+            slide.id === firstTaskId ? { ...slide, id: legacyId } : slide,
+          )
+        : slideList,
+    [aliasRequested, firstTaskId, legacyId, slideList],
+  );
+  return { ...useSlideNavigation(navigationSlides), slides: navigationSlides };
+}
 
 export default function AppHtml5() {
-  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const { activeSlide, setActiveSlide, slides: navigationSlides } = useLegacyTaskAlias(
+    slides,
+    'tasks',
+    HTML_TASKS[0].id,
+  );
   const htmlTaskRef = useRef(null);
-  const [activeTaskId, setActiveTaskId] = useState(HTML_TASKS[0].id);
-  const currentSlide = slides.find((slide) => slide.id === activeSlide) || slides[0];
-  const activeTask = HTML_TASKS.find((task) => task.id === activeTaskId) || HTML_TASKS[0];
+  const currentSlide =
+    navigationSlides.find((slide) => slide.id === activeSlide) || navigationSlides[0];
+  const activeTask =
+    HTML_TASKS.find((task) => task.id === activeSlide) ||
+    (activeSlide === 'tasks' ? HTML_TASKS[0] : null);
 
   return (
     <LessonShell
       lesson={getLessonByNumber(1)}
-      slides={slides}
+      slides={navigationSlides}
       activeSlide={activeSlide}
       onChange={setActiveSlide}
       title="ZWA-1: Interaktivní prezentace HTML5"
@@ -786,9 +840,9 @@ export default function AppHtml5() {
           </div>
         )}
 
-        {activeSlide === 'tasks' && (
+        {activeTask && (
           <div className="space-y-3">
-            <HtmlTaskProvider ref={htmlTaskRef}>
+            <HtmlTaskProvider ref={htmlTaskRef} initialHtml={activeTask.initialHtml}>
               <LessonTaskWorkspace
                 privateMarker="html-exercise"
                 task={
@@ -798,11 +852,27 @@ export default function AppHtml5() {
                   </>
                 }
                 onRunTests={() => htmlTaskRef.current?.runValidation()}
-                editor={
-                  <HtmlTaskEditor
-                    tasks={HTML_TASKS}
-                    activeTaskId={activeTaskId}
-                    onTaskChange={setActiveTaskId}
+                ideTabs={
+                  <WorkspaceIdeTabs
+                    files={[
+                      {
+                        id: 'index-html',
+                        label: 'index.html',
+                        panel: <HtmlTaskFileEditor />,
+                      },
+                    ]}
+                    solution={{
+                      label: 'Řešení',
+                      panel: (
+                        <SyntaxCodeEditor
+                          value={HTML_REFERENCE_SOLUTIONS[activeTask.id]}
+                          language="html"
+                          label="Referenční řešení HTML"
+                          minHeight="360px"
+                          readOnly
+                        />
+                      ),
+                    }}
                   />
                 }
                 preview={<HtmlTaskPreview />}

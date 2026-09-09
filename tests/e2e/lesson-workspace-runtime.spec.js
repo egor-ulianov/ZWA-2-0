@@ -173,19 +173,21 @@ test.describe('runtime lesson task workspaces', () => {
     await expect(page.getByRole('region', { name: 'Náhled a testy' })).toBeVisible();
   });
 
-  test('task choice arrow keys stay on the task slide', async ({ page }) => {
+  test('IDE file and solution tab arrow keys stay on the task slide', async ({ page }) => {
     for (const route of [
       '/interactive-zwa-5-css-ii?slide=tasks',
       '/interactive-zwa-5-js?slide=tasks',
+      '/interactive-zwa-1-html5?slide=tasks',
+      '/interactive-zwa-2-forms?slide=tasks',
     ]) {
       await installDeterministicNetwork(page);
       await page.goto(route);
 
-      const taskChoice = route.includes('5-js')
-        ? page.getByRole('tab').nth(1)
-        : route.includes('/interactive-zwa-2?')
-          ? page.getByRole('tab').first()
-          : page.getByRole('region', { name: 'IDE' }).getByRole('tab').nth(1);
+      const taskChoice = route.includes('1-html5') || route.includes('2-forms')
+        ? page.getByRole('region', { name: 'IDE' }).getByRole('tablist', { name: 'Soubory IDE' }).getByRole('tab').last()
+        : route.includes('5-js')
+          ? page.getByRole('tab').nth(1)
+          : page.getByRole('tablist').first().getByRole('tab').first();
       await taskChoice.focus();
       await taskChoice.press('ArrowLeft');
       await expect(page).toHaveURL(/slide=tasks/);
@@ -194,8 +196,6 @@ test.describe('runtime lesson task workspaces', () => {
 
   test('task choice up and down keys do not escape the lesson slide', async ({ page }) => {
     const cases = [
-      { route: '/interactive-zwa-1-html5?slide=tasks', tablist: 'Kroky úlohy HTML' },
-      { route: '/interactive-zwa-2-forms?slide=tasks', tablist: 'Kroky úlohy formulářů' },
       { route: '/interactive-zwa-5-css-ii?slide=tasks', tablist: 'Kroky úlohy CSS II' },
     ];
 
@@ -216,18 +216,16 @@ test.describe('runtime lesson task workspaces', () => {
     }
   });
 
-  test('HTML and form task selectors keep students in the unified workspace', async ({ page }) => {
+  test('HTML and form tasks are selected from the course outline', async ({ page }) => {
     const cases = [
       {
         route: '/interactive-zwa-1-html5?slide=tasks',
-        tablist: 'Kroky úlohy HTML',
-        tab: 'Sémantická struktura',
+        task: 'Sémantická struktura',
         assignment: 'sémantickou strukturu',
       },
       {
         route: '/interactive-zwa-2-forms?slide=tasks',
-        tablist: 'Kroky úlohy formulářů',
-        tab: 'Seskupení polí',
+        task: 'Seskupení polí',
         assignment: 'fieldset',
       },
     ];
@@ -237,12 +235,10 @@ test.describe('runtime lesson task workspaces', () => {
       await page.goto(testCase.route);
 
       const assignment = page.getByRole('region', { name: 'Zadání' });
-      const taskTabs = page
-        .getByRole('region', { name: 'IDE' })
-        .getByRole('tablist', { name: testCase.tablist });
-
-      await taskTabs.getByRole('tab', { name: testCase.tab, exact: true }).click();
-      await expect(page).toHaveURL(new RegExp(`${testCase.route.replace('?', '\\?')}$`));
+      await page
+        .getByRole('navigation', { name: 'Osnova kurzu' })
+        .getByRole('button', { name: testCase.task, exact: true })
+        .click();
       await expect(assignment).toContainText(testCase.assignment);
       await expect(page.getByRole('region', { name: 'IDE' })).toBeVisible();
       await expect(page.getByRole('region', { name: 'Náhled a testy' })).toBeVisible();
@@ -317,7 +313,7 @@ test.describe('runtime lesson task workspaces', () => {
     });
   }
 
-  test('network checker reports unmet requirements and passes after all simulated commands', async ({
+  test('network task checkers stay scoped to their individual outline task', async ({
     page,
   }) => {
     await installDeterministicNetwork(page);
@@ -328,25 +324,29 @@ test.describe('runtime lesson task workspaces', () => {
     await expect(commandInput).toBeVisible();
     const runTests = workspace.getByRole('button', { name: 'Spustit testy', exact: true });
 
+    await runTests.click();
+
+    await expect(workspace.getByText('Kontrola neúspěšná')).toBeVisible();
+    await expect(workspace.getByText('Požadavek: ověření DNS — nesplněn')).toBeVisible();
+
     await commandInput.fill('host cvut.cz');
     await commandInput.press('Enter');
     await expect(page.getByText(/cvut\.cz má adresu 147\.32\.0\.1/)).toBeVisible();
     await runTests.click();
-
-    await expect(workspace.getByText('Kontrola neúspěšná')).toBeVisible();
-    await expect(
-      workspace.getByText('Požadavek: ověření místní konfigurace — nesplněn'),
-    ).toBeVisible();
-    await expect(workspace).not.toContainText(/ifconfig|traceroute|telnet|host cvut\.cz/i);
-
-    for (const command of ['ifconfig', 'traceroute fel.cvut.cz', 'telnet zwa.toad.cz 80']) {
-      await commandInput.fill(command);
-      await commandInput.press('Enter');
-    }
-    await runTests.click();
-
     await expect(workspace.getByText('Kontrola úspěšná')).toBeVisible();
     await expect(workspace.getByText(/nesplněn/)).toHaveCount(0);
+
+    await page
+      .getByRole('navigation', { name: 'Osnova kurzu' })
+      .getByRole('button', { name: 'Lokální síť a konektivita: ifconfig / ping', exact: true })
+      .click();
+    const localWorkspace = page.getByRole('region', { name: 'Náhled a testy' }).first();
+    await localWorkspace.getByRole('button', { name: 'Spustit testy', exact: true }).click();
+    await expect(localWorkspace.getByText('Kontrola neúspěšná')).toBeVisible();
+    await commandInput.fill('ifconfig');
+    await commandInput.press('Enter');
+    await localWorkspace.getByRole('button', { name: 'Spustit testy', exact: true }).click();
+    await expect(localWorkspace.getByText('Kontrola úspěšná')).toBeVisible();
   });
 
   test('network task keeps terminal commands local and makes no external requests', async ({
