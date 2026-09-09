@@ -2,8 +2,69 @@ import React from 'react';
 import { buildNormalizationRequestBody, isAbortError, request } from '../../src/lib/apiClient.js';
 import TeacherWorkspaceShell from '../../src/components/teacher/TeacherWorkspaceShell.jsx';
 
+function TeacherLogin({ onSuccess }) {
+  const [username, setUsername] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState('');
+  const [saving, setSaving] = React.useState(false);
+
+  async function submit(event) {
+    event.preventDefault();
+    setSaving(true);
+    setError('');
+    try {
+      await request('/api/teacher/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      setPassword('');
+      onSuccess();
+    } catch (cause) {
+      setError(cause.message || 'Login failed');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="grid max-w-xl grid-cols-1 gap-4 md:grid-cols-2" aria-label="Teacher login">
+      <label className="text-sm font-semibold text-[var(--portal-text)]" htmlFor="teacher-username">
+        Username
+        <input
+          id="teacher-username"
+          className="mt-2 block min-h-11 w-full rounded border border-[var(--portal-border)] bg-[var(--portal-panel)] px-3 py-2 font-normal text-[var(--portal-text)]"
+          value={username}
+          autoComplete="username"
+          onChange={(event) => setUsername(event.target.value)}
+          required
+        />
+      </label>
+      <label className="text-sm font-semibold text-[var(--portal-text)]" htmlFor="teacher-password">
+        Password
+        <input
+          id="teacher-password"
+          className="mt-2 block min-h-11 w-full rounded border border-[var(--portal-border)] bg-[var(--portal-panel)] px-3 py-2 font-normal text-[var(--portal-text)]"
+          type="password"
+          value={password}
+          autoComplete="current-password"
+          onChange={(event) => setPassword(event.target.value)}
+          required
+        />
+      </label>
+      <div className="md:col-span-2">
+        <button className="portal-action disabled:cursor-not-allowed disabled:opacity-50" type="submit" disabled={saving}>
+          {saving ? 'Signing in…' : 'Login'}
+        </button>
+      </div>
+      {error ? <p className="text-sm text-[var(--portal-coral)] md:col-span-2" role="alert">{error}</p> : null}
+    </form>
+  );
+}
+
 export default function TeacherNormalize() {
   const [auth, setAuth] = React.useState({ loading: true, username: '', error: '' });
+  const [authAttempt, setAuthAttempt] = React.useState(0);
   const [stateByTest, setStateByTest] = React.useState({
     1: { loading: false, error: '', result: null },
     2: { loading: false, error: '', result: null },
@@ -13,6 +74,7 @@ export default function TeacherNormalize() {
 
   React.useEffect(() => {
     let mounted = true;
+    setAuth({ loading: true, username: '', error: '' });
     (async () => {
       try {
         const d = await request('/api/teacher/me');
@@ -23,7 +85,7 @@ export default function TeacherNormalize() {
       }
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [authAttempt]);
 
   async function runNormalize(testNumber, dryRun) {
     let body;
@@ -122,7 +184,7 @@ export default function TeacherNormalize() {
                 <span className="ml-3 font-medium">Updated:</span> {result.updated ?? 0}
               </div>
               {Array.isArray(preview) && preview.length > 0 ? (
-                <div className="overflow-hidden rounded border border-[var(--portal-border)]">
+                <div className="overflow-x-auto rounded border border-[var(--portal-border)]">
                   <table className="w-full text-sm">
                     <thead className="bg-[var(--portal-surface-muted)]">
                       <tr>
@@ -186,8 +248,22 @@ export default function TeacherNormalize() {
         description="Review grade changes safely with a dry run before applying any normalization."
         activeSection="normalization"
       >
-        <section className="portal-panel p-6" role="alert">
-          <p className="text-sm text-[var(--portal-coral)]">{auth.error}</p>
+        <section className="portal-panel max-w-2xl p-6" aria-labelledby="teacher-login-title">
+          <p className="portal-kicker">Secure access</p>
+          <h2 id="teacher-login-title" className="mt-2 text-xl font-semibold">
+            Teacher login
+          </h2>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--portal-text-muted)]">
+            Sign in to review and apply grade normalization changes.
+          </p>
+          <div className="mt-6">
+            <TeacherLogin
+              onSuccess={() => {
+                setAuth({ loading: true, username: '', error: '' });
+                setAuthAttempt((attempt) => attempt + 1);
+              }}
+            />
+          </div>
         </section>
       </TeacherWorkspaceShell>
     );

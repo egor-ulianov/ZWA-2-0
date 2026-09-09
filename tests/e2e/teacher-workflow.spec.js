@@ -409,6 +409,95 @@ test('teacher ignores stale date responses and blocks export after the selected 
   await expect(page.getByRole('button', { name: 'Export CSV' })).toBeDisabled();
 });
 
+test('teacher scopes failed attendance retry and CSV import to the selected date', async ({
+  page,
+}) => {
+  await installDeterministicNetwork(page);
+
+  const nextDate = '2030-01-03';
+  let attendancePostCount = 0;
+  const postedMaps = [];
+  const attendanceMaps = {};
+  await page.route('**/api/teacher/me', (route) => fulfillJson(route, { username: 'teacher' }));
+  await page.route('**/api/students', (route) =>
+    fulfillJson(route, {
+      count: 2,
+      students: [{ username: 'alice' }, { username: 'bob' }],
+    }),
+  );
+  await page.route('**/api/attendance**', async (route) => {
+    if (route.request().method() === 'GET') {
+      const url = new URL(route.request().url());
+      if (!url.searchParams.has('date')) return fulfillJson(route, { overview: {} });
+      const requestedDate = url.searchParams.get('date');
+      return fulfillJson(route, {
+        date: requestedDate,
+        map:
+          attendanceMaps[requestedDate] ||
+          (requestedDate === nextDate ? { alice: true, bob: false } : { alice: false, bob: false }),
+        revision: requestedDate === nextDate ? 2 : 1,
+      });
+    }
+    attendancePostCount += 1;
+    const body = JSON.parse(route.request().postData() || '{}');
+    postedMaps.push(body.map);
+    if (attendancePostCount === 1) {
+      return fulfillJson(route, { error: 'Temporary attendance failure' }, { status: 503 });
+    }
+    attendanceMaps[body.date] = body.map;
+    return fulfillJson(route, { ok: true, revision: attendancePostCount + 1 });
+  });
+  await page.route('**/api/progress', (route) => fulfillJson(route, { items: [] }));
+
+  await page.goto('/attendance');
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toBeVisible();
+  const dateInput = page.getByLabel('Attendance date');
+  const oldDate = await dateInput.inputValue();
+  const aliceAttendance = page
+    .getByRole('listitem')
+    .filter({ has: page.getByRole('heading', { name: 'alice', exact: true }) })
+    .getByRole('checkbox');
+  await aliceAttendance.check();
+  await expect.poll(() => attendancePostCount).toBe(1);
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Temporary attendance failure' }),
+  ).toBeVisible();
+
+  await page.getByLabel('Import CSV').setInputFiles({
+    name: 'attendance.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(`username,present,date\r\nalice,1,${oldDate}\r\n`),
+  });
+  await expect(page.getByRole('heading', { name: 'Import preview' })).toBeVisible();
+
+  await dateInput.fill(nextDate);
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toContainText(
+    'Present: 1 of 2',
+  );
+  await expect(dateInput).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Mark visible students present' })).toBeEnabled();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Temporary attendance failure' }),
+  ).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Import preview' })).toHaveCount(0);
+  await expect(page.getByRole('status').filter({ hasText: 'Attendance ready.' })).toBeVisible();
+
+  await page.getByLabel('Import CSV').setInputFiles({
+    name: 'attendance-current.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(`username,present,date\r\nalice,0,${nextDate}\r\n`),
+  });
+  await expect(page.getByRole('heading', { name: 'Import preview' })).toBeVisible();
+  await page.getByRole('button', { name: 'Confirm and persist import' }).click();
+  await expect(page.getByRole('heading', { name: 'Import preview' })).toHaveCount(0);
+  await expect.poll(() => attendancePostCount).toBe(2);
+  expect(postedMaps[1]).toEqual({ alice: false, bob: false });
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toContainText(
+    'Present: 0 of 2',
+  );
+  await expect(page.getByRole('button', { name: 'Export CSV' })).toBeEnabled();
+});
+
 test('teacher retry persists the recovered attendance map before the next edit', async ({
   page,
 }) => {
