@@ -35,8 +35,8 @@ test('semantic HTML test names a failed requirement but does not give a solution
     result.map(({ id, ok }) => [id, ok]),
     [['main-landmark', false]],
   );
-  assert.match(result[0].text, /main landmark/i);
-  assert.doesNotMatch(result[0].text, /replace.*div.*main/i);
+  assert.match(result[0].text, /hlavní orientační bod/i);
+  assert.doesNotMatch(result[0].text, /nahraďte.*div.*main/i);
 });
 
 test('semantic HTML test reports the requirement as met when the source has a main landmark', () => {
@@ -48,8 +48,8 @@ test('semantic HTML test reports the requirement as met when the source has a ma
     {
       id: 'main-landmark',
       ok: true,
-      text: 'Main landmark requirement met',
-      hint: 'The page identifies its primary content region.',
+      text: 'Požadavek na hlavní orientační bod je splněn',
+      hint: 'Stránka označuje svou hlavní oblast obsahu.',
     },
   ]);
 });
@@ -73,4 +73,10 @@ test('runner preserves bounded sandbox result messages while adding stable ids',
     { id: 'javascript-step-1', ok: true, text: 'Code executed' },
     { id: 'javascript-step-2', ok: false, text: 'Requirement failed' },
   ]);
+});
+
+test('test definitions expose Czech exercise labels and hints', () => {
+  assert.equal(getJavaScriptDefinition(0).label, 'Proměnné a typy');
+  assert.match(getJavaScriptDefinition(0).hint, /modul/i);
+  assert.equal(semanticHtmlDefinition.label, 'Sémantické HTML');
 });

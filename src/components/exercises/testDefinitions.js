@@ -33,8 +33,8 @@ function createJavaScriptDefinition(stepIndex, label, hint) {
 
 const semanticHtmlDefinition = Object.freeze({
   id: 'semantic-html',
-  label: 'Semantic HTML',
-  hint: 'Describe the page structure with meaningful landmarks.',
+  label: 'Sémantické HTML',
+  hint: 'Popište strukturu stránky pomocí významových orientačních bodů.',
   run({ source }) {
     const hasMainLandmark = /<main(?:\s[^>]*)?>[\s\S]*<\/main\s*>/i.test(source);
 
@@ -43,9 +43,9 @@ const semanticHtmlDefinition = Object.freeze({
         id: 'main-landmark',
         ok: hasMainLandmark,
         text: hasMainLandmark
-          ? 'Main landmark requirement met'
-          : 'Main landmark requirement not met',
-        hint: 'The page identifies its primary content region.',
+          ? 'Požadavek na hlavní orientační bod je splněn'
+          : 'Požadavek na hlavní orientační bod nebyl splněn',
+        hint: 'Stránka označuje svou hlavní oblast obsahu.',
       },
     ];
   },
@@ -54,30 +54,30 @@ const semanticHtmlDefinition = Object.freeze({
 const javascriptDefinitions = Object.freeze([
   createJavaScriptDefinition(
     0,
-    'Variables and types',
-    'Expose the values needed by the exercise through the provided module boundary.',
+    'Proměnné a typy',
+    'Zpřístupněte hodnoty potřebné pro úlohu přes poskytnuté rozhraní modulu.',
   ),
   createJavaScriptDefinition(
     1,
-    'Functions and conditions',
-    'Check the function behavior with both branches and an invalid input.',
+    'Funkce a podmínky',
+    'Ověřte chování funkce pro obě větve a neplatný vstup.',
   ),
-  createJavaScriptDefinition(2, 'For loops', 'Check the accumulated value for the exercise input.'),
+  createJavaScriptDefinition(2, 'Cykly for', 'Ověřte nahromaděnou hodnotu pro vstup úlohy.'),
   createJavaScriptDefinition(
     3,
-    'Arrays and objects',
-    'Check that the collection is reduced to the expected total.',
+    'Pole a objekty',
+    'Ověřte, že je kolekce zredukována na očekávaný součet.',
   ),
   createJavaScriptDefinition(
     4,
-    'DOM selectors',
-    'Check the owned preview element after the script runs.',
+    'Selektory DOM',
+    'Po spuštění skriptu ověřte prvek ve vlastním náhledu.',
   ),
-  createJavaScriptDefinition(5, 'Events', 'Check the counter after its button interaction.'),
+  createJavaScriptDefinition(5, 'Události', 'Ověřte čítač po interakci s tlačítkem.'),
   createJavaScriptDefinition(
     6,
-    'Alert and confirm',
-    'Check both notification paths without exposing their implementation.',
+    'Alert a confirm',
+    'Ověřte obě cesty upozornění bez odhalení jejich implementace.',
   ),
 ]);
 

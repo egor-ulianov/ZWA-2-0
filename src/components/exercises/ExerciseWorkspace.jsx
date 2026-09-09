@@ -150,118 +150,134 @@ export function ExerciseWorkspace({
   }
 
   return (
-    <section
+    <div
       data-projector-private="exercise-workspace"
       className="overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
-      aria-label={testDefinition?.label || 'Exercise workspace'}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200/70 px-4 py-3 dark:border-zinc-800">
         <div>
-          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-            {testDefinition?.label || 'Build exercise'}
-          </p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">In this browser session</p>
+          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Plocha úkolu</p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">V tomto okně prohlížeče</p>
         </div>
-        <button
-          type="button"
-          className="rounded-lg bg-indigo-700 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          onClick={handleRunTests}
-          disabled={!currentFile}
-        >
-          Run tests
-        </button>
       </div>
 
-      <div className="grid min-w-0 grid-cols-1 lg:grid-cols-[minmax(12rem,15rem)_minmax(0,1fr)]">
-        <div className="min-w-0 border-b border-zinc-200/70 dark:border-zinc-800 lg:border-b-0 lg:border-r">
-          <div className="border-b border-zinc-200/70 px-4 py-3 dark:border-zinc-800">
-            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-              Files
-            </p>
-            <div className="mt-2 flex flex-wrap gap-1" role="tablist" aria-label="Source files">
-              {normalizedFiles.map((file) => (
-                <button
-                  key={file.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={file.id === currentFileId}
-                  className="rounded-md px-2 py-1 text-left text-xs font-medium text-zinc-700 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 aria-selected:bg-indigo-50 aria-selected:text-indigo-800 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:aria-selected:bg-indigo-950/50 dark:aria-selected:text-indigo-200"
-                  onClick={() => handleFileChange(file.id)}
-                >
-                  {file.name}
-                </button>
-              ))}
+      <section
+        role="region"
+        aria-label="Zadání"
+        className="border-b border-zinc-200/70 px-4 py-4 dark:border-zinc-800"
+      >
+        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Zadání</h2>
+        <div className="mt-2 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
+          {testDefinition?.label && <p>{testDefinition.label}</p>}
+          {testDefinition?.hint && <p>{testDefinition.hint}</p>}
+        </div>
+      </section>
+
+      <section role="region" aria-label="IDE">
+        <div className="grid min-w-0 grid-cols-1 lg:grid-cols-[minmax(12rem,15rem)_minmax(0,1fr)]">
+          <div className="min-w-0 border-b border-zinc-200/70 dark:border-zinc-800 lg:border-b-0 lg:border-r">
+            <div className="border-b border-zinc-200/70 px-4 py-3 dark:border-zinc-800">
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Soubory
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1" role="tablist" aria-label="Soubory">
+                {normalizedFiles.map((file) => (
+                  <button
+                    key={file.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={file.id === currentFileId}
+                    className="rounded-md px-2 py-1 text-left text-xs font-medium text-zinc-700 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 aria-selected:bg-indigo-50 aria-selected:text-indigo-800 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:aria-selected:bg-indigo-950/50 dark:aria-selected:text-indigo-200"
+                    onClick={() => handleFileChange(file.id)}
+                  >
+                    {file.name}
+                  </button>
+                ))}
+              </div>
             </div>
+            {currentFile ? (
+              <label className="block p-4">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  Editor
+                </span>
+                <span className="sr-only">{currentFile.name} — Editor</span>
+                <textarea
+                  value={source}
+                  onChange={handleSourceChange}
+                  spellCheck={false}
+                  maxLength={MAX_EXERCISE_SOURCE_LENGTH}
+                  aria-label={`${currentFile.name} — Editor`}
+                  className="min-h-[320px] w-full resize-y rounded-lg border border-zinc-300 bg-zinc-950 p-3 font-mono text-xs leading-5 text-zinc-100 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 dark:border-zinc-700"
+                />
+              </label>
+            ) : (
+              <p className="p-4 text-sm text-zinc-500">Není vybrán žádný zdrojový soubor.</p>
+            )}
           </div>
-          {currentFile ? (
-            <label className="block p-4">
-              <span className="sr-only">{currentFile.name} source editor</span>
-              <textarea
-                value={source}
-                onChange={handleSourceChange}
-                spellCheck={false}
-                maxLength={MAX_EXERCISE_SOURCE_LENGTH}
-                aria-label={`${currentFile.name} source editor`}
-                className="min-h-[320px] w-full resize-y rounded-lg border border-zinc-300 bg-zinc-950 p-3 font-mono text-xs leading-5 text-zinc-100 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 dark:border-zinc-700"
-              />
-            </label>
+        </div>
+      </section>
+
+      <section role="region" aria-label="Náhled a testy" className="min-w-0 p-4">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Náhled a testy</h2>
+          <button
+            type="button"
+            className="rounded-lg bg-indigo-700 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={handleRunTests}
+            disabled={!currentFile}
+          >
+            Spustit testy
+          </button>
+        </div>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Náhled</h3>
+        </div>
+        <div className="min-w-0">{renderedPreview}</div>
+
+        <div
+          className="mt-4 rounded-xl border border-zinc-200/70 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/60"
+          role="group"
+          aria-label="Výsledky testů"
+          aria-live="polite"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              Výsledky testů
+            </h3>
+            {testDefinition?.hint && (
+              <span className="text-right text-xs text-zinc-500 dark:text-zinc-400">
+                {testDefinition.hint}
+              </span>
+            )}
+          </div>
+          {testResults.length === 0 ? (
+            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+              Spusťte testy a ověřte požadavek.
+            </p>
           ) : (
-            <p className="p-4 text-sm text-zinc-500">No source file selected.</p>
+            <ul className="mt-2 space-y-1.5 text-sm">
+              {testResults.map((result, index) => (
+                <li
+                  key={`${result.id}-${index}`}
+                  className={
+                    result.ok
+                      ? 'text-emerald-700 dark:text-emerald-400'
+                      : 'text-rose-700 dark:text-rose-400'
+                  }
+                >
+                  <span aria-hidden="true">{result.ok ? '✓' : '×'}</span> <span>{result.text}</span>
+                  {result.hint && (
+                    <span className="ml-1 text-xs text-zinc-500 dark:text-zinc-400">
+                      ({result.hint})
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
-
-        <div className="min-w-0 p-4">
-          <div className="mb-2 flex items-center justify-between gap-3">
-            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Preview</h3>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">Session-only edits</span>
-          </div>
-          <div className="min-w-0">{renderedPreview}</div>
-
-          <section
-            className="mt-4 rounded-xl border border-zinc-200/70 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/60"
-            aria-label="Test results"
-            aria-live="polite"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                Test results
-              </h3>
-              {testDefinition?.hint && (
-                <span className="text-right text-xs text-zinc-500 dark:text-zinc-400">
-                  {testDefinition.hint}
-                </span>
-              )}
-            </div>
-            {testResults.length === 0 ? (
-              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                Run tests to check this requirement.
-              </p>
-            ) : (
-              <ul className="mt-2 space-y-1.5 text-sm">
-                {testResults.map((result, index) => (
-                  <li
-                    key={`${result.id}-${index}`}
-                    className={
-                      result.ok
-                        ? 'text-emerald-700 dark:text-emerald-400'
-                        : 'text-rose-700 dark:text-rose-400'
-                    }
-                  >
-                    <span aria-hidden="true">{result.ok ? '✓' : '×'}</span>{' '}
-                    <span>{result.text}</span>
-                    {result.hint && (
-                      <span className="ml-1 text-xs text-zinc-500 dark:text-zinc-400">
-                        ({result.hint})
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }
 
