@@ -48,12 +48,14 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
   const timerRef = React.useRef(null);
   const flushingRef = React.useRef(false);
   const identityRef = React.useRef(username);
+  const accessCodeRetryRef = React.useRef(false);
 
   React.useEffect(() => {
     if (identityRef.current !== username) {
       identityRef.current = username;
       pendingRef.current = {};
       failedRef.current = {};
+      accessCodeRetryRef.current = false;
       dirtyFieldsRef.current = new Set();
       fieldVersionsRef.current = new Map();
       setStatus({ saving: false, error: '', accessCode: '' });
@@ -146,9 +148,11 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
   }
 
   async function generateAccessCode() {
+    accessCodeRetryRef.current = true;
     setStatus((current) => ({ ...current, saving: true, error: '', accessCode: '' }));
     try {
       const result = await onSavePatch(username, { generate_access_code: true });
+      accessCodeRetryRef.current = false;
       setStatus((current) => ({ ...current, saving: false, accessCode: result.accessCode || '' }));
     } catch (error) {
       if (isAbortError(error)) return;
@@ -160,6 +164,28 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
     ? `mailto:${encodeURIComponent(username)}?subject=${encodeURIComponent('ZWA access information')}&body=${encodeURIComponent(`Username: ${username}\nAccess code: ${status.accessCode}\n\nLogin: ${typeof window === 'undefined' ? '/student' : `${window.location.origin}/student`}`)}`
     : '';
   const finalPointsErrorId = `final-points-error-${username.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+
+  function retrySave() {
+    if (accessCodeRetryRef.current) {
+      generateAccessCode();
+      return;
+    }
+    pendingRef.current = { ...failedRef.current, ...pendingRef.current };
+    setStatus((current) => ({ ...current, error: '' }));
+    flush();
+  }
+
+  function rollbackChanges() {
+    clearTimeout(timerRef.current);
+    pendingRef.current = {};
+    failedRef.current = {};
+    accessCodeRetryRef.current = false;
+    dirtyFieldsRef.current = new Set();
+    const next = normalizeProgress(serverValueRef.current);
+    draftRef.current = next;
+    setDraft(next);
+    setStatus((current) => ({ ...current, saving: false, error: '' }));
+  }
 
   return (
     <section className="mt-4 space-y-4 border-t border-[var(--portal-border)] pt-4" aria-label={`Progress for ${username}`}>
@@ -227,7 +253,7 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
         <p className="mt-3 text-xs text-[var(--portal-text-muted)]" role="status" aria-live="polite">{status.saving ? 'Saving…' : status.accessCode ? 'Access code generated. Copy it now; it will not be shown again.' : 'Changes save automatically.'}</p>
       </fieldset>
 
-      {status.error ? <div className="text-sm text-[var(--portal-coral)]" role="alert"><p>{status.error}</p><div className="mt-2 flex flex-wrap gap-3"><button type="button" className="font-semibold underline" onClick={() => { pendingRef.current = { ...failedRef.current, ...pendingRef.current }; setStatus((current) => ({ ...current, error: '' })); flush(); }}>Retry</button><button type="button" className="font-semibold underline" onClick={() => { clearTimeout(timerRef.current); pendingRef.current = {}; failedRef.current = {}; dirtyFieldsRef.current = new Set(); const next = normalizeProgress(serverValueRef.current); draftRef.current = next; setDraft(next); setStatus((current) => ({ ...current, saving: false, error: '' })); }}>Roll back</button></div></div> : null}
+      {status.error ? <div className="text-sm text-[var(--portal-coral)]" role="alert"><p>{status.error}</p><div className="mt-2 flex flex-wrap gap-3"><button type="button" className="font-semibold underline" onClick={retrySave}>Retry</button><button type="button" className="font-semibold underline" onClick={rollbackChanges}>Roll back</button></div></div> : null}
     </section>
   );
 }

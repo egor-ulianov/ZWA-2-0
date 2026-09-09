@@ -10,6 +10,10 @@ test('teacher can sign in, edit roster data, and retry a conflicted attendance s
 
   let authenticated = false;
   let attendancePostCount = 0;
+  let releaseConflict;
+  const conflictPending = new Promise((resolve) => {
+    releaseConflict = resolve;
+  });
   const initialAttendance = { alice: false, bob: true };
   const progressByUser = {
     alice: {
@@ -63,6 +67,7 @@ test('teacher can sign in, edit roster data, and retry a conflicted attendance s
 
     attendancePostCount += 1;
     if (attendancePostCount === 1) {
+      await conflictPending;
       return fulfillJson(route, { error: 'Attendance changed; reload and retry' }, { status: 409 });
     }
     return fulfillJson(route, { ok: true, count: 2, revision: 2 }, { headers: { etag: '"2"' } });
@@ -102,17 +107,25 @@ test('teacher can sign in, edit roster data, and retry a conflicted attendance s
   const aliceAttendance = aliceRow.getByRole('checkbox');
   await expect(aliceAttendance).not.toBeChecked();
   await aliceAttendance.check();
+  await expect.poll(() => attendancePostCount).toBe(1);
+  try {
+    await expect(page.getByRole('status').filter({ hasText: 'Saving attendance…' })).toBeVisible();
+  } finally {
+    releaseConflict();
+  }
 
   const conflict = page
     .getByRole('alert')
     .filter({ hasText: 'Attendance changed on the server. The latest values were reloaded' });
   await expect(conflict).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Attendance conflict' })).toBeVisible();
   await expect(aliceAttendance).not.toBeChecked();
   await conflict.getByRole('button', { name: 'Reload latest' }).click();
   await expect(conflict).not.toBeVisible();
   await aliceAttendance.check();
   await expect.poll(() => attendancePostCount).toBe(2);
   await expect(aliceAttendance).toBeChecked();
+  await expect(page.getByRole('status').filter({ hasText: 'Attendance saved.' })).toBeVisible();
   expect(attendancePostCount).toBe(2);
 
   await aliceRow.getByText('Assignment progress').click();
@@ -139,4 +152,270 @@ test('teacher can sign in, edit roster data, and retry a conflicted attendance s
   });
   expect(requestBody).not.toHaveProperty('test1');
   await expect(topic).toHaveValue('Topic with comma, quote "and details"');
+});
+
+test('teacher keeps the workspace hidden until initial records load and can recover from failure', async ({
+  page,
+}) => {
+  await installDeterministicNetwork(page);
+
+  let studentsRequested = false;
+  let studentAttempt = 0;
+  let releaseStudents;
+  const studentsPending = new Promise((resolve) => {
+    releaseStudents = resolve;
+  });
+
+  await page.route('**/api/teacher/me', (route) => fulfillJson(route, { username: 'teacher' }));
+  await page.route('**/api/students', async (route) => {
+    studentsRequested = true;
+    studentAttempt += 1;
+    if (studentAttempt === 1) {
+      await studentsPending;
+      return fulfillJson(route, { error: 'Students unavailable' }, { status: 503 });
+    }
+    return fulfillJson(route, {
+      count: 2,
+      students: [{ username: 'alice' }, { username: 'bob' }],
+    });
+  });
+  await page.route('**/api/attendance**', async (route) => {
+    if (route.request().method() === 'GET') {
+      const url = new URL(route.request().url());
+      if (!url.searchParams.has('date')) {
+        return fulfillJson(route, { overview: { '2026-09-08': { alice: false, bob: true } } });
+      }
+      return fulfillJson(route, {
+        date: url.searchParams.get('date'),
+        map: { alice: false, bob: true },
+        revision: 1,
+      });
+    }
+    return fulfillJson(route, { ok: true, revision: 2 });
+  });
+  await page.route('**/api/progress', (route) =>
+    fulfillJson(route, {
+      items: [
+        { username: 'alice', assignment_final_points: null },
+        { username: 'bob', assignment_final_points: 8 },
+      ],
+    }),
+  );
+
+  await page.goto('/attendance');
+  await expect.poll(() => studentsRequested).toBe(true);
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toHaveCount(0);
+
+  releaseStudents();
+  await expect(page.getByRole('alert').filter({ hasText: 'Students unavailable' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Retry loading workspace' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Retry loading workspace' }).click();
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toBeVisible();
+});
+
+test('teacher disables date-dependent attendance writes while a selected day loads', async ({
+  page,
+}) => {
+  await installDeterministicNetwork(page);
+
+  const nextDate = '2030-01-02';
+  let releaseNextDate;
+  const nextDatePending = new Promise((resolve) => {
+    releaseNextDate = resolve;
+  });
+  let postCount = 0;
+
+  await page.route('**/api/teacher/me', (route) => fulfillJson(route, { username: 'teacher' }));
+  await page.route('**/api/students', (route) =>
+    fulfillJson(route, {
+      count: 2,
+      students: [{ username: 'alice' }, { username: 'bob' }],
+    }),
+  );
+  await page.route('**/api/attendance**', async (route) => {
+    if (route.request().method() === 'GET') {
+      const url = new URL(route.request().url());
+      if (!url.searchParams.has('date')) {
+        return fulfillJson(route, { overview: {} });
+      }
+      if (url.searchParams.get('date') === nextDate) {
+        await nextDatePending;
+        return fulfillJson(route, {
+          date: nextDate,
+          map: { alice: false, bob: false },
+          revision: 2,
+        });
+      }
+      return fulfillJson(route, {
+        date: url.searchParams.get('date'),
+        map: { alice: false, bob: true },
+        revision: 1,
+      });
+    }
+    postCount += 1;
+    return fulfillJson(route, { ok: true, revision: 3 });
+  });
+  await page.route('**/api/progress', (route) => fulfillJson(route, { items: [] }));
+
+  await page.goto('/attendance');
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toContainText(
+    'Present: 1 of 2',
+  );
+
+  const dateInput = page.getByLabel('Attendance date');
+  const markPresent = page.getByRole('button', { name: 'Mark visible students present' });
+  const aliceAttendance = page
+    .getByRole('listitem')
+    .filter({
+      has: page.getByRole('heading', { name: 'alice', exact: true }),
+    })
+    .getByRole('checkbox');
+  await dateInput.fill(nextDate);
+  try {
+    await expect(dateInput).toBeDisabled();
+    await expect(markPresent).toBeDisabled();
+    await expect(aliceAttendance).toBeDisabled();
+  } finally {
+    releaseNextDate();
+  }
+
+  await expect(dateInput).toBeEnabled();
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toContainText(
+    'Present: 0 of 2',
+  );
+  expect(postCount).toBe(0);
+});
+
+test('teacher retry persists the recovered attendance map before the next edit', async ({
+  page,
+}) => {
+  await installDeterministicNetwork(page);
+
+  let postCount = 0;
+  const postedMaps = [];
+  let releaseFailure;
+  const failurePending = new Promise((resolve) => {
+    releaseFailure = resolve;
+  });
+  await page.route('**/api/teacher/me', (route) => fulfillJson(route, { username: 'teacher' }));
+  await page.route('**/api/students', (route) =>
+    fulfillJson(route, {
+      count: 2,
+      students: [{ username: 'alice' }, { username: 'bob' }],
+    }),
+  );
+  await page.route('**/api/attendance**', async (route) => {
+    if (route.request().method() === 'GET') {
+      const url = new URL(route.request().url());
+      if (!url.searchParams.has('date')) return fulfillJson(route, { overview: {} });
+      return fulfillJson(route, {
+        date: url.searchParams.get('date'),
+        map: { alice: false, bob: false },
+        revision: 1,
+      });
+    }
+    postCount += 1;
+    const body = JSON.parse(route.request().postData() || '{}');
+    postedMaps.push(body.map);
+    if (postCount === 1) {
+      await failurePending;
+      return fulfillJson(route, { error: 'Temporary attendance failure' }, { status: 503 });
+    }
+    return fulfillJson(route, { ok: true, revision: postCount + 1 });
+  });
+  await page.route('**/api/progress', (route) => fulfillJson(route, { items: [] }));
+
+  await page.goto('/attendance');
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toContainText(
+    'Present: 0 of 2',
+  );
+  const aliceRow = page.getByRole('listitem').filter({
+    has: page.getByRole('heading', { name: 'alice', exact: true }),
+  });
+  const bobRow = page.getByRole('listitem').filter({
+    has: page.getByRole('heading', { name: 'bob', exact: true }),
+  });
+  const aliceAttendance = aliceRow.getByRole('checkbox');
+  const bobAttendance = bobRow.getByRole('checkbox');
+
+  await expect(aliceAttendance).toBeEnabled();
+  await aliceAttendance.check();
+  await expect.poll(() => postCount).toBe(1);
+  releaseFailure();
+  const failure = page.getByRole('alert').filter({ hasText: 'Temporary attendance failure' });
+  await expect(failure).toBeVisible();
+  await expect(
+    page
+      .getByRole('status')
+      .filter({ hasText: 'Attendance save failed: Temporary attendance failure' }),
+  ).toBeVisible();
+  await expect(aliceAttendance).not.toBeChecked();
+  await failure.getByRole('button', { name: 'Retry' }).click();
+  await expect.poll(() => postCount).toBe(2);
+  await expect(aliceAttendance).toBeChecked();
+
+  await bobAttendance.check();
+  await expect.poll(() => postCount).toBe(3);
+  expect(postedMaps[2]).toEqual({ alice: true, bob: true });
+});
+
+test('teacher can retry a failed generated access-code request', async ({ page }) => {
+  await installDeterministicNetwork(page);
+
+  let accessCodeAttempts = 0;
+  const progress = {
+    username: 'alice',
+    assignment_task_checked: false,
+    assignment_midterm_ok: false,
+    assignment_topic: '',
+    assignment_partner: '',
+    assignment_final_points: null,
+  };
+  await page.route('**/api/teacher/me', (route) => fulfillJson(route, { username: 'teacher' }));
+  await page.route('**/api/students', (route) =>
+    fulfillJson(route, { count: 1, students: [{ username: 'alice' }] }),
+  );
+  await page.route('**/api/attendance**', (route) => {
+    if (route.request().method() === 'GET') {
+      const url = new URL(route.request().url());
+      if (!url.searchParams.has('date')) return fulfillJson(route, { overview: {} });
+      return fulfillJson(route, {
+        date: url.searchParams.get('date'),
+        map: { alice: false },
+        revision: 1,
+      });
+    }
+    return fulfillJson(route, { ok: true, revision: 2 });
+  });
+  await page.route('**/api/progress', async (route) => {
+    if (route.request().method() === 'GET') return fulfillJson(route, { items: [progress] });
+    const body = JSON.parse(route.request().postData() || '{}');
+    if (body.generate_access_code) {
+      accessCodeAttempts += 1;
+      if (accessCodeAttempts === 1) {
+        return fulfillJson(route, { error: 'Access code service unavailable' }, { status: 503 });
+      }
+      return fulfillJson(route, { ok: true, item: progress, accessCode: 'one-time-code' });
+    }
+    return fulfillJson(route, { ok: true, item: { ...progress, ...body } });
+  });
+
+  await page.goto('/attendance');
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toBeVisible();
+  const aliceRow = page.getByRole('listitem').filter({
+    has: page.getByRole('heading', { name: 'alice', exact: true }),
+  });
+  await aliceRow.getByText('Assignment progress').click();
+  await aliceRow.getByRole('button', { name: 'Generate access code' }).click();
+  const accessCodeFailure = aliceRow
+    .getByRole('alert')
+    .filter({ hasText: 'Access code service unavailable' });
+  await expect(accessCodeFailure).toBeVisible();
+  await accessCodeFailure.getByRole('button', { name: 'Retry' }).click();
+  await expect.poll(() => accessCodeAttempts).toBe(2);
+  await expect(aliceRow.getByRole('status')).toContainText('Access code generated. Copy it now');
 });

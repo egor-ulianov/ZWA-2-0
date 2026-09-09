@@ -76,6 +76,11 @@ export default function AttendancePage() {
   const [query, setQuery] = React.useState('');
   const [error, setError] = React.useState('');
   const [saveError, setSaveError] = React.useState(null);
+  const [attendanceStatus, setAttendanceStatus] = React.useState({
+    kind: 'idle',
+    message: 'Attendance ready.',
+  });
+  const [attendanceDateLoading, setAttendanceDateLoading] = React.useState(false);
   const [importDraft, setImportDraft] = React.useState(null);
   const queuesRef = React.useRef(new Map());
   const revisionsRef = React.useRef(new Map());
@@ -84,6 +89,7 @@ export default function AttendancePage() {
   const attendanceRef = React.useRef({});
   const saveVersionsRef = React.useRef(new Map());
   const fileReaderRef = React.useRef(null);
+  const dateLoadVersionRef = React.useRef(0);
 
   React.useEffect(() => () => {
     const reader = fileReaderRef.current;
@@ -126,9 +132,14 @@ export default function AttendancePage() {
 
   const loadTeacherData = React.useCallback(async (signal) => {
     setError('');
+    setTeacher(undefined);
+    setStudents([]);
+    setOverview({});
+    setProgress({});
+    attendanceRef.current = {};
+    setAttendance({});
     try {
       const me = await client('/api/teacher/me', { signal });
-      setTeacher(me.username || 'teacher');
       const [studentData, attendanceData, progressData] = await Promise.all([
         client('/api/students', { signal }), client('/api/attendance', { signal }), client('/api/progress', { signal }),
       ]);
@@ -136,6 +147,8 @@ export default function AttendancePage() {
       setStudents(studentData.students || []);
       setOverview(nextOverview);
       setProgress(Object.fromEntries((progressData.items || []).map((item) => [item.username, item])));
+      setAttendanceDateLoading(true);
+      setTeacher(me.username || 'teacher');
     } catch (cause) {
       if (isAbortError(cause) || isUnauthorized(cause)) return;
       setError(cause.message || 'Unable to load teacher data');
@@ -150,9 +163,14 @@ export default function AttendancePage() {
 
   React.useEffect(() => {
     if (!teacher) return undefined;
+    const requestVersion = ++dateLoadVersionRef.current;
     const controller = new AbortController();
+    setAttendanceDateLoading(true);
     readAttendanceDate(date, controller.signal).then(({ map }) => applyAttendance(date, map)).catch((cause) => {
+      if (dateLoadVersionRef.current !== requestVersion) return;
       if (!isAbortError(cause) && !isUnauthorized(cause)) setError(cause.message || 'Unable to load attendance');
+    }).finally(() => {
+      if (dateLoadVersionRef.current === requestVersion) setAttendanceDateLoading(false);
     });
     return () => controller.abort();
   }, [applyAttendance, date, readAttendanceDate, teacher]);
@@ -180,16 +198,28 @@ export default function AttendancePage() {
     const version = (saveVersionsRef.current.get(targetDate) || 0) + 1;
     saveVersionsRef.current.set(targetDate, version);
     setSaveError(null);
+    setAttendanceStatus({ kind: 'saving', message: 'Saving attendance…' });
     const snapshot = { ...nextMap };
     const queue = queueForDate(targetDate);
     return queue.enqueue({ map: snapshot }).then(() => {
       confirmedRef.current.set(targetDate, snapshot);
       setOverview((current) => ({ ...current, [targetDate]: snapshot }));
-      if (saveVersionsRef.current.get(targetDate) === version) setSaveError(null);
+      if (targetDate === date) {
+        attendanceRef.current = snapshot;
+        setAttendance(snapshot);
+      }
+      if (saveVersionsRef.current.get(targetDate) === version) {
+        setSaveError(null);
+        setAttendanceStatus({ kind: 'saved', message: 'Attendance saved.' });
+      }
     }).catch(async (cause) => {
       if (isAbortError(cause) || isUnauthorized(cause)) throw cause;
       if (cause.status === 409) {
         queue.clearPending(cause);
+        setAttendanceStatus({
+          kind: 'conflict',
+          message: 'Attendance conflict: the latest values are being reloaded. Review and retry.',
+        });
         try {
           await reloadAttendance(targetDate);
           if (saveVersionsRef.current.get(targetDate) === version) {
@@ -203,19 +233,24 @@ export default function AttendancePage() {
         } catch (reloadError) {
           if (!isAbortError(reloadError) && !isUnauthorized(reloadError)
             && saveVersionsRef.current.get(targetDate) === version) {
-            setSaveError({ message: reloadError.message || 'Unable to reload attendance after a conflict', date: targetDate, conflict: true, action: 'reload' });
+            const message = reloadError.message || 'Unable to reload attendance after a conflict';
+            setAttendanceStatus({ kind: 'error', message: `Attendance reload failed: ${message}` });
+            setSaveError({ message, date: targetDate, conflict: true, action: 'reload' });
           }
         }
       } else if (saveVersionsRef.current.get(targetDate) === version) {
         attendanceRef.current = confirmedRef.current.get(targetDate) || {};
         setAttendance(attendanceRef.current);
-        setSaveError({ message: cause.message || 'Unable to save attendance', date: targetDate, map: snapshot, action: 'retry' });
+        const message = cause.message || 'Unable to save attendance';
+        setAttendanceStatus({ kind: 'error', message: `Attendance save failed: ${message}` });
+        setSaveError({ message, date: targetDate, map: snapshot, action: 'retry' });
       }
       throw cause;
     });
   }
 
   function updateAttendance(nextMap) {
+    if (attendanceDateLoading) return;
     const snapshot = { ...nextMap };
     attendanceRef.current = snapshot;
     setAttendance(snapshot);
@@ -268,7 +303,7 @@ export default function AttendancePage() {
   }
 
   function confirmImport() {
-    if (!importDraft?.entries.length || !importDraft.date) return;
+    if (attendanceDateLoading || !importDraft?.entries.length || !importDraft.date) return;
     const draft = importDraft;
     setSaveError(null);
     (async () => {
@@ -294,10 +329,18 @@ export default function AttendancePage() {
   }
 
   function retrySave() {
-    if (!saveError?.action) return;
+    if (attendanceDateLoading || !saveError?.action) return;
     if (saveError.action === 'reload') {
-      reloadAttendance(saveError.date).then(() => setSaveError(null)).catch((cause) => {
-        if (!isAbortError(cause) && !isUnauthorized(cause)) setSaveError({ message: cause.message || 'Unable to reload attendance', date: saveError.date, conflict: true, action: 'reload' });
+      setAttendanceStatus({ kind: 'loading', message: 'Reloading latest attendance…' });
+      reloadAttendance(saveError.date).then(() => {
+        setSaveError(null);
+        setAttendanceStatus({ kind: 'ready', message: 'Latest attendance reloaded. Review and retry.' });
+      }).catch((cause) => {
+        if (!isAbortError(cause) && !isUnauthorized(cause)) {
+          const message = cause.message || 'Unable to reload attendance';
+          setAttendanceStatus({ kind: 'error', message: `Attendance reload failed: ${message}` });
+          setSaveError({ message, date: saveError.date, conflict: true, action: 'reload' });
+        }
       });
       return;
     }
@@ -327,6 +370,7 @@ export default function AttendancePage() {
   const dates = [...new Set([...Object.keys(overview), date])].sort();
   const presentCount = students.filter((student) => attendance[student.username]).length;
   const attendanceSaving = Boolean(queuesRef.current.get(date)?.pendingCount);
+  const attendanceBusy = attendanceSaving || attendanceDateLoading;
 
   if (teacher === undefined) {
     return (
@@ -410,9 +454,12 @@ export default function AttendancePage() {
               Choose a date, narrow the visible roster, and apply attendance changes to the filtered students.
             </p>
           </div>
-          <p className="text-sm font-semibold" aria-live="polite">
-            Present: {presentCount} of {students.length}
-          </p>
+          <div className="text-right">
+            <p className="text-sm font-semibold">Present: {presentCount} of {students.length}</p>
+            <p className="mt-2 text-xs text-[var(--portal-text-muted)]" role="status" aria-live="polite">
+              {attendanceDateLoading ? `Loading attendance for ${date}…` : attendanceStatus.message}
+            </p>
+          </div>
         </div>
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-[minmax(12rem,0.65fr)_minmax(16rem,1fr)_auto] md:items-end">
           <label className="text-sm font-semibold text-[var(--portal-text)]" htmlFor="attendance-date">
@@ -422,8 +469,12 @@ export default function AttendancePage() {
               className="mt-2 block min-h-11 w-full rounded border border-[var(--portal-border)] bg-[var(--portal-panel)] px-3 py-2 font-normal text-[var(--portal-text)]"
               type="date"
               value={date}
-              disabled={attendanceSaving}
-              onChange={(event) => setDate(event.target.value)}
+              disabled={attendanceBusy}
+              onChange={(event) => {
+                dateLoadVersionRef.current += 1;
+                setAttendanceDateLoading(true);
+                setDate(event.target.value);
+              }}
             />
           </label>
           <label className="text-sm font-semibold text-[var(--portal-text)]" htmlFor="attendance-search">
@@ -439,7 +490,7 @@ export default function AttendancePage() {
             <button
               type="button"
               className="portal-action portal-secondary-action disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={attendanceSaving}
+              disabled={attendanceBusy}
               onClick={() => updateAttendance({ ...attendanceRef.current, ...Object.fromEntries(filtered.map((student) => [student.username, true])) })}
             >
               Mark visible students present
@@ -447,7 +498,7 @@ export default function AttendancePage() {
             <button
               type="button"
               className="portal-action portal-secondary-action disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={attendanceSaving}
+              disabled={attendanceBusy}
               onClick={() => updateAttendance({ ...attendanceRef.current, ...Object.fromEntries(filtered.map((student) => [student.username, false])) })}
             >
               Mark visible students absent
@@ -485,7 +536,7 @@ export default function AttendancePage() {
               key={student.username}
               student={student}
               present={Boolean(attendance[student.username])}
-              saving={attendanceSaving}
+              saving={attendanceBusy}
               progress={progress[student.username]}
               onToggle={(username, present) => updateAttendance({ ...attendanceRef.current, [username]: present })}
               onSaveProgress={saveProgressPatch}
@@ -522,7 +573,7 @@ export default function AttendancePage() {
           </button>
           <label className="portal-action portal-secondary-action cursor-pointer">
             Import CSV
-            <input type="file" accept=".csv,text/csv" className="sr-only" onChange={handleFile} />
+            <input type="file" accept=".csv,text/csv" className="sr-only" disabled={attendanceBusy} onChange={handleFile} />
           </label>
         </div>
       </section>
@@ -548,7 +599,7 @@ export default function AttendancePage() {
             <button
               type="button"
               className="portal-action disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={!importDraft.date || !importDraft.entries.length}
+              disabled={attendanceBusy || !importDraft.date || !importDraft.entries.length}
               onClick={confirmImport}
             >
               Confirm and persist import
