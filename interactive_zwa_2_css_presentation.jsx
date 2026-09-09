@@ -242,7 +242,73 @@ const CssTaskProvider = forwardRef(function CssTaskProvider({ slideId, stepIndex
   );
 });
 
-function CssTaskEditor() {
+function CssTaskStepTabs({ steps, activeIndex, onChange }) {
+  const tabRefs = useRef([]);
+
+  const focusStep = useCallback(
+    (nextIndex) => {
+      const boundedIndex = Math.min(Math.max(nextIndex, 0), steps.length - 1);
+      onChange(boundedIndex);
+      requestAnimationFrame(() => tabRefs.current[boundedIndex]?.focus());
+    },
+    [onChange, steps.length],
+  );
+
+  const handleKeyDown = (event, index) => {
+    const nextIndex =
+      event.key === 'ArrowRight' || event.key === 'ArrowDown'
+        ? Math.min(index + 1, steps.length - 1)
+        : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+          ? Math.max(index - 1, 0)
+          : event.key === 'Home'
+            ? 0
+            : event.key === 'End'
+              ? steps.length - 1
+              : index;
+    if (nextIndex === index) return;
+    event.preventDefault();
+    focusStep(nextIndex);
+  };
+
+  return (
+    <div className="mb-4" role="tablist" aria-label="Kroky úlohy CSS">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        Vyberte úlohu
+      </p>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {steps.map((step, index) => {
+          const isActive = index === activeIndex;
+          return (
+            <button
+              key={step.title}
+              ref={(element) => {
+                tabRefs.current[index] = element;
+              }}
+              id={`css-task-tab-${index}`}
+              type="button"
+              role="tab"
+              aria-controls="css-task-panel"
+              aria-selected={isActive}
+              tabIndex={isActive ? 0 : -1}
+              className={clsx(
+                'shrink-0 rounded-lg border px-3 py-2 text-left text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                isActive
+                  ? 'border-indigo-600 bg-indigo-700 text-white'
+                  : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800',
+              )}
+              onClick={() => onChange(index)}
+              onKeyDown={(event) => handleKeyDown(event, index)}
+            >
+              {step.title}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function CssTaskEditor({ steps, stepIndex, onStepIndexChange }) {
   const {
     activeTab,
     setActiveTab,
@@ -256,6 +322,7 @@ function CssTaskEditor() {
   } = useContext(CssTaskContext);
   return (
     <div>
+      <CssTaskStepTabs steps={steps} activeIndex={stepIndex} onChange={onStepIndexChange} />
       <div className="flex items-center justify-between mb-2">
         <div className="font-semibold text-sm">Editor HTML a CSS</div>
         <label className="text-xs flex items-center gap-1">
@@ -307,6 +374,29 @@ function CssTaskEditor() {
       >
         Spustit náhled
       </button>
+    </div>
+  );
+}
+
+function CssTaskInstructions({ steps, stepIndex }) {
+  const step = steps[stepIndex];
+  if (!step) return null;
+
+  return (
+    <div id="css-task-panel" role="tabpanel" aria-labelledby={`css-task-tab-${stepIndex}`}>
+      <div className="flex items-center justify-between gap-3">
+        <span className="rounded-full border border-sky-200/60 bg-sky-100 px-2 py-0.5 text-[11px] text-sky-800 dark:border-sky-800 dark:bg-sky-900/40 dark:text-sky-300">
+          Úloha {stepIndex + 1} / {steps.length}
+        </span>
+      </div>
+      <p className="mt-2 font-semibold">{step.title}</p>
+      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{step.desc}</p>
+      {step.examples && (
+        <pre className="mt-3 overflow-x-auto rounded-lg bg-zinc-100/70 p-3 text-xs whitespace-pre-wrap dark:bg-zinc-800/70">
+          {step.examples.join('\n')}
+        </pre>
+      )}
+      {step.hint && <p className="mt-3 text-xs text-zinc-500">Nápověda: {step.hint}</p>}
     </div>
   );
 }
@@ -919,46 +1009,47 @@ export default function App() {
       slides={slides}
       activeSlide={activeSlide}
       onChange={setActiveSlide}
-      title="ZWA-2: Interaktivní prezentace CSS"
+      title="ZWA-4: CSS – interaktivní prezentace"
       objective="Použijete základní CSS selektory, pseudo-elementy a propojení stylopisu v praktickém playgroundu."
-      subtitle="Editor vlevo, náhled vpravo. Upravte kód → prohlédněte náhled → spusťte testy."
-      footerText="© 2025 ZWA – Interaktivní výuková ukázka (Egor Ulianov)"
+      subtitle="Vyberte úlohu, upravte kód v IDE a ověřte výsledek v náhledu."
+      footerText="© 2025 ZWA – CSS interaktivní výuková ukázka"
       maxWidthClass="max-w-7xl"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
-          <CssSlideContent
-            slide={current}
-            stepIndex={hasSteps ? stepIndex : undefined}
-            onStepIndexChange={setStepIndex}
+      {current.id === 'tasks' ? (
+        <CssTaskProvider ref={cssTaskRef} slideId={activeSlide} stepIndex={stepIndex}>
+          <LessonTaskWorkspace
+            privateMarker="css-exercise"
+            onRunTests={() => cssTaskRef.current?.runValidation()}
+            task={<CssTaskInstructions steps={current.steps} stepIndex={stepIndex} />}
+            editor={
+              <CssTaskEditor
+                steps={current.steps}
+                stepIndex={stepIndex}
+                onStepIndexChange={setStepIndex}
+              />
+            }
+            preview={<CssTaskPreview />}
           />
-        </div>
-        <div>
-          <div className="lg:sticky lg:top-8">
-            {current.id === 'tasks' ? (
-              <CssTaskProvider ref={cssTaskRef} slideId={activeSlide} stepIndex={stepIndex}>
-                <LessonTaskWorkspace
-                  privateMarker="css-exercise"
-                  onRunTests={() => cssTaskRef.current?.runValidation()}
-                  task={
-                    <>
-                      <p>{current.steps?.[stepIndex]?.title}</p>
-                      <p>{current.steps?.[stepIndex]?.desc}</p>
-                    </>
-                  }
-                  editor={<CssTaskEditor />}
-                  preview={<CssTaskPreview />}
-                />
-              </CssTaskProvider>
-            ) : (
+        </CssTaskProvider>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div>
+            <CssSlideContent
+              slide={current}
+              stepIndex={hasSteps ? stepIndex : undefined}
+              onStepIndexChange={setStepIndex}
+            />
+          </div>
+          <div>
+            <div className="lg:sticky lg:top-8">
               <VsPlayground slideId={activeSlide} stepIndex={hasSteps ? stepIndex : 0} />
-            )}
-            <div className="mt-3 text-xs text-zinc-500">
-              Pozn.: Toto je výuková simulace pro procvičení CSS. Výsledky jsou zjednodušené kvůli
-              spolehlivému automatickému vyhodnocení.
             </div>
           </div>
         </div>
+      )}
+      <div className="mt-3 text-xs text-zinc-500">
+        Pozn.: Toto je výuková simulace pro procvičení CSS. Výsledky jsou zjednodušené kvůli
+        spolehlivému automatickému vyhodnocení.
       </div>
     </LessonShell>
   );

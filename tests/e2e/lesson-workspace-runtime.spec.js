@@ -94,6 +94,33 @@ test.describe('runtime lesson task workspaces', () => {
     }
   });
 
+  test('CSS tasks keep the selected assignment above a wide IDE with task tabs', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+    await page.goto('/interactive-zwa-2?slide=tasks');
+
+    const assignment = page.getByRole('region', { name: 'Zadání' });
+    const ide = page.getByRole('region', { name: 'IDE' });
+    const taskTabs = ide.getByRole('tablist', { name: 'Kroky úlohy CSS' });
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'ZWA-4: CSS – interaktivní prezentace' }),
+    ).toBeVisible();
+    await expect(assignment.getByText('Úloha 1 / 5', { exact: true })).toBeVisible();
+    await expect(taskTabs).toBeVisible();
+    await expect(taskTabs.getByRole('tab', { name: /1.*Nadpis/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect(page.getByRole('button', { name: 'Předchozí', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Další', exact: true })).toHaveCount(0);
+
+    await taskTabs.getByRole('tab', { name: /2.*Odkazy ve footeru/ }).click();
+    await expect(assignment.getByText('Úloha 2 / 5', { exact: true })).toBeVisible();
+    await expect(assignment).toContainText('Georgia');
+  });
+
   test.describe('the unified action invokes the existing runtime checker', () => {
     const checkerCases = [
       {

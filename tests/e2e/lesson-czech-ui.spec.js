@@ -20,7 +20,7 @@ const taskRoutes = [
 
 async function expectTaskWorkspace(page) {
   await expect(page.getByRole('navigation', { name: 'Osnova kurzu' })).toHaveCount(1);
-  await expect(page.getByRole('tablist')).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'Navigace mezi snímky' })).toHaveCount(0);
 
   for (const label of ['Zadání', 'IDE', 'Náhled a testy']) {
     await expect(page.getByRole('region', { name: label })).toHaveCount(1);
@@ -56,7 +56,7 @@ test.describe('Czech unified lesson task workspace integration', () => {
       await expect(page.getByRole('main')).toBeVisible();
 
       await expect(page.getByRole('navigation', { name: 'Osnova kurzu' })).toHaveCount(0);
-      await expect(page.getByRole('tablist')).toHaveCount(0);
+      await expect(page.getByRole('navigation', { name: 'Navigace mezi snímky' })).toHaveCount(0);
       await expect(page.locator('[data-projector-private]')).toHaveCount(0);
       await expect(page.getByRole('region', { name: 'Zadání' })).toHaveCount(0);
       await expect(page.getByRole('region', { name: 'IDE' })).toHaveCount(0);
