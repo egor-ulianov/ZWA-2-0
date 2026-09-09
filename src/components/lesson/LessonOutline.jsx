@@ -8,12 +8,12 @@ export default function LessonOutline({ lesson, slides = [], activeSlide, onChan
   const number = lessonNumber(lesson);
 
   return (
-    <nav aria-label="Course outline" className="portal-panel min-w-0 p-4">
+    <nav aria-label="Osnova kurzu" className="portal-panel min-w-0 p-4">
       <div className="mb-4">
-        <p className="portal-kicker">Course outline</p>
+        <p className="portal-kicker">Osnova kurzu</p>
         <p className="mt-1 text-sm font-semibold leading-5">
           {number ? `${number} · ` : ''}
-          {lesson?.title || 'Lesson'}
+          {lesson?.title || 'Lekce'}
         </p>
       </div>
 

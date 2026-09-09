@@ -34,19 +34,19 @@ export default function ProjectorStage({ lesson, slides, slide, onPrevious, onNe
 
   return (
     <main
-      aria-label={`${lesson?.title || 'Lesson'} projector`}
+      aria-label={`${lesson?.title || 'Lekce'} — projekce`}
       className="projector-stage mx-auto flex min-h-[calc(100vh-5rem)] max-w-7xl flex-col justify-between px-6 py-10 md:px-12 md:py-16"
     >
       <div>
         <div className="mb-12 flex items-center justify-between gap-6 text-sm text-[var(--portal-text-muted)]">
-          <p className="portal-kicker">{lesson?.number ? `Lesson ${lesson.number}` : 'Lesson'}</p>
-          <p aria-label="Slide position" className="font-mono tabular-nums">
+          <p className="portal-kicker">{lesson?.number ? `Lekce ${lesson.number}` : 'Lekce'}</p>
+          <p aria-label="Pozice snímku" className="font-mono tabular-nums">
             {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
           </p>
         </div>
         <div className="max-w-5xl">
           <h1 className="text-4xl font-bold tracking-tight md:text-6xl">
-            {slide?.title || 'Lesson'}
+            {slide?.title || 'Lekce'}
           </h1>
           {slide?.subtitle ? (
             <p className="mt-5 text-xl text-[var(--portal-text-muted)] md:text-2xl">
@@ -65,18 +65,18 @@ export default function ProjectorStage({ lesson, slides, slide, onPrevious, onNe
           className="portal-action rounded px-4 py-2"
           onClick={onPrevious}
           disabled={!hasPrevious}
-          aria-label="Previous slide"
+          aria-label="Předchozí snímek"
         >
-          Previous
+          Předchozí snímek
         </button>
         <button
           type="button"
           className="portal-action rounded px-4 py-2"
           onClick={onNext}
           disabled={!hasNext}
-          aria-label="Next slide"
+          aria-label="Následující snímek"
         >
-          Next
+          Následující snímek
         </button>
       </div>
     </main>

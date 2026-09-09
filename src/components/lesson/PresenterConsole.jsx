@@ -46,12 +46,12 @@ export default function PresenterConsole({ lesson, slides = [], activeSlide, onC
 
   return (
     <section
-      aria-label="Presenter console"
+      aria-label="Konzole prezentujícího"
       className="grid gap-6 lg:grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)]"
     >
-      <nav aria-label="Presenter outline" className="portal-panel min-w-0 p-4">
-        <p className="portal-kicker">Presenter outline</p>
-        <p className="mt-1 text-sm font-semibold leading-5">{lesson?.title || 'Lesson'}</p>
+      <nav aria-label="Osnova prezentujícího" className="portal-panel min-w-0 p-4">
+        <p className="portal-kicker">Osnova prezentujícího</p>
+        <p className="mt-1 text-sm font-semibold leading-5">{lesson?.title || 'Lekce'}</p>
         <ol className="mt-4 space-y-1">
           {slides.map((slide, index) => (
             <li key={slide.id}>
@@ -75,7 +75,7 @@ export default function PresenterConsole({ lesson, slides = [], activeSlide, onC
         <div className="portal-panel p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="portal-kicker">Presenter timer</p>
+              <p className="portal-kicker">Časovač prezentujícího</p>
               <p aria-live="polite" className="mt-1 font-mono text-3xl tabular-nums">
                 {formatElapsed(elapsed)}
               </p>
@@ -86,7 +86,7 @@ export default function PresenterConsole({ lesson, slides = [], activeSlide, onC
                 className="portal-action rounded px-3 py-2"
                 onClick={() => setTimerRunning((running) => !running)}
               >
-                {timerRunning ? 'Pause timer' : 'Start timer'}
+                {timerRunning ? 'Pozastavit časovač' : 'Spustit časovač'}
               </button>
               <button
                 type="button"
@@ -96,30 +96,32 @@ export default function PresenterConsole({ lesson, slides = [], activeSlide, onC
                   setElapsed(0);
                 }}
               >
-                Reset
+                Resetovat
               </button>
             </div>
           </div>
         </div>
 
         <div className="portal-panel p-5">
-          <p className="portal-kicker">Presenter notes</p>
+          <p className="portal-kicker">Poznámky prezentujícího</p>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6">
-            {active?.presenterNotes || active?.notes || 'No presenter notes for this slide.'}
+            {active?.presenterNotes ||
+              active?.notes ||
+              'Pro tento snímek nejsou žádné poznámky prezentujícího.'}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" className="portal-action rounded px-4 py-2" onClick={openProjector}>
-            Open projector
+            Otevřít projektor
           </button>
           {popupBlocked && projectorUrl ? (
             <a className="underline" href={projectorUrl} target="_blank" rel="noreferrer">
-              Open projector in this tab
+              Otevřít projektor v tomto panelu
             </a>
           ) : null}
           <span className="text-sm text-[var(--portal-text-muted)]">
-            Arrow keys change slides · Escape leaves fullscreen
+            Šipkami měníte snímky · Esc ukončí režim celé obrazovky
           </span>
         </div>
       </div>

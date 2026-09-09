@@ -138,7 +138,7 @@ export default function LessonShell({
     mode === 'student' && typeof window !== 'undefined' ? resolveLessonMode(window.location) : mode;
   const resolvedMode = normalizeLessonMode(locationMode);
   const courseModule = getCourseModule(lesson);
-  const lessonTitle = title || lesson?.title || 'Lesson';
+  const lessonTitle = title || lesson?.title || 'Lekce';
   const resolvedObjective =
     objective || learningObjective || lesson?.objective || courseModule?.focus;
   const contextValue = createLessonContextValue({
@@ -182,7 +182,7 @@ export default function LessonShell({
     return (
       <LessonContext.Provider value={contextValue}>
         <PortalFrame
-          meta={lesson?.number ? `Lesson ${lesson.number}` : 'Lesson'}
+          meta={lesson?.number ? `Lekce ${lesson.number}` : 'Lekce'}
           className="lesson-shell"
         >
           <ProjectorStage
@@ -202,7 +202,7 @@ export default function LessonShell({
   return (
     <LessonContext.Provider value={contextValue}>
       <PortalFrame
-        meta={lesson?.number ? `Lesson ${lesson.number}` : 'Lesson'}
+        meta={lesson?.number ? `Lekce ${lesson.number}` : 'Lekce'}
         className="lesson-shell"
       >
         <div
@@ -211,7 +211,7 @@ export default function LessonShell({
         >
           <header className="mb-8 max-w-4xl">
             <p className="portal-kicker mb-2">
-              {lesson?.number ? `Lesson ${lesson.number}` : 'Lesson'}
+              {lesson?.number ? `Lekce ${lesson.number}` : 'Lekce'}
             </p>
             <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{lessonTitle}</h1>
             {subtitle && (
@@ -221,7 +221,7 @@ export default function LessonShell({
             )}
             {resolvedObjective && (
               <div className="portal-panel mt-5 max-w-3xl p-4">
-                <p className="portal-kicker">Learning objective</p>
+                <p className="portal-kicker">Cíl lekce</p>
                 <p className="mt-1 text-sm leading-6">{resolvedObjective}</p>
               </div>
             )}
@@ -245,12 +245,14 @@ export default function LessonShell({
             />
 
             <div className="min-w-0">
-              <SlideNavigation
-                slides={slides}
-                activeSlide={activeSlide}
-                onChange={onChange}
-                idPrefix={idPrefix}
-              />
+              {resolvedMode !== 'student' ? (
+                <SlideNavigation
+                  slides={slides}
+                  activeSlide={activeSlide}
+                  onChange={onChange}
+                  idPrefix={idPrefix}
+                />
+              ) : null}
               <main id={`${idPrefix}-content`} aria-label={lessonTitle}>
                 {children}
               </main>

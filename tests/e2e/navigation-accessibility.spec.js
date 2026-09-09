@@ -48,7 +48,7 @@ test.describe('public catalog and lesson navigation', () => {
     await expect(firstLesson).toBeFocused();
     await firstLesson.press('Enter');
 
-    await expect(page).toHaveURL(/\/interactive-zwa-1-html5\/?(?:\?slide=title)?$/);
+    await expect(page).toHaveURL(/\/interactive-zwa-1-html5\/?(?:\?slide=(?:title|intro))?$/);
     await expect(page.locator('h1').first()).toBeVisible();
   });
 
@@ -58,65 +58,55 @@ test.describe('public catalog and lesson navigation', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-1-html5?slide=tasks#stale');
-    await expect(page.getByRole('tab', { name: 'Úkoly' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('navigation', { name: 'Osnova kurzu' })).toBeVisible();
+    await expect(page.getByRole('tablist')).toHaveCount(0);
+    await expect(page.getByText('Lekce 1', { exact: true }).first()).toBeVisible();
+    await expect(
+      page.getByRole('navigation', { name: 'Osnova kurzu' }).getByRole('button', { name: 'Úkoly' }),
+    ).toHaveAttribute('aria-current', 'step');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect.poll(() => new URL(page.url()).hash).toBe('');
 
     await page.goto('/interactive-zwa-1-html5?slide=missing');
-    await expect(page.getByRole('tab', { name: 'Úvod' })).toHaveAttribute('aria-selected', 'true');
+    await expect(
+      page.getByRole('navigation', { name: 'Osnova kurzu' }).getByRole('button', { name: 'Úvod' }),
+    ).toHaveAttribute('aria-current', 'step');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('intro');
   });
 
-  test('lesson tabs expose accessible relationships and keyboard focus movement', async ({
+  test('student outline exposes one accessible navigation and slide focus movement', async ({
     page,
   }) => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-1-html5?slide=intro');
-    await expect(page.getByRole('navigation', { name: /Course outline/i })).toBeVisible();
-    await page.getByRole('tab', { name: 'Úkoly' }).press('Home');
-    await expect(page.getByRole('tab', { name: 'Úvod' })).toHaveAttribute('aria-selected', 'true');
-    const tablist = page
-      .getByRole('navigation', { name: 'Navigace mezi snímky' })
-      .getByRole('tablist');
-    const tabs = tablist.getByRole('tab');
-    await expect(tablist).toHaveAttribute('aria-orientation', 'horizontal');
-    await expect(tabs).toHaveCount(4);
-    await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
-    await expect(tabs.nth(0)).toHaveAttribute('tabindex', '0');
-    await expect(tabs.nth(1)).toHaveAttribute('tabindex', '-1');
+    const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
+    await expect(outline).toBeVisible();
+    await expect(page.getByRole('tablist')).toHaveCount(0);
+    const slides = outline.getByRole('button');
+    await expect(slides).toHaveCount(4);
 
-    await tabs.nth(0).focus();
-    await tabs.nth(0).press('ArrowRight');
-    await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true');
-    await expect(tabs.nth(1)).toBeFocused();
+    await slides.nth(1).click();
+    await expect(slides.nth(1)).toHaveAttribute('aria-current', 'step');
+    await expect(page).toHaveURL(/slide=sections/);
 
-    await tabs.nth(1).press('End');
-    await expect(tabs.nth(3)).toHaveAttribute('aria-selected', 'true');
-    await expect(tabs.nth(3)).toBeFocused();
-
-    const panelId = await tabs.nth(3).getAttribute('aria-controls');
-    await expect(page.locator(`#${panelId}`)).toHaveAttribute(
-      'aria-labelledby',
-      await tabs.nth(3).getAttribute('id'),
-    );
-
-    await tabs.nth(3).press('Home');
-    await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
-    await expect(tabs.nth(0)).toBeFocused();
+    await page.keyboard.press('End');
+    await expect(slides.nth(3)).toHaveAttribute('aria-current', 'step');
+    await page.keyboard.press('Home');
+    await expect(slides.nth(0)).toHaveAttribute('aria-current', 'step');
   });
 
   test('presenter controls are keyboard reachable', async ({ page }) => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-1-html5?mode=presenter&slide=intro');
-    const startTimer = page.getByRole('button', { name: 'Start timer' });
-    const openProjector = page.getByRole('button', { name: 'Open projector' });
+    const startTimer = page.getByRole('button', { name: 'Spustit časovač' });
+    const openProjector = page.getByRole('button', { name: 'Otevřít projektor' });
 
     await startTimer.focus();
     await expect(startTimer).toBeFocused();
     await startTimer.press('Enter');
-    await expect(page.getByRole('button', { name: 'Pause timer' })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Pozastavit časovač' })).toBeFocused();
 
     await openProjector.focus();
     await expect(openProjector).toBeFocused();
@@ -137,37 +127,16 @@ test.describe('public catalog and lesson navigation', () => {
       expect(response.ok()).toBe(true);
       await expect(page.locator('h1').first()).toBeVisible();
 
-      const navigation = page.getByRole('navigation', { name: 'Navigace mezi snímky' });
-      const tabs = navigation.getByRole('tab');
-      const tabCount = await tabs.count();
-      expect(tabCount).toBeGreaterThan(1);
+      const navigation = page.getByRole('navigation', { name: 'Osnova kurzu' });
+      const slideButtons = navigation.getByRole('button');
+      const slideCount = await slideButtons.count();
+      expect(slideCount).toBeGreaterThan(1);
+      await expect(page.getByRole('tablist')).toHaveCount(0);
 
-      const controlledPanelIds = new Set();
-      for (let index = 0; index < tabCount; index += 1) {
-        const tab = tabs.nth(index);
-        const tabId = await tab.getAttribute('id');
-        const panelId = await tab.getAttribute('aria-controls');
-        expect(tabId).toBeTruthy();
-        expect(panelId).toBeTruthy();
-        expect(controlledPanelIds.has(panelId)).toBe(false);
-        controlledPanelIds.add(panelId);
-      }
-
-      const activeTab = navigation.getByRole('tab', { selected: true });
-      const activeTabId = await activeTab.getAttribute('id');
-      const activePanelId = await activeTab.getAttribute('aria-controls');
-      await expect(page.locator(`#${activePanelId}`)).toHaveAttribute(
-        'aria-labelledby',
-        activeTabId,
-      );
-      await expect(activeTab).toHaveAttribute('aria-selected', 'true');
-      await tabs.nth(1).click();
-      await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true');
-      await expect(
-        page.locator(`#${await tabs.nth(1).getAttribute('aria-controls')}`),
-      ).toBeVisible();
-      await expect(tabs.nth(1)).toHaveAttribute('tabindex', '0');
-      await expect(tabs.first()).toHaveAttribute('tabindex', '-1');
+      const activeSlide = navigation.locator('button[aria-current="step"]');
+      await expect(activeSlide).toHaveCount(1);
+      await slideButtons.nth(1).click();
+      await expect(slideButtons.nth(1)).toHaveAttribute('aria-current', 'step');
     });
   }
 });

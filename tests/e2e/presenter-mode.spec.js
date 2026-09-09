@@ -8,7 +8,7 @@ test.describe('lesson projector and presenter modes', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-1-html5?mode=projector&slide=intro');
-    await expect(page.getByRole('navigation', { name: /Course outline/i })).toHaveCount(0);
+    await expect(page.getByRole('navigation', { name: /Osnova kurzu/i })).toHaveCount(0);
     await expect(page.getByText('01 / 04')).toBeVisible();
     await expect(page.getByText('Organizace a prostředí')).toBeVisible();
     await expect(page.locator('textarea, iframe')).toHaveCount(0);
@@ -22,7 +22,7 @@ test.describe('lesson projector and presenter modes', () => {
 
     await page.goto('/interactive-zwa-1-html5?mode=unknown&slide=intro');
     await expect(page.locator('[data-lesson-mode="student"]')).toBeVisible();
-    await expect(page.getByRole('navigation', { name: /Course outline/i })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: /Osnova kurzu/i })).toBeVisible();
   });
 
   test('projector keeps lesson teaching copy while stripping activity controls', async ({
@@ -34,10 +34,10 @@ test.describe('lesson projector and presenter modes', () => {
     await expect(page.getByRole('heading', { name: 'Úlohy – JavaScript' }).first()).toBeVisible();
     await expect(page.getByText(/Vytvořte proměnnou greeting/)).toBeVisible();
     await expect(page.locator('textarea, iframe')).toHaveCount(0);
-    await expect(page.getByText('In this browser session', { exact: true })).toHaveCount(0);
-    await expect(page.getByText('Files', { exact: true })).toHaveCount(0);
-    await expect(page.getByText('Preview', { exact: true })).toHaveCount(0);
-    await expect(page.getByText('Console', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('V tomto okně prohlížeče', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Soubory', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Náhled', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Konzole', { exact: true })).toHaveCount(0);
   });
 
   test('projector keeps CSS teaching text without editor mirrors or controls', async ({ page }) => {
@@ -47,7 +47,7 @@ test.describe('lesson projector and presenter modes', () => {
     await expect(page.getByText(/Vytvořte link na stylopis/)).toBeVisible();
     await expect(page.locator('textarea, iframe, pre[aria-hidden="true"]')).toHaveCount(0);
     await expect(page.getByText('Editor', { exact: true })).toHaveCount(0);
-    await expect(page.getByText('Preview', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Náhled', { exact: true })).toHaveCount(0);
   });
 
   test('arrow keys in editable fields do not change the active slide', async ({ page }) => {
@@ -66,8 +66,8 @@ test.describe('lesson projector and presenter modes', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-1-html5?mode=presenter&slide=intro');
-    await expect(page.getByRole('navigation', { name: /Presenter outline/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Open projector/i })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: /Osnova prezentujícího/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Otevřít projektor/i })).toBeVisible();
   });
 
   test('successful projector popup does not show the blocked-popup fallback', async ({ page }) => {
@@ -75,10 +75,12 @@ test.describe('lesson projector and presenter modes', () => {
 
     await page.goto('/interactive-zwa-1-html5?mode=presenter&slide=intro');
     const popupPromise = page.waitForEvent('popup');
-    await page.getByRole('button', { name: /Open projector/i }).click();
+    await page.getByRole('button', { name: /Otevřít projektor/i }).click();
     const popup = await popupPromise;
     await expect(popup).toHaveURL(/mode=projector.*slide=intro/);
-    await expect(page.getByRole('link', { name: /Open projector in this tab/i })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Otevřít projektor v tomto panelu/i })).toHaveCount(
+      0,
+    );
     await popup.close();
   });
 });

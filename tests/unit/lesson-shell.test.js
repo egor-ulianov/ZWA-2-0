@@ -35,8 +35,32 @@ test('lesson context exposes the shared lesson state hook', async () => {
 test('lesson outline is a named navigation landmark', async () => {
   const source = await readFile(path.join(root, 'src/components/lesson/LessonOutline.jsx'), 'utf8');
   assert.match(source, /<nav/);
-  assert.match(source, /Course outline/);
+  assert.match(source, /Osnova kurzu/);
   assert.match(source, /aria-current/);
+});
+
+test('shared lesson chrome uses Czech labels without legacy English copy', async () => {
+  const componentPaths = [
+    'LessonShell.jsx',
+    'LessonOutline.jsx',
+    'ProjectorStage.jsx',
+    'PresenterConsole.jsx',
+  ];
+  const sources = await Promise.all(
+    componentPaths.map((fileName) =>
+      readFile(path.join(root, 'src/components/lesson', fileName), 'utf8'),
+    ),
+  );
+  const source = sources.join('\n');
+  assert.match(source, /Osnova kurzu/);
+  assert.match(source, /Cíl lekce/);
+  assert.doesNotMatch(source, /Course outline|Learning objective/);
+});
+
+test('student mode keeps the outline as the only lesson navigation', async () => {
+  const source = await readFile(path.join(root, 'src/components/lesson/LessonShell.jsx'), 'utf8');
+  assert.match(source, /LessonOutline/);
+  assert.match(source, /resolvedMode !== 'student'/);
 });
 
 test('slide cards use solid portal panels without glass effects', async () => {
