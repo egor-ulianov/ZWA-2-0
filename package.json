@@ -25,7 +25,11 @@
     "quality": "npm test && npm run lint && npm run format:check && npm run typecheck && npm run security:scan && npm audit --omit=dev && npm run quality:health && npm run quality:docker && npm run build && npm run test:e2e"
   },
   "dependencies": {
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/lang-html": "^6.4.12",
+    "@codemirror/view": "^6.43.11",
     "@neondatabase/serverless": "^0.9.5",
+    "@uiw/react-codemirror": "^4.25.11",
     "@vercel/analytics": "^1.5.0",
     "next": "16.3.4",
     "react": "^18.3.1",

@@ -17,6 +17,7 @@ import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonS
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
 
 import {
   CSS_BASICS_INSPECTION,
@@ -354,18 +355,11 @@ function CssTaskEditor({ steps, stepIndex, onStepIndexChange }) {
           </button>
         ))}
       </div>
-      <label className="sr-only" htmlFor="css-task-editor">
-        {activeTab === 'css' ? 'Editor CSS' : 'Editor HTML'}
-      </label>
-      <textarea
-        id="css-task-editor"
-        aria-label="Editor HTML a CSS"
+      <SyntaxCodeEditor
         value={activeTab === 'css' ? cssCode : htmlCode}
-        onChange={(event) =>
-          activeTab === 'css' ? onCssChange(event.target.value) : onHtmlChange(event.target.value)
-        }
-        spellCheck={false}
-        className="min-h-[450px] w-full resize-y rounded-xl border border-zinc-200/60 bg-zinc-950 p-3 font-mono text-xs leading-5 text-zinc-100 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+        onChange={(value) => (activeTab === 'css' ? onCssChange(value) : onHtmlChange(value))}
+        language={activeTab}
+        label="Editor HTML a CSS"
       />
       <button
         type="button"

@@ -113,6 +113,9 @@ test.describe('runtime lesson task workspaces', () => {
       'aria-selected',
       'true',
     );
+    await expect(ide.locator('.cm-editor')).toBeVisible();
+    await expect(ide.locator('.cm-content')).toBeVisible();
+    await expect(ide.locator('.cm-gutters')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Předchozí', exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Další', exact: true })).toHaveCount(0);
 
