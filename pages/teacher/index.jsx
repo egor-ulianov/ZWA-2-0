@@ -1,5 +1,6 @@
 import React from 'react';
 import { buildNormalizationRequestBody, isAbortError, request } from '../../src/lib/apiClient.js';
+import TeacherWorkspaceShell from '../../src/components/teacher/TeacherWorkspaceShell.jsx';
 
 export default function TeacherNormalize() {
   const [auth, setAuth] = React.useState({ loading: true, username: '', error: '' });
@@ -68,34 +69,51 @@ export default function TeacherNormalize() {
     const result = st.result;
     const preview = result?.preview || [];
     return (
-      <section className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 shadow">
-        <div className="px-4 py-3 border-b border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between">
-          <h2 className="text-lg font-bold">Test {tn}</h2>
+      <section
+        className="portal-panel"
+        role="region"
+        aria-labelledby={`normalization-test-${tn}-title`}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--portal-border)] px-4 py-4 md:px-5">
+          <div>
+            <p className="portal-kicker">Grade review</p>
+            <h2 id={`normalization-test-${tn}-title`} className="mt-2 text-lg font-semibold">
+              Test {tn} normalization
+            </h2>
+          </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="text-xs px-3 py-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50"
+              className="portal-action portal-secondary-action px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => runNormalize(tn, true)}
               disabled={st.loading}
             >
-              Dry‑run
+              Dry run normalization for Test {tn}
             </button>
             <button
               type="button"
-              className="text-xs px-3 py-1 rounded-md border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 disabled:opacity-50"
+              className="portal-action px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => runNormalize(tn, false)}
               disabled={st.loading || !st.result?.runId}
             >
-              Apply
+              Apply normalization for Test {tn}
             </button>
           </div>
         </div>
-        <div className="p-4">
+        <div className="space-y-4 p-4 md:p-5">
+          <p className="text-sm leading-6 text-[var(--portal-text-muted)]">
+            Dry run before applying changes. Review the bounded preview, then apply only this
+            matching run.
+          </p>
           {st.loading ? (
-            <div className="text-sm text-zinc-600 dark:text-zinc-300">Processing…</div>
+            <div className="text-sm text-[var(--portal-text-muted)]" role="status" aria-live="polite">
+              Processing normalization…
+            </div>
           ) : null}
           {st.error ? (
-            <div className="text-sm text-rose-600 dark:text-rose-400">{st.error}</div>
+            <div className="text-sm text-[var(--portal-coral)]" role="alert">
+              {st.error}
+            </div>
           ) : null}
           {result ? (
             <div className="space-y-3">
@@ -104,33 +122,39 @@ export default function TeacherNormalize() {
                 <span className="ml-3 font-medium">Updated:</span> {result.updated ?? 0}
               </div>
               {Array.isArray(preview) && preview.length > 0 ? (
-                <div className="rounded-lg border border-zinc-200/60 dark:border-zinc-800 overflow-hidden">
+                <div className="overflow-hidden rounded border border-[var(--portal-border)]">
                   <table className="w-full text-sm">
-                    <thead className="bg-zinc-50/80 dark:bg-zinc-800/60">
+                    <thead className="bg-[var(--portal-surface-muted)]">
                       <tr>
-                        <th className="text-left px-3 py-2 font-semibold">Username</th>
-                        <th className="text-left px-3 py-2 font-semibold">Original</th>
-                        <th className="text-left px-3 py-2 font-semibold">New</th>
+                        <th scope="col" className="px-3 py-2 text-left font-semibold">
+                          Username
+                        </th>
+                        <th scope="col" className="px-3 py-2 text-left font-semibold">
+                          Original
+                        </th>
+                        <th scope="col" className="px-3 py-2 text-left font-semibold">
+                          New
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {preview.slice(0, 20).map((it) => (
-                        <tr key={it.username} className="odd:bg-white/50 dark:odd:bg-zinc-900/40">
-                          <td className="px-3 py-2">{it.username}</td>
-                          <td className="px-3 py-2">{it.originalPoints}</td>
-                          <td className="px-3 py-2">{it.normalizedPoints}</td>
+                      {preview.slice(0, 20).map((item) => (
+                        <tr key={item.username} className="border-t border-[var(--portal-border)]">
+                          <td className="px-3 py-2">{item.username}</td>
+                          <td className="px-3 py-2">{item.originalPoints}</td>
+                          <td className="px-3 py-2">{item.normalizedPoints}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                   {preview.length > 20 ? (
-                    <div className="px-3 py-2 text-xs text-zinc-600 dark:text-zinc-300">
+                    <div className="border-t border-[var(--portal-border)] px-3 py-2 text-xs text-[var(--portal-text-muted)]">
                       Showing first 20 of {preview.length} rows…
                     </div>
                   ) : null}
                 </div>
               ) : (
-                <div className="text-sm text-zinc-600 dark:text-zinc-300">
+                <div className="text-sm text-[var(--portal-text-muted)]">
                   {result.updated > 0 ? 'Applied.' : 'No preview available.'}
                 </div>
               )}
@@ -143,53 +167,43 @@ export default function TeacherNormalize() {
 
   if (auth.loading) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-        <main className="max-w-4xl mx-auto p-6">
-          <div className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-6">
-            <p className="text-zinc-600 dark:text-zinc-300">Loading…</p>
-          </div>
-        </main>
-      </div>
+      <TeacherWorkspaceShell
+        title="Grade normalization"
+        description="Review grade changes safely with a dry run before applying any normalization."
+        activeSection="normalization"
+      >
+        <section className="portal-panel p-6" role="status" aria-live="polite">
+          <p className="text-sm text-[var(--portal-text-muted)]">Loading…</p>
+        </section>
+      </TeacherWorkspaceShell>
     );
   }
 
   if (auth.error) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-        <main className="max-w-4xl mx-auto p-6">
-          <div className="rounded-2xl border border-rose-300/40 dark:border-rose-900/40 bg-white/70 dark:bg-zinc-900/60 p-6">
-            <p className="text-rose-600 dark:text-rose-400">{auth.error}</p>
-          </div>
-        </main>
-      </div>
+      <TeacherWorkspaceShell
+        title="Grade normalization"
+        description="Review grade changes safely with a dry run before applying any normalization."
+        activeSection="normalization"
+      >
+        <section className="portal-panel p-6" role="alert">
+          <p className="text-sm text-[var(--portal-coral)]">{auth.error}</p>
+        </section>
+      </TeacherWorkspaceShell>
     );
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-zinc-50 to-sky-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-900 dark:text-zinc-50">
-      <div className="max-w-5xl mx-auto p-4 md:p-8 relative">
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-          <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-sky-300/40 dark:bg-sky-500/20 blur-3xl" />
-          <div className="absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-fuchsia-300/40 dark:bg-fuchsia-500/20 blur-3xl" />
-        </div>
-
-        <header className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Teacher – Normalize Grades</h1>
-            <p className="text-xs md:text-sm text-zinc-500 mt-1">Username: <span className="font-semibold text-zinc-700 dark:text-zinc-200">{auth.username}</span></p>
-          </div>
-        </header>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <TeacherWorkspaceShell
+      title="Grade normalization"
+      description="Review grade changes safely with a dry run before applying any normalization."
+      username={auth.username}
+      activeSection="normalization"
+    >
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {[1,2,3,4].map((tn) => <Panel key={tn} tn={tn} />)}
-        </div>
-
-        <footer className="mt-8 text-sm text-zinc-500">
-          © 2025 ZWA – Teacher view
-        </footer>
       </div>
-    </div>
+    </TeacherWorkspaceShell>
   );
 }
-
 
