@@ -8,17 +8,22 @@ const playgroundLessons = [
     name: 'HTML5 static preview',
     href: '/interactive-zwa-1-html5?slide=tasks',
     verify: async (page) => {
-      await expect(page.getByRole('tablist', { name: 'Kroky úlohy HTML' })).toBeVisible();
+      await expect(page.getByRole('tablist', { name: 'Soubory IDE' })).toBeVisible();
     },
   },
   {
     name: 'HTML forms interaction',
-    href: '/interactive-zwa-2-forms?slide=playground',
+    href: '/interactive-zwa-2-forms?slide=forms-task-standard',
     verify: async (page) => {
-      await page.getByRole('button', { name: 'Vyzkoušet' }).first().click();
-      await expect(page.getByLabel('Jméno')).toBeVisible();
-      await page.getByLabel('Jméno').fill('Ada');
-      await expect(page.getByLabel('Jméno')).toHaveValue('Ada');
+      const editor = page.getByRole('textbox', { name: 'Editor HTML formuláře' });
+      await editor.fill(`<!doctype html>
+<html lang="cs"><body>
+  <form><label for="name">Jméno</label><input id="name" name="name"></form>
+</body></html>`);
+      const preview = page.frameLocator('iframe[title="Náhled HTML formuláře"]');
+      await expect(preview.getByLabel('Jméno')).toBeVisible();
+      await preview.getByLabel('Jméno').fill('Ada');
+      await expect(preview.getByLabel('Jméno')).toHaveValue('Ada');
     },
   },
   {
@@ -149,7 +154,7 @@ test('JavaScript exercise workspace exposes exactly three Czech task regions', a
   await expect(page.getByRole('button', { name: 'Spustit testy' })).toBeVisible();
   await expect(page.getByText('Plocha úkolu', { exact: true })).toBeVisible();
   await expect(page.getByText('JavaScript v tomto okně prohlížeče', { exact: true })).toBeVisible();
-  await expect(workspace.getByRole('tablist', { name: 'Kroky úlohy JavaScript' })).toBeVisible();
+  await expect(workspace.getByRole('tablist', { name: 'Soubory IDE' })).toBeVisible();
   await expect(workspace.getByRole('textbox', { name: 'main.js — Editor' })).toBeVisible();
   await expect(page.getByText('Náhled', { exact: true })).toBeVisible();
   await expect(page.getByText('Výsledky testů', { exact: true })).toBeVisible();

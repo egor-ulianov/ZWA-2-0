@@ -64,7 +64,9 @@ test.describe('public catalog and lesson navigation', () => {
     await expect(page.getByRole('navigation', { name: 'Navigace mezi snímky' })).toHaveCount(0);
     await expect(page.getByText('Lekce 1', { exact: true }).first()).toBeVisible();
     await expect(
-      page.getByRole('navigation', { name: 'Osnova kurzu' }).getByRole('button', { name: 'Úkoly' }),
+      page
+        .getByRole('navigation', { name: 'Osnova kurzu' })
+        .getByRole('button', { name: 'Kostra dokumentu' }),
     ).toHaveAttribute('aria-current', 'step');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect.poll(() => new URL(page.url()).hash).toBe('');
@@ -87,14 +89,14 @@ test.describe('public catalog and lesson navigation', () => {
     await expect(page.getByRole('tablist')).toHaveCount(0);
     await expect(page.getByRole('tabpanel')).toHaveCount(0);
     const slides = outline.getByRole('button');
-    await expect(slides).toHaveCount(4);
+    await expect(slides).toHaveCount(6);
 
     await slides.nth(1).click();
     await expect(slides.nth(1)).toHaveAttribute('aria-current', 'step');
     await expect(page).toHaveURL(/slide=sections/);
 
     await page.keyboard.press('End');
-    await expect(slides.nth(3)).toHaveAttribute('aria-current', 'step');
+    await expect(slides.nth(5)).toHaveAttribute('aria-current', 'step');
     await page.keyboard.press('Home');
     await expect(slides.nth(0)).toHaveAttribute('aria-current', 'step');
   });

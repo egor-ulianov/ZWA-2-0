@@ -9,7 +9,7 @@ test.describe('lesson projector and presenter modes', () => {
 
     await page.goto('/interactive-zwa-1-html5?mode=projector&slide=intro');
     await expect(page.getByRole('navigation', { name: /Osnova kurzu/i })).toHaveCount(0);
-    await expect(page.getByText('01 / 04')).toBeVisible();
+    await expect(page.getByText('01 / 06')).toBeVisible();
     await expect(page.getByText('Organizace a prostředí')).toBeVisible();
     await expect(page.locator('textarea, iframe')).toHaveCount(0);
 
@@ -31,7 +31,7 @@ test.describe('lesson projector and presenter modes', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-5-js?mode=projector&slide=tasks');
-    await expect(page.getByRole('heading', { name: 'Úlohy – JavaScript' }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: '1) Proměnné a typy' }).first()).toBeVisible();
     await expect(page.locator('[data-projector-private]')).toHaveCount(0);
     await expect(
       page.locator('textarea, iframe, [role="tablist"], [contenteditable="true"]'),

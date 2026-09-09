@@ -6,18 +6,21 @@ import { installDeterministicNetwork } from './helpers/browser.js';
 const cases = [
   {
     route: '/interactive-zwa-10-sessions-cookies?slide=tasks',
-    assignment: 'Nastavte cookie s tématem vzhledu',
-    expected: 'Ukázky nastaví bezpečné atributy cookie',
+    assignment: 'Nastavte theme=dark na 7 dní',
+    expected: 'Cookie má bezpečné atributy',
+    sourceFile: 'sessions.php',
   },
   {
     route: '/interactive-zwa-11-files-json?slide=tasks',
-    assignment: 'První experimenty se soubory',
-    expected: 'Výsledný serverový program čte a zapisuje data',
+    assignment: 'Vytvořte data.txt',
+    expected: 'Program bezpečně zapíše a přečte',
+    sourceFile: 'users.lib.php',
   },
   {
     route: '/interactive-zwa-12-auth?slide=tasks',
-    assignment: 'Přihlašovací formulář',
-    expected: 'Přihlášení ověřuje hash hesla',
+    assignment: 'Vytvořte přihlašovací formulář',
+    expected: 'Formulář předá heslo přes POST',
+    sourceFile: 'auth.php',
   },
 ];
 
@@ -33,7 +36,7 @@ test.describe('student task workspace consistency for lessons 10–12', () => {
 
       await expect(assignment).toContainText(testCase.assignment);
       await expect(assignment).toContainText('Konkrétní vstup studenta:');
-      await expect(ide).toContainText('PHP');
+      await expect(ide.getByRole('tab', { name: testCase.sourceFile })).toBeVisible();
       await expect(ide.locator('.cm-editor')).toBeVisible();
       await expect(preview).toContainText(testCase.expected);
       await expect(preview).toContainText('Statická kontrola');
