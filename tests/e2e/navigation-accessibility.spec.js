@@ -27,6 +27,7 @@ test.describe('public catalog and lesson navigation', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/student');
+    await expect(page.getByRole('main')).toHaveCount(1);
     const username = page.getByLabel('Username');
     const code = page.getByLabel('Auth code');
     const signIn = page.getByRole('button', { name: 'Sign in' });

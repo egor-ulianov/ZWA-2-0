@@ -74,14 +74,14 @@ export default function TeacherNormalize() {
         role="region"
         aria-labelledby={`normalization-test-${tn}-title`}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-[var(--portal-border)] px-4 py-4 md:px-5">
-          <div>
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--portal-border)] px-4 py-4 md:px-5">
+          <div className="min-w-0">
             <p className="portal-kicker">Grade review</p>
             <h2 id={`normalization-test-${tn}-title`} className="mt-2 text-lg font-semibold">
               Test {tn} normalization
             </h2>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
             <button
               type="button"
               className="portal-action portal-secondary-action px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
@@ -206,4 +206,3 @@ export default function TeacherNormalize() {
     </TeacherWorkspaceShell>
   );
 }
-
