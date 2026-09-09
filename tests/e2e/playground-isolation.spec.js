@@ -126,7 +126,7 @@ test('projector output has one main landmark and no private playground or presen
 
   await expect(page.getByRole('main')).toHaveCount(1);
   await expect(page.getByRole('tablist')).toHaveCount(0);
-  await expect(page.getByText('Presenter notes', { exact: true })).toHaveCount(0);
+  await expect(page.locator('[data-projector-private="presenter-notes"]')).toHaveCount(0);
   await expect(page.locator('[data-projector-private]')).toHaveCount(0);
   await expect(
     page.getByText('Před spuštěním testů požádejte o předpověď výsledku pro jeden vstup.', {

@@ -76,3 +76,11 @@ test('slide cards keep tab semantics only for presenter mode', async () => {
   assert.match(source, /role=\{isPresenter \? 'tabpanel' : 'region'\}/);
   assert.match(source, /aria-labelledby=\{isPresenter \? tabId : headingId\}/);
 });
+
+test('presenter notes declare the projector-private boundary', async () => {
+  const source = await readFile(
+    path.join(root, 'src/components/lesson/PresenterConsole.jsx'),
+    'utf8',
+  );
+  assert.match(source, /data-projector-private="presenter-notes"/);
+});

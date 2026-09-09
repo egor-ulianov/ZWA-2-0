@@ -102,7 +102,7 @@ export default function PresenterConsole({ lesson, slides = [], activeSlide, onC
           </div>
         </div>
 
-        <div className="portal-panel p-5">
+        <div className="portal-panel p-5" data-projector-private="presenter-notes">
           <p className="portal-kicker">Poznámky prezentujícího</p>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6">
             {active?.presenterNotes ||

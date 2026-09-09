@@ -31,6 +31,18 @@ All required focused checks pass after implementation:
 - `npm run format:check` — passed.
 - `git diff --check` — passed.
 
+## P2 follow-up — presenter notes privacy assertion
+
+Replaced the stale English `Presenter notes` projector assertion in `tests/e2e/playground-isolation.spec.js` with a language-independent structural check. The presenter notes panel now carries `data-projector-private="presenter-notes"`, and projector E2E asserts that marker (and all other private markers) never appears. This verifies the privacy boundary without coupling the check to English or Czech copy.
+
+P2 verification:
+
+- `node --test tests/unit/lesson-shell.test.js` — 9 passed.
+- `npm run test:e2e -- tests/e2e/playground-isolation.spec.js` — 8 passed.
+- `npm run lint` — passed with `--max-warnings=0`.
+- `npm run format:check` — passed.
+- `git diff --check` — passed.
+
 ## Files changed
 
 - `src/components/lesson/LessonShell.jsx`
