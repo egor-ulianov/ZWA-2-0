@@ -14,6 +14,11 @@ test('teacher can sign in, edit roster data, and retry a conflicted attendance s
   const conflictPending = new Promise((resolve) => {
     releaseConflict = resolve;
   });
+  let attendanceDateReadCount = 0;
+  let releaseConflictReload;
+  const conflictReloadPending = new Promise((resolve) => {
+    releaseConflictReload = resolve;
+  });
   const initialAttendance = { alice: false, bob: true };
   const progressByUser = {
     alice: {
@@ -54,6 +59,8 @@ test('teacher can sign in, edit roster data, and retry a conflicted attendance s
       if (!url.searchParams.has('date')) {
         return fulfillJson(route, { overview: { '2026-09-08': initialAttendance } });
       }
+      attendanceDateReadCount += 1;
+      if (attendanceDateReadCount === 2) await conflictReloadPending;
       return fulfillJson(
         route,
         {
@@ -113,6 +120,12 @@ test('teacher can sign in, edit roster data, and retry a conflicted attendance s
   } finally {
     releaseConflict();
   }
+
+  await expect.poll(() => attendanceDateReadCount).toBe(2);
+  await expect(aliceAttendance).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Mark visible students present' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Export CSV' })).toBeDisabled();
+  releaseConflictReload();
 
   const conflict = page
     .getByRole('alert')
@@ -289,6 +302,113 @@ test('teacher disables date-dependent attendance writes while a selected day loa
   expect(postCount).toBe(0);
 });
 
+test('teacher ignores stale date responses and blocks export after the selected date fails', async ({
+  page,
+}) => {
+  await installDeterministicNetwork(page);
+
+  const firstDate = '2030-01-02';
+  const secondDate = '2030-01-03';
+  const failedDate = '2030-01-04';
+  let releaseFirstDate;
+  let releaseSecondDate;
+  const firstDatePending = new Promise((resolve) => {
+    releaseFirstDate = resolve;
+  });
+  const secondDatePending = new Promise((resolve) => {
+    releaseSecondDate = resolve;
+  });
+  let releaseFailedDate;
+  const failedDatePending = new Promise((resolve) => {
+    releaseFailedDate = resolve;
+  });
+  let firstDateRequested = false;
+  let secondDateRequested = false;
+  let failedDateRequested = false;
+
+  await page.route('**/api/teacher/me', (route) => fulfillJson(route, { username: 'teacher' }));
+  await page.route('**/api/students', (route) =>
+    fulfillJson(route, {
+      count: 2,
+      students: [{ username: 'alice' }, { username: 'bob' }],
+    }),
+  );
+  await page.route('**/api/attendance**', async (route) => {
+    if (route.request().method() !== 'GET') return fulfillJson(route, { ok: true, revision: 4 });
+    const url = new URL(route.request().url());
+    if (!url.searchParams.has('date')) return fulfillJson(route, { overview: {} });
+    const requestedDate = url.searchParams.get('date');
+    if (requestedDate === firstDate) {
+      firstDateRequested = true;
+      await firstDatePending;
+      return fulfillJson(route, {
+        date: firstDate,
+        map: { alice: true, bob: false },
+        revision: 2,
+      });
+    }
+    if (requestedDate === secondDate) {
+      secondDateRequested = true;
+      await secondDatePending;
+      return fulfillJson(route, {
+        date: secondDate,
+        map: { alice: true, bob: true },
+        revision: 3,
+      });
+    }
+    if (requestedDate === failedDate) {
+      failedDateRequested = true;
+      await failedDatePending;
+      return fulfillJson(route, { error: 'Selected date unavailable' }, { status: 503 });
+    }
+    return fulfillJson(route, {
+      date: requestedDate,
+      map: { alice: false, bob: false },
+      revision: 1,
+    });
+  });
+  await page.route('**/api/progress', (route) => fulfillJson(route, { items: [] }));
+
+  await page.goto('/attendance');
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toContainText(
+    'Present: 0 of 2',
+  );
+
+  const dateInput = page.getByLabel('Attendance date');
+  await dateInput.fill(firstDate);
+  await expect.poll(() => firstDateRequested).toBe(true);
+  await page.evaluate((value) => {
+    const input = document.querySelector('#attendance-date');
+    input.removeAttribute('disabled');
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    setter.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }, secondDate);
+  await expect.poll(() => secondDateRequested).toBe(true);
+
+  releaseFirstDate();
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toContainText(
+    'Present: 0 of 2',
+  );
+  releaseSecondDate();
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toContainText(
+    'Present: 2 of 2',
+  );
+
+  await dateInput.fill(failedDate);
+  await expect.poll(() => failedDateRequested).toBe(true);
+  await expect(dateInput).toBeDisabled();
+  releaseFailedDate();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Selected date unavailable' }),
+  ).toBeVisible();
+
+  // A failed current-date response must not leave its previous verified map exportable.
+  await expect(page.getByRole('button', { name: 'Export CSV' })).toBeDisabled();
+});
+
 test('teacher retry persists the recovered attendance map before the next edit', async ({
   page,
 }) => {
@@ -367,6 +487,8 @@ test('teacher can retry a failed generated access-code request', async ({ page }
   await installDeterministicNetwork(page);
 
   let accessCodeAttempts = 0;
+  let ordinaryFieldAttempts = 0;
+  const progressBodies = [];
   const progress = {
     username: 'alice',
     assignment_task_checked: false,
@@ -394,12 +516,19 @@ test('teacher can retry a failed generated access-code request', async ({ page }
   await page.route('**/api/progress', async (route) => {
     if (route.request().method() === 'GET') return fulfillJson(route, { items: [progress] });
     const body = JSON.parse(route.request().postData() || '{}');
+    progressBodies.push(body);
     if (body.generate_access_code) {
       accessCodeAttempts += 1;
       if (accessCodeAttempts === 1) {
         return fulfillJson(route, { error: 'Access code service unavailable' }, { status: 503 });
       }
       return fulfillJson(route, { ok: true, item: progress, accessCode: 'one-time-code' });
+    }
+    if (body.assignment_topic) {
+      ordinaryFieldAttempts += 1;
+      if (ordinaryFieldAttempts === 1) {
+        return fulfillJson(route, { error: 'Ordinary field save unavailable' }, { status: 503 });
+      }
     }
     return fulfillJson(route, { ok: true, item: { ...progress, ...body } });
   });
@@ -415,7 +544,18 @@ test('teacher can retry a failed generated access-code request', async ({ page }
     .getByRole('alert')
     .filter({ hasText: 'Access code service unavailable' });
   await expect(accessCodeFailure).toBeVisible();
-  await accessCodeFailure.getByRole('button', { name: 'Retry' }).click();
-  await expect.poll(() => accessCodeAttempts).toBe(2);
-  await expect(aliceRow.getByRole('status')).toContainText('Access code generated. Copy it now');
+  await aliceRow.getByLabel('Semestral topic').fill('A topic that fails once');
+  const ordinaryFieldFailure = aliceRow
+    .getByRole('alert')
+    .filter({ hasText: 'Ordinary field save unavailable' });
+  await expect(ordinaryFieldFailure).toBeVisible();
+  await ordinaryFieldFailure.getByRole('button', { name: 'Retry' }).click();
+  await expect.poll(() => ordinaryFieldAttempts).toBe(2);
+  expect(accessCodeAttempts).toBe(1);
+  expect(progressBodies.at(-1)).toMatchObject({
+    username: 'alice',
+    assignment_topic: 'A topic that fails once',
+  });
+  expect(progressBodies.at(-1)).not.toHaveProperty('generate_access_code');
+  await expect(aliceRow.getByLabel('Semestral topic')).toHaveValue('A topic that fails once');
 });

@@ -101,6 +101,7 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
     } catch (error) {
       if (!isAbortError(error)) {
         failed = true;
+        accessCodeRetryRef.current = false;
         pendingRef.current = { ...patch, ...pendingRef.current };
         failedRef.current = { ...failedRef.current, ...patch };
         setStatus((current) => ({ ...current, error: error.message || 'Unable to save progress' }));
@@ -116,6 +117,7 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
   }, [onSavePatch, username]);
 
   function change(patch) {
+    accessCodeRetryRef.current = false;
     for (const field of Object.keys(patch)) {
       fieldVersionsRef.current.set(field, (fieldVersionsRef.current.get(field) || 0) + 1);
       dirtyFieldsRef.current.add(field);
