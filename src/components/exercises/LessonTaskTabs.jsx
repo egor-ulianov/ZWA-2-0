@@ -17,15 +17,26 @@ export default function LessonTaskTabs({ tasks, activeTaskId, onChange, label })
   );
 
   function onKeyDown(event, index) {
-    const isTaskNavigationKey = ['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key);
+    const isTaskNavigationKey = [
+      'ArrowRight',
+      'ArrowDown',
+      'ArrowLeft',
+      'ArrowUp',
+      'Home',
+      'End',
+    ].includes(event.key);
     if (isTaskNavigationKey) {
       event.preventDefault();
       event.stopPropagation();
     }
 
     let nextIndex = index;
-    if (event.key === 'ArrowRight') nextIndex = index === tasks.length - 1 ? 0 : index + 1;
-    if (event.key === 'ArrowLeft') nextIndex = index === 0 ? tasks.length - 1 : index - 1;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = index === tasks.length - 1 ? 0 : index + 1;
+    }
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      nextIndex = index === 0 ? tasks.length - 1 : index - 1;
+    }
     if (event.key === 'Home') nextIndex = 0;
     if (event.key === 'End') nextIndex = tasks.length - 1;
     if (nextIndex === index) return;

@@ -192,6 +192,30 @@ test.describe('runtime lesson task workspaces', () => {
     }
   });
 
+  test('task choice up and down keys do not escape the lesson slide', async ({ page }) => {
+    const cases = [
+      { route: '/interactive-zwa-1-html5?slide=tasks', tablist: 'Kroky úlohy HTML' },
+      { route: '/interactive-zwa-2-forms?slide=tasks', tablist: 'Kroky úlohy formulářů' },
+      { route: '/interactive-zwa-5-css-ii?slide=tasks', tablist: 'Kroky úlohy CSS II' },
+    ];
+
+    for (const testCase of cases) {
+      await installDeterministicNetwork(page);
+      await page.goto(testCase.route);
+      const firstTask = page
+        .getByRole('region', { name: 'IDE' })
+        .getByRole('tablist', { name: testCase.tablist })
+        .getByRole('tab')
+        .first();
+
+      await firstTask.focus();
+      await firstTask.press('ArrowUp');
+      await expect(page).toHaveURL(new RegExp(`${testCase.route.replace('?', '\\?')}$`));
+      await firstTask.press('ArrowDown');
+      await expect(page).toHaveURL(new RegExp(`${testCase.route.replace('?', '\\?')}$`));
+    }
+  });
+
   test('HTML and form task selectors keep students in the unified workspace', async ({ page }) => {
     const cases = [
       {
