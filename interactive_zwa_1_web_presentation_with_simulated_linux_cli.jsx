@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import portraitImg from './src/interactive-zwa-1/assets/portrait.png';
 import discordLogo from './src/interactive-zwa-1/assets/discord-logo.png';
 import telegramQr from './src/interactive-zwa-1/assets/telegram-qr.png';
@@ -346,15 +346,22 @@ const NETWORK_TASKS = [
     body: 'Pomocí simulátoru ověřte A, NS nebo TXT záznam domény cvut.cz příkazem host či nslookup.',
     requirement: 'dns',
     examples: ['host cvut.cz', 'nslookup -type=ns cvut.cz', 'host 147.32.85.229'],
-    solution: '$ host cvut.cz\ncvut.cz má adresu 147.32.0.1\n$ nslookup -type=ns cvut.cz\nNS\tcvut.cz\tns.cvut.cz',
+    solution:
+      '$ host cvut.cz\ncvut.cz má adresu 147.32.0.1\n$ nslookup -type=ns cvut.cz\nNS\tcvut.cz\tns.cvut.cz',
   },
   {
     id: 'network-task-local',
     title: 'Lokální síť a konektivita: ifconfig / ping',
     body: 'Zobrazte lokální rozhraní a ověřte, že rozumíte IP adrese, masce, MAC a latenci.',
     requirement: 'ifconfig',
-    examples: ['ifconfig', 'ifconfig > ifconfigresult.txt', 'grep 192.168. ifconfigresult.txt', 'ping seznam.cz'],
-    solution: '$ ifconfig\neth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n        inet 192.168.1.57  netmask 255.255.255.0  broadcast 192.168.1.255\n        ether 02:42:ac:11:00:02  txqueuelen 1000  (Ethernet)',
+    examples: [
+      'ifconfig',
+      'ifconfig > ifconfigresult.txt',
+      'grep 192.168. ifconfigresult.txt',
+      'ping seznam.cz',
+    ],
+    solution:
+      '$ ifconfig\neth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n        inet 192.168.1.57  netmask 255.255.255.0  broadcast 192.168.1.255\n        ether 02:42:ac:11:00:02  txqueuelen 1000  (Ethernet)',
   },
   {
     id: 'network-task-traceroute',
@@ -362,7 +369,8 @@ const NETWORK_TASKS = [
     body: 'Vypište jednotlivé směrovače, přes které simulovaný paket putuje k cíli.',
     requirement: 'traceroute',
     examples: ['traceroute fel.cvut.cz', 'traceroute seznam.cz'],
-    solution: '$ traceroute fel.cvut.cz\n1\t192.168.1.1\t1.0 ms\n2\t10.0.0.1\t3.2 ms\n3\t147.32.85.229\t13.0 ms',
+    solution:
+      '$ traceroute fel.cvut.cz\n1\t192.168.1.1\t1.0 ms\n2\t10.0.0.1\t3.2 ms\n3\t147.32.85.229\t13.0 ms',
   },
   {
     id: 'network-task-telnet',
@@ -370,7 +378,8 @@ const NETWORK_TASKS = [
     body: 'Připojte se v simulátoru na port 80 a prohlédněte si ukázku syrové HTTP odpovědi.',
     requirement: 'telnet',
     examples: ['telnet zwa.toad.cz 80'],
-    solution: '$ telnet zwa.toad.cz 80\nPřipojeno k zwa.toad.cz.\nGET / HTTP/1.1\nHost: zwa.toad.cz\n\nHTTP/1.1 200 OK\nContent-Type: text/html; charset=utf-8',
+    solution:
+      '$ telnet zwa.toad.cz 80\nPřipojeno k zwa.toad.cz.\nGET / HTTP/1.1\nHost: zwa.toad.cz\n\nHTTP/1.1 200 OK\nContent-Type: text/html; charset=utf-8',
   },
 ];
 
@@ -500,9 +509,7 @@ function useLegacyTaskAlias(slideList, legacyId, firstTaskId) {
   const navigationSlides = useMemo(
     () =>
       aliasRequested
-        ? slideList.map((slide) =>
-            slide.id === firstTaskId ? { ...slide, id: legacyId } : slide,
-          )
+        ? slideList.map((slide) => (slide.id === firstTaskId ? { ...slide, id: legacyId } : slide))
         : slideList,
     [aliasRequested, firstTaskId, legacyId, slideList],
   );
@@ -984,29 +991,32 @@ function TerminalPanel({ clearKey, onCommand }) {
 
 export default function App() {
   const { run } = useInterpreter();
-  const [clearKey, setClearKey] = useState(0);
-  const [commandLog, setCommandLog] = useState([]);
-  const [checklistChecked, setChecklistChecked] = useState(false);
+  const [clearKeys, setClearKeys] = useState({});
+  const [commandLogs, setCommandLogs] = useState({});
+  const [checklistChecked, setChecklistChecked] = useState({});
 
-  async function handleCommand(cmd) {
+  async function handleCommand(cmd, taskId) {
     const out = await run(cmd);
     if (out === '__CLEAR__') {
       // trigger terminal remount to clear history
-      setClearKey((k) => k + 1);
-      setCommandLog([]);
-      setChecklistChecked(false);
+      setClearKeys((keys) => ({ ...keys, [taskId]: (keys[taskId] || 0) + 1 }));
+      setCommandLogs((logs) => ({ ...logs, [taskId]: [] }));
+      setChecklistChecked((checked) => ({ ...checked, [taskId]: false }));
       return '';
     }
-    setCommandLog((logs) => [...logs, cmd].slice(-50));
-    setChecklistChecked(false);
+    setCommandLogs((logs) => ({
+      ...logs,
+      [taskId]: [...(logs[taskId] || []), cmd].slice(-50),
+    }));
+    setChecklistChecked((checked) => ({ ...checked, [taskId]: false }));
     return out;
   }
 
-  const { activeSlide, setActiveSlide, slides: navigationSlides } = useLegacyTaskAlias(
-    slides,
-    'tasks-net',
-    NETWORK_TASKS[0].id,
-  );
+  const {
+    activeSlide,
+    setActiveSlide,
+    slides: navigationSlides,
+  } = useLegacyTaskAlias(slides, 'tasks-net', NETWORK_TASKS[0].id);
   const current = navigationSlides.find((s) => s.id === activeSlide) || navigationSlides[0];
   const activeNetworkTask =
     NETWORK_TASKS.find((task) => task.id === current.id) ||
@@ -1024,16 +1034,20 @@ export default function App() {
       footerText="© 2025 ZWA – Interaktivní výuková ukázka (Egor Ulianov)"
       maxWidthClass="max-w-7xl"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className={activeNetworkTask ? 'grid grid-cols-1 gap-6 lg:grid-cols-2' : ''}>
         <div>
-          <LessonSlideContent slide={current} commandLog={commandLog} />
+          <LessonSlideContent
+            slide={current}
+            commandLog={commandLogs[activeNetworkTask?.id] || []}
+          />
         </div>
-
-        <div>
-          {activeNetworkTask ? (
+        {activeNetworkTask && (
+          <div>
             <LessonTaskWorkspace
               privateMarker="network-exercise"
-              onRunTests={() => setChecklistChecked(true)}
+              onRunTests={() =>
+                setChecklistChecked((checked) => ({ ...checked, [activeNetworkTask.id]: true }))
+              }
               task={
                 <>
                   <p>{activeNetworkTask.body}</p>
@@ -1049,7 +1063,12 @@ export default function App() {
                     {
                       id: 'terminal',
                       label: 'terminál',
-                      panel: <TerminalPanel clearKey={clearKey} onCommand={handleCommand} />,
+                      panel: (
+                        <TerminalPanel
+                          clearKey={`${activeNetworkTask.id}-${clearKeys[activeNetworkTask.id] || 0}`}
+                          onCommand={(command) => handleCommand(command, activeNetworkTask.id)}
+                        />
+                      ),
                     },
                   ]}
                   solution={{
@@ -1068,16 +1087,14 @@ export default function App() {
               }
               preview={
                 <TaskChecklist
-                  commandLog={commandLog}
-                  checked={checklistChecked}
+                  commandLog={commandLogs[activeNetworkTask.id] || []}
+                  checked={checklistChecked[activeNetworkTask.id] || false}
                   requirementIds={[activeNetworkTask.requirement]}
                 />
               }
             />
-          ) : (
-            <TerminalPanel clearKey={clearKey} onCommand={handleCommand} />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </LessonShell>
   );

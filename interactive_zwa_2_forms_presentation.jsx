@@ -459,23 +459,52 @@ function FormsPlayground() {
   );
 }
 
-function defaultFormChecks(text) {
+function runFormTaskChecks(text, taskId) {
   const issues = [];
   const must = (re, msg) => {
     if (!re.test(text)) issues.push(msg);
   };
   must(/<!doctype\s+html>/i, 'Chybí <!doctype html>');
-  must(/<form[^>]*>/i, 'Chybí <form>');
-  if (!/type="email"/i.test(text)) issues.push('Zvažte použít input[type=email] pro e‑mail');
-  if (/type="tel"/i.test(text) && !/pattern=/i.test(text)) {
-    issues.push('Pro telefon zvažte atribut pattern');
+  if (taskId === 'forms-task-standard') {
+    must(/<form[^>]*>/i, 'Chybí <form>');
+    must(/<label[^>]*for=/i, 'Doplňte <label> s atributem for');
+    must(/<textarea[^>]*>/i, 'Doplňte <textarea>');
+    must(/<select[^>]*>/i, 'Doplňte <select>');
+    must(/<button[^>]*>/i, 'Doplňte tlačítko');
+  }
+  if (taskId === 'forms-task-grouping') {
+    must(/<fieldset[^>]*>/i, 'Doplňte <fieldset>');
+    must(/<legend[^>]*>/i, 'Doplňte <legend>');
+  }
+  if (taskId === 'forms-task-attributes') {
+    ['readonly', 'disabled', 'autocomplete', 'autofocus'].forEach((attribute) => {
+      if (!new RegExp(`\\b${attribute}(?:=|\\s|>)`, 'i').test(text)) {
+        issues.push(`Doplňte atribut ${attribute}`);
+      }
+    });
+  }
+  if (taskId === 'forms-task-inputs') {
+    ['email', 'date', 'color', 'range', 'url'].forEach((type) => {
+      if (!new RegExp(`type="${type}"`, 'i').test(text)) issues.push(`Doplňte input typu ${type}`);
+    });
+  }
+  if (taskId === 'forms-task-meter') {
+    must(/<meter[^>]*\bvalue=/i, 'Doplňte meter s hodnotou');
+    must(/<progress[^>]*\bvalue=/i, 'Doplňte progress s hodnotou');
+  }
+  if (taskId === 'forms-task-datalist') {
+    must(/<input[^>]*\blist=/i, 'Input musí používat atribut list');
+    must(/<datalist[^>]*\bid=/i, 'Doplňte datalist s id');
   }
   return { issues, passed: issues.length === 0 };
 }
 
 const FormTaskContext = createContext(null);
 
-const FormTaskProvider = forwardRef(function FormTaskProvider({ initialHtml, children }, ref) {
+const FormTaskProvider = forwardRef(function FormTaskProvider(
+  { initialHtml, taskId, children },
+  ref,
+) {
   const [html, setHtml] = useState(initialHtml);
   const [checking, setChecking] = useState(false);
   const [results, setResults] = useState(null);
@@ -501,7 +530,14 @@ const FormTaskProvider = forwardRef(function FormTaskProvider({ initialHtml, chi
 
   return (
     <FormTaskContext.Provider
-      value={{ html, setHtml, checking, results, validateOnline, local: defaultFormChecks(html) }}
+      value={{
+        html,
+        setHtml,
+        checking,
+        results,
+        validateOnline,
+        local: runFormTaskChecks(html, taskId),
+      }}
     >
       {children}
     </FormTaskContext.Provider>
@@ -1333,6 +1369,39 @@ const FORM_REFERENCE_SOLUTIONS = {
   ].join('\n'),
 };
 
+const FORM_TASK_STARTERS = {
+  'forms-task-standard': [
+    '<!doctype html>',
+    '<html lang="cs"><head><meta charset="utf-8"><title>Standardní prvky</title></head>',
+    '<body><form>\n  \n</form></body></html>',
+  ].join('\n'),
+  'forms-task-grouping': [
+    '<!doctype html>',
+    '<html lang="cs"><head><meta charset="utf-8"><title>Seskupení polí</title></head>',
+    '<body><form>\n  \n</form></body></html>',
+  ].join('\n'),
+  'forms-task-attributes': [
+    '<!doctype html>',
+    '<html lang="cs"><head><meta charset="utf-8"><title>Atributy</title></head>',
+    '<body><form>\n  \n</form></body></html>',
+  ].join('\n'),
+  'forms-task-inputs': [
+    '<!doctype html>',
+    '<html lang="cs"><head><meta charset="utf-8"><title>HTML5 inputy</title></head>',
+    '<body><form>\n  \n</form></body></html>',
+  ].join('\n'),
+  'forms-task-meter': [
+    '<!doctype html>',
+    '<html lang="cs"><head><meta charset="utf-8"><title>Meter a progress</title></head>',
+    '<body>\n  <meter min="0" max="100" value="0"></meter>\n  <progress max="100" value="0"></progress>\n</body></html>',
+  ].join('\n'),
+  'forms-task-datalist': [
+    '<!doctype html>',
+    '<html lang="cs"><head><meta charset="utf-8"><title>Datalist</title></head>',
+    '<body>\n  <label for="city">Město</label>\n  <input id="city" name="city" list="cities">\n  <datalist id="cities"></datalist>\n</body></html>',
+  ].join('\n'),
+};
+
 const slides = [
   { id: 'overview', title: 'Přehled', activityType: 'learn' },
   { id: 'playground', title: 'Sekce', activityType: 'build' },
@@ -1346,9 +1415,7 @@ function useLegacyTaskAlias(slideList, legacyId, firstTaskId) {
   const navigationSlides = useMemo(
     () =>
       aliasRequested
-        ? slideList.map((slide) =>
-            slide.id === firstTaskId ? { ...slide, id: legacyId } : slide,
-          )
+        ? slideList.map((slide) => (slide.id === firstTaskId ? { ...slide, id: legacyId } : slide))
         : slideList,
     [aliasRequested, firstTaskId, legacyId, slideList],
   );
@@ -1356,11 +1423,11 @@ function useLegacyTaskAlias(slideList, legacyId, firstTaskId) {
 }
 
 export default function AppFormsLesson2() {
-  const { activeSlide, setActiveSlide, slides: navigationSlides } = useLegacyTaskAlias(
-    slides,
-    'tasks',
-    FORM_TASKS[0].id,
-  );
+  const {
+    activeSlide,
+    setActiveSlide,
+    slides: navigationSlides,
+  } = useLegacyTaskAlias(slides, 'tasks', FORM_TASKS[0].id);
   const formsTaskRef = useRef(null);
   const currentSlide =
     navigationSlides.find((slide) => slide.id === activeSlide) || navigationSlides[0];
@@ -1464,23 +1531,10 @@ export default function AppFormsLesson2() {
         {activeTask && (
           <div className="space-y-3">
             <FormTaskProvider
+              key={activeTask.id}
               ref={formsTaskRef}
-              initialHtml={[
-                '<!doctype html>',
-                '<html lang="cs">',
-                '  <head>',
-                '    <meta charset="utf-8">',
-                '    <title>Formulář</title>',
-                '  </head>',
-                '  <body>',
-                '    <form>',
-                '      <label for="email">E-mail</label>',
-                '      <input id="email" type="email" required>',
-                '      <button>Odeslat</button>',
-                '    </form>',
-                '  </body>',
-                '</html>',
-              ].join('\n')}
+              initialHtml={FORM_TASK_STARTERS[activeTask.id]}
+              taskId={activeTask.id}
             >
               <LessonTaskWorkspace
                 privateMarker="forms-exercise"

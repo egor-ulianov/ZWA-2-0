@@ -97,6 +97,41 @@ test.describe('early lesson theory and task outline', () => {
     }
   });
 
+  test('switching an HTML5 outline task starts that task with its own draft', async ({ page }) => {
+    await installDeterministicNetwork(page);
+    await page.goto('/interactive-zwa-1-html5?slide=html-task-skeleton');
+
+    const ide = page.getByRole('region', { name: 'IDE' });
+    const editor = ide.locator('[data-code-editor="syntax"] .cm-content');
+    await editor.click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.type('TEST-STATE-NEPŘENÁŠET');
+
+    await page
+      .getByRole('navigation', { name: 'Osnova kurzu' })
+      .getByRole('button', { name: 'Sémantická struktura', exact: true })
+      .click();
+    await expect(ide.locator('[data-code-editor="syntax"] .cm-content')).not.toContainText(
+      'TEST-STATE-NEPŘENÁŠET',
+    );
+  });
+
+  test('each forms task opens a starter that matches its assignment', async ({ page }) => {
+    await installDeterministicNetwork(page);
+    await page.goto('/interactive-zwa-2-forms?slide=forms-task-meter');
+
+    await expect(page.getByRole('region', { name: 'IDE' }).locator('.cm-content')).toContainText(
+      '<meter',
+    );
+    await page
+      .getByRole('navigation', { name: 'Osnova kurzu' })
+      .getByRole('button', { name: 'Datalist', exact: true })
+      .click();
+    await expect(page.getByRole('region', { name: 'IDE' }).locator('.cm-content')).toContainText(
+      '<datalist',
+    );
+  });
+
   test('network task alias opens the first terminal task and has no legacy task sidebar', async ({
     page,
   }) => {
@@ -125,5 +160,13 @@ test.describe('early lesson theory and task outline', () => {
         .getByRole('region', { name: 'IDE' })
         .locator('[data-solution-panel] [contenteditable="false"]'),
     ).toHaveCount(1);
+  });
+
+  test('network theory does not render a terminal outside a task workspace', async ({ page }) => {
+    await installDeterministicNetwork(page);
+    await page.goto('/interactive-zwa-1?slide=theory');
+
+    await expect(page.getByRole('textbox')).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'IDE' })).toHaveCount(0);
   });
 });

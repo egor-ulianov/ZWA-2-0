@@ -84,7 +84,7 @@ function MinimalTaskTemplate() {
   ].join('\n');
 }
 
-function runHtmlTaskChecks(text) {
+function runHtmlTaskChecks(text, taskId) {
   const issues = [];
   const req = (re, msg) => {
     if (!re.test(text)) issues.push(msg);
@@ -96,23 +96,31 @@ function runHtmlTaskChecks(text) {
   req(/<meta[^>]*viewport/i, 'Chybí <meta name="viewport"> (doporučeno)');
   req(/<title>[^<]+<\/title>/i, 'Chybí <title>');
   req(/<body[^>]*>/i, 'Chybí <body>');
-  ['header', 'nav', 'section', 'article', 'aside', 'figure', 'figcaption', 'footer'].forEach(
-    (tag) => {
-      if (!new RegExp(`<${tag}[^>]*>`, 'i').test(text)) issues.push(`Doplňte <${tag}> (sémantika)`);
-    },
-  );
-  req(/<img[^>]*alt=/i, 'Obrázek musí mít atribut alt');
-  if (!/(<table[\s\S]*?<th[\s\S]*?<td[\s\S]*?<\/table>)/i.test(text)) {
-    issues.push('Tabulka by měla obsahovat hlavičku (<th>) i buňky (<td>)');
+  if (taskId === 'html-task-semantic') {
+    ['header', 'nav', 'main', 'section', 'article', 'aside', 'footer'].forEach((tag) => {
+      if (!new RegExp(`<${tag}[^>]*>`, 'i').test(text)) {
+        issues.push(`Doplňte <${tag}> (sémantika)`);
+      }
+    });
   }
-  req(/colspan\s*=\s*"\d+"/i, 'V tabulce použijte alespoň jeden colspan');
-  req(/rowspan\s*=\s*"\d+"/i, 'V tabulce použijte alespoň jeden rowspan');
+  if (taskId === 'html-task-media') {
+    req(/<figure[^>]*>[\s\S]*<img[^>]*alt=[\s\S]*<\/figure>/i, 'Obrázek s alt vložte do <figure>');
+    req(/<figcaption[^>]*>/i, 'Doplňte <figcaption>');
+    if (!/(<table[\s\S]*?<th[\s\S]*?<td[\s\S]*?<\/table>)/i.test(text)) {
+      issues.push('Tabulka by měla obsahovat hlavičku (<th>) i buňky (<td>)');
+    }
+    req(/colspan\s*=\s*"\d+"/i, 'V tabulce použijte alespoň jeden colspan');
+    req(/rowspan\s*=\s*"\d+"/i, 'V tabulce použijte alespoň jeden rowspan');
+  }
   return { issues, passed: issues.length === 0 };
 }
 
 const HtmlTaskContext = createContext(null);
 
-const HtmlTaskProvider = forwardRef(function HtmlTaskProvider({ children, initialHtml }, ref) {
+const HtmlTaskProvider = forwardRef(function HtmlTaskProvider(
+  { children, initialHtml, taskId },
+  ref,
+) {
   const [html, setHtml] = useState(() => initialHtml || MinimalTaskTemplate());
   const [checking, setChecking] = useState(false);
   const [results, setResults] = useState(null);
@@ -138,7 +146,14 @@ const HtmlTaskProvider = forwardRef(function HtmlTaskProvider({ children, initia
 
   return (
     <HtmlTaskContext.Provider
-      value={{ html, setHtml, checking, results, validateOnline, local: runHtmlTaskChecks(html) }}
+      value={{
+        html,
+        setHtml,
+        checking,
+        results,
+        validateOnline,
+        local: runHtmlTaskChecks(html, taskId),
+      }}
     >
       {children}
     </HtmlTaskContext.Provider>
@@ -403,7 +418,10 @@ const TaskEditorHtml = forwardRef(function TaskEditorHtml(_, ref) {
 
 function SectionTabs({ theory, example, id }) {
   return (
-    <section id={id} className="space-y-3 rounded-2xl border border-zinc-200/60 bg-white/70 p-5 dark:border-zinc-800 dark:bg-zinc-900/60">
+    <section
+      id={id}
+      className="space-y-3 rounded-2xl border border-zinc-200/60 bg-white/70 p-5 dark:border-zinc-800 dark:bg-zinc-900/60"
+    >
       <div className="text-sm text-zinc-700 dark:text-zinc-300">{theory}</div>
       <div>
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
@@ -433,10 +451,6 @@ function HtmlSections() {
     </>
   );
   const exampleSkeleton = MinimalHtml5Skeleton();
-  function TrySkeleton() {
-    return <Playground />;
-  }
-
   const theorySemantic = (
     <>
       <p>
@@ -464,14 +478,6 @@ function HtmlSections() {
     '  <footer>© 2025</footer>',
     '</main>',
   ].join('\n');
-  function TrySemantic() {
-    return (
-      <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-4 text-sm">
-        Upravte skeleton v části Úkol tak, aby používal výše uvedené sémantické značky.
-      </div>
-    );
-  }
-
   const theoryBasics = (
     <>
       <p>
@@ -506,15 +512,6 @@ function HtmlSections() {
     '<figure>\n  <img src="https://placehold.co/320x180" alt="Ukázkový obrázek" />\n  <figcaption>Popisek obrázku</figcaption>\n</figure>',
     '<table>\n  <tr><th>Jméno</th><th>Body</th></tr>\n  <tr><td>Ada</td><td>10</td></tr>\n</table>',
   ].join('\n');
-  function TryBasics() {
-    return (
-      <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-4 text-sm">
-        Do Úkolu doplňte: nadpis, odstavec se <Code>strong</Code>/<Code>em</Code>, seznam{' '}
-        <Code>ul/li</Code>, odkaz <Code>a</Code> (s bezpečnými atributy), a tabulku.
-      </div>
-    );
-  }
-
   const theoryMedia = (
     <>
       <p>
@@ -548,92 +545,12 @@ function HtmlSections() {
     '  <tr><td>A</td><td>10</td></tr>',
     '</table>',
   ].join('\n');
-  function TryMedia() {
-    return (
-      <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-4 text-sm">
-        Doplňte do Úkolu obrázek s <Code>alt</Code> a tabulku s <Code>th</Code> a <Code>td</Code>.
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
-      <SectionTabs
-        id="basics"
-        theory={theoryBasics}
-        example={exampleBasics}
-        Try={TryBasics}
-        validate={{}}
-        taskText={
-          <>
-            <p>Do editoru níže doplňte:</p>
-            <ul className="list-disc pl-5">
-              <li>
-                Nadpis <Code>h1</Code> a odstavec <Code>p</Code> se <Code>strong</Code>/
-                <Code>em</Code>
-              </li>
-              <li>
-                Seznam <Code>ul/li</Code> a odkaz <Code>a</Code> s bezpečnými atributy
-              </li>
-              <li>
-                Tabulku s <Code>th</Code> a <Code>td</Code>
-              </li>
-            </ul>
-          </>
-        }
-      />
-      <SectionTabs
-        id="skeleton"
-        theory={theorySkeleton}
-        example={exampleSkeleton}
-        Try={TrySkeleton}
-        validate={{}}
-        taskText={
-          <>
-            <p>
-              Vytvořte minimální validní skeleton s <Code>&lt;!doctype html&gt;</Code>,{' '}
-              <Code>&lt;html&gt;</Code>, <Code>&lt;head&gt;</Code> (včetně{' '}
-              <Code>&lt;meta charset&gt;</Code>, <Code>&lt;title&gt;</Code>) a{' '}
-              <Code>&lt;body&gt;</Code>.
-            </p>
-          </>
-        }
-      />
-      <SectionTabs
-        id="semantic"
-        theory={theorySemantic}
-        example={exampleSemantic}
-        Try={TrySemantic}
-        validate={{}}
-        taskText={
-          <>
-            <p>
-              Doplňte do těla dokumentu sémantické prvky: <Code>header</Code>, <Code>nav</Code>,{' '}
-              <Code>section</Code>, <Code>article</Code>, <Code>aside</Code>, <Code>figure</Code> +{' '}
-              <Code>figcaption</Code>, <Code>footer</Code>.
-            </p>
-          </>
-        }
-      />
-      <SectionTabs
-        id="media"
-        theory={theoryMedia}
-        example={exampleMedia}
-        Try={TryMedia}
-        validate={{}}
-        taskText={
-          <>
-            <p>
-              Přidejte obrázek s povinným <Code>alt</Code> a tabulku s hlavičkou (<Code>th</Code>) a
-              buňkami (<Code>td</Code>).
-            </p>
-            <p className="mt-1">
-              Zahrňte alespoň jeden <Code>colspan</Code> a jeden <Code>rowspan</Code> pro sloučení
-              buněk.
-            </p>
-          </>
-        }
-      />
+      <SectionTabs id="basics" theory={theoryBasics} example={exampleBasics} />
+      <SectionTabs id="skeleton" theory={theorySkeleton} example={exampleSkeleton} />
+      <SectionTabs id="semantic" theory={theorySemantic} example={exampleSemantic} />
+      <SectionTabs id="media" theory={theoryMedia} example={exampleMedia} />
     </div>
   );
 }
@@ -739,9 +656,7 @@ function useLegacyTaskAlias(slideList, legacyId, firstTaskId) {
   const navigationSlides = useMemo(
     () =>
       aliasRequested
-        ? slideList.map((slide) =>
-            slide.id === firstTaskId ? { ...slide, id: legacyId } : slide,
-          )
+        ? slideList.map((slide) => (slide.id === firstTaskId ? { ...slide, id: legacyId } : slide))
         : slideList,
     [aliasRequested, firstTaskId, legacyId, slideList],
   );
@@ -749,11 +664,11 @@ function useLegacyTaskAlias(slideList, legacyId, firstTaskId) {
 }
 
 export default function AppHtml5() {
-  const { activeSlide, setActiveSlide, slides: navigationSlides } = useLegacyTaskAlias(
-    slides,
-    'tasks',
-    HTML_TASKS[0].id,
-  );
+  const {
+    activeSlide,
+    setActiveSlide,
+    slides: navigationSlides,
+  } = useLegacyTaskAlias(slides, 'tasks', HTML_TASKS[0].id);
   const htmlTaskRef = useRef(null);
   const currentSlide =
     navigationSlides.find((slide) => slide.id === activeSlide) || navigationSlides[0];
@@ -842,7 +757,12 @@ export default function AppHtml5() {
 
         {activeTask && (
           <div className="space-y-3">
-            <HtmlTaskProvider ref={htmlTaskRef} initialHtml={activeTask.initialHtml}>
+            <HtmlTaskProvider
+              key={activeTask.id}
+              ref={htmlTaskRef}
+              initialHtml={activeTask.initialHtml}
+              taskId={activeTask.id}
+            >
               <LessonTaskWorkspace
                 privateMarker="html-exercise"
                 task={

@@ -59,6 +59,7 @@ const LANGUAGE_EXTENSIONS = Object.freeze({
   js: javascript,
   javascript,
   php: () => phpLanguage.extension,
+  text: () => [],
 });
 
 export default function SyntaxCodeEditor({
