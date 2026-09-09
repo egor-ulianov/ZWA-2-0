@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import portraitImg from './src/interactive-zwa-1/assets/portrait.png';
 import discordLogo from './src/interactive-zwa-1/assets/discord-logo.png';
 import telegramQr from './src/interactive-zwa-1/assets/telegram-qr.png';
@@ -347,7 +347,7 @@ const NETWORK_TASKS = [
     requirement: 'dns',
     examples: ['host cvut.cz', 'nslookup -type=ns cvut.cz', 'host 147.32.85.229'],
     solution:
-      '$ host cvut.cz\ncvut.cz má adresu 147.32.0.1\n$ nslookup -type=ns cvut.cz\nNS\tcvut.cz\tns.cvut.cz',
+      '$ host cvut.cz\ncvut.cz má adresu 147.32.0.1\n$ nslookup -type=ns cvut.cz\nNS\tcvut.cz\tns.cvut.cz\nNS\tcvut.cz\talbert.ics.cvut.cz\n$ nslookup -type=txt cvut.cz\nTXT\tcvut.cz\tv=spf1 include:_spf.cvut.cz ~all\n$ host 147.32.85.229\n147.32.85.229 ukazatel doménového jména fel.cvut.cz',
   },
   {
     id: 'network-task-local',
@@ -361,7 +361,7 @@ const NETWORK_TASKS = [
       'ping seznam.cz',
     ],
     solution:
-      '$ ifconfig\neth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n        inet 192.168.1.57  netmask 255.255.255.0  broadcast 192.168.1.255\n        ether 02:42:ac:11:00:02  txqueuelen 1000  (Ethernet)',
+      '$ ifconfig > ifconfigresult.txt\n(výstup přesměrován)\nzapsáno do ifconfigresult.txt\n$ grep 192.168. ifconfigresult.txt\n        inet 192.168.1.57  netmask 255.255.255.0  broadcast 192.168.1.255\n$ ping seznam.cz\n64 bajtů od 77.75.79.53: icmp_seq=1 ttl=56 čas=12.40 ms\n64 bajtů od 77.75.79.53: icmp_seq=2 ttl=56 čas=13.10 ms\n64 bajtů od 77.75.79.53: icmp_seq=3 ttl=56 čas=12.80 ms\n--- statistika pingu seznam.cz ---\nodeslány 3 pakety, přijaty 3, ztráta 0 %',
   },
   {
     id: 'network-task-traceroute',
@@ -1022,12 +1022,21 @@ export default function App() {
     NETWORK_TASKS.find((task) => task.id === current.id) ||
     (activeSlide === 'tasks-net' ? NETWORK_TASKS[0] : null);
 
+  function handleSlideChange(nextSlide) {
+    const nextTaskId = NETWORK_TASKS.find((task) => task.id === nextSlide)?.id || null;
+    if (nextTaskId !== activeNetworkTask?.id) {
+      setCommandLogs({});
+      setChecklistChecked({});
+    }
+    setActiveSlide(nextSlide);
+  }
+
   return (
     <LessonShell
       lesson={getLessonByNumber(3)}
       slides={navigationSlides}
       activeSlide={activeSlide}
-      onChange={setActiveSlide}
+      onChange={handleSlideChange}
       title="ZWA-1: Interaktivní webová prezentace"
       objective="Vysvětlíte cestu požadavku od DNS přes TCP až po HTTP a procvičíte diagnostické příkazy v simulovaném terminálu."
       subtitle="Simulovaná linuxová CLI vpravo →"

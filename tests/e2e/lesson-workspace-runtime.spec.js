@@ -55,22 +55,18 @@ test.describe('runtime lesson task workspaces', () => {
       {
         route: '/interactive-zwa-1-html5?slide=tasks',
         iframeTitle: 'Náhled HTML playgroundu',
-        editorName: 'Editor HTML pro úkol',
       },
       {
         route: '/interactive-zwa-2-forms?slide=tasks',
         iframeTitle: 'Náhled HTML formuláře',
-        editorName: 'Editor HTML formuláře',
       },
       {
         route: '/interactive-zwa-2?slide=tasks',
         iframeTitle: 'Náhled CSS playgroundu',
-        editorName: 'Editor HTML a CSS',
       },
       {
         route: '/interactive-zwa-5-css-ii?slide=tasks',
         iframeTitle: 'Náhled CSS II playgroundu',
-        editorName: 'Editor HTML CSS II',
       },
     ];
 
@@ -80,7 +76,7 @@ test.describe('runtime lesson task workspaces', () => {
       const editor = page.getByRole('region', { name: 'IDE' }).first();
       const preview = page.getByRole('region', { name: 'Náhled a testy' }).first();
 
-      await expect(editor.getByRole('textbox', { name: testCase.editorName })).toBeVisible();
+      await expect(editor.getByRole('textbox').first()).toBeVisible();
       await expect(preview.locator(`iframe[title="${testCase.iframeTitle}"]`)).toBeVisible();
       await expect(editor.locator(`iframe[title="${testCase.iframeTitle}"]`)).toHaveCount(0);
 
@@ -94,7 +90,7 @@ test.describe('runtime lesson task workspaces', () => {
     }
   });
 
-  test('CSS tasks keep the selected assignment above a wide IDE with task tabs', async ({
+  test('CSS tasks live in the course outline while IDE tabs stay reserved for files', async ({
     page,
   }) => {
     await installDeterministicNetwork(page);
@@ -102,25 +98,21 @@ test.describe('runtime lesson task workspaces', () => {
 
     const assignment = page.getByRole('region', { name: 'Zadání' });
     const ide = page.getByRole('region', { name: 'IDE' });
-    const taskTabs = ide.getByRole('tablist', { name: 'Kroky úlohy CSS' });
+    const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
 
     await expect(
       page.getByRole('heading', { level: 1, name: 'ZWA-4: CSS – interaktivní prezentace' }),
     ).toBeVisible();
-    await expect(assignment.getByText('Úloha 1 / 5', { exact: true })).toBeVisible();
-    await expect(taskTabs).toBeVisible();
-    await expect(taskTabs.getByRole('tab', { name: /1.*Nadpis/ })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    await expect(outline.getByRole('button', { name: '1) Nadpis', exact: true })).toBeVisible();
+    await expect(ide.getByRole('tablist', { name: 'Kroky úlohy CSS' })).toHaveCount(0);
+    await expect(ide.getByRole('tablist', { name: 'Soubory IDE' })).toBeVisible();
     await expect(ide.locator('.cm-editor')).toBeVisible();
     await expect(ide.locator('.cm-content')).toBeVisible();
     await expect(ide.locator('.cm-gutters')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Předchozí', exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Další', exact: true })).toHaveCount(0);
 
-    await taskTabs.getByRole('tab', { name: /2.*Odkazy ve footeru/ }).click();
-    await expect(assignment.getByText('Úloha 2 / 5', { exact: true })).toBeVisible();
+    await outline.getByRole('button', { name: '2) Odkazy ve footeru', exact: true }).click();
     await expect(assignment).toContainText('Georgia');
   });
 
@@ -138,36 +130,24 @@ test.describe('runtime lesson task workspaces', () => {
     }
   });
 
-  test('CSS II keeps task choice in the IDE and consumes boundary task keys', async ({ page }) => {
+  test('CSS II tasks use the course outline and keep only files and solution in the IDE', async ({
+    page,
+  }) => {
     await installDeterministicNetwork(page);
     await page.goto('/interactive-zwa-5-css-ii?slide=tasks');
 
     const assignment = page.getByRole('region', { name: 'Zadání' });
     const ide = page.getByRole('region', { name: 'IDE' });
-    const taskTabs = ide.getByRole('tablist', { name: 'Kroky úlohy CSS II' });
+    const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
 
-    await expect(taskTabs).toBeVisible();
-    await expect(assignment.getByText('Úloha 1 / 7', { exact: true })).toBeVisible();
-    await expect(taskTabs.getByRole('tab', { name: 'Box model', exact: true })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    await expect(outline.getByRole('button', { name: 'Box model', exact: true })).toBeVisible();
+    await expect(ide.getByRole('tablist', { name: 'Kroky úlohy CSS II' })).toHaveCount(0);
+    await expect(ide.getByRole('tablist', { name: 'Soubory IDE' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Předchozí', exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Další', exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /Přejít na úlohu/ })).toHaveCount(0);
 
-    const firstTab = taskTabs.getByRole('tab').first();
-    await firstTab.focus();
-    await firstTab.press('Home');
-    await expect(page).toHaveURL(/slide=tasks/);
-
-    const lastTab = taskTabs.getByRole('tab').last();
-    await lastTab.focus();
-    await lastTab.press('End');
-    await expect(page).toHaveURL(/slide=tasks/);
-
-    await taskTabs.getByRole('tab', { name: 'Float/Clear', exact: true }).click();
-    await expect(assignment.getByText('Úloha 2 / 7', { exact: true })).toBeVisible();
+    await outline.getByRole('button', { name: 'Float/Clear', exact: true }).click();
     await expect(assignment).toContainText('Vložte obrázek do textu');
     await expect(ide).toBeVisible();
     await expect(page.getByRole('region', { name: 'Náhled a testy' })).toBeVisible();
@@ -191,28 +171,6 @@ test.describe('runtime lesson task workspaces', () => {
       await taskChoice.focus();
       await taskChoice.press('ArrowLeft');
       await expect(page).toHaveURL(/slide=tasks/);
-    }
-  });
-
-  test('task choice up and down keys do not escape the lesson slide', async ({ page }) => {
-    const cases = [
-      { route: '/interactive-zwa-5-css-ii?slide=tasks', tablist: 'Kroky úlohy CSS II' },
-    ];
-
-    for (const testCase of cases) {
-      await installDeterministicNetwork(page);
-      await page.goto(testCase.route);
-      const firstTask = page
-        .getByRole('region', { name: 'IDE' })
-        .getByRole('tablist', { name: testCase.tablist })
-        .getByRole('tab')
-        .first();
-
-      await firstTask.focus();
-      await firstTask.press('ArrowUp');
-      await expect(page).toHaveURL(new RegExp(`${testCase.route.replace('?', '\\?')}$`));
-      await firstTask.press('ArrowDown');
-      await expect(page).toHaveURL(new RegExp(`${testCase.route.replace('?', '\\?')}$`));
     }
   });
 

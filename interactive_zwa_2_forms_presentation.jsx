@@ -477,7 +477,7 @@ function runFormTaskChecks(text, taskId) {
     must(/<legend[^>]*>/i, 'Doplňte <legend>');
   }
   if (taskId === 'forms-task-attributes') {
-    ['readonly', 'disabled', 'autocomplete', 'autofocus'].forEach((attribute) => {
+    ['readonly', 'disabled', 'autocomplete', 'autofocus', 'accesskey'].forEach((attribute) => {
       if (!new RegExp(`\\b${attribute}(?:=|\\s|>)`, 'i').test(text)) {
         issues.push(`Doplňte atribut ${attribute}`);
       }
@@ -1298,7 +1298,7 @@ const FORM_TASKS = [
   {
     id: 'forms-task-attributes',
     label: 'Atributy',
-    description: 'Vyzkoušejte readonly, disabled, autocomplete, autofocus a přístupové klávesy.',
+    description: 'Vyzkoušejte readonly, disabled, autocomplete, autofocus a accesskey.',
   },
   {
     id: 'forms-task-inputs',
@@ -1341,7 +1341,7 @@ const FORM_REFERENCE_SOLUTIONS = {
     '<body><form autocomplete="on">',
     '  <input type="text" name="readonly" value="jen pro čtení" readonly>',
     '  <input type="text" name="name" required autofocus>',
-    '  <button type="button" disabled>Nelze odeslat</button>',
+    '  <button type="button" accesskey="o" disabled>Nelze odeslat</button>',
     '</form></body></html>',
   ].join('\n'),
   'forms-task-inputs': [

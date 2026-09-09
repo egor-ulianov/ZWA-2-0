@@ -169,4 +169,26 @@ test.describe('early lesson theory and task outline', () => {
     await expect(page.getByRole('textbox')).toHaveCount(0);
     await expect(page.getByRole('region', { name: 'IDE' })).toHaveCount(0);
   });
+
+  test('network solution tabs contain every command sequence expected by their tasks', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+    await page.goto('/interactive-zwa-1?slide=network-task-dns');
+    const ide = page.getByRole('region', { name: 'IDE' });
+    const solutionTab = ide.getByRole('tab', { name: 'Řešení', exact: true });
+
+    await solutionTab.click();
+    await expect(ide.locator('[data-solution-panel]')).toContainText('nslookup -type=txt cvut.cz');
+
+    await page
+      .getByRole('navigation', { name: 'Osnova kurzu' })
+      .getByRole('button', { name: 'Lokální síť a konektivita: ifconfig / ping', exact: true })
+      .click();
+    await solutionTab.click();
+    await expect(ide.locator('[data-solution-panel]')).toContainText(
+      'grep 192.168. ifconfigresult.txt',
+    );
+    await expect(ide.locator('[data-solution-panel]')).toContainText('ping seznam.cz');
+  });
 });
