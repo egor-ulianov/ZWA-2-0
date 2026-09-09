@@ -762,10 +762,10 @@ export default function AppPhpLesson8() {
       slides={slides}
       activeSlide={activeSlide}
       onChange={setActiveSlide}
-      title="ZWA-8: PHP Basics – Malý test #2"
+      title="ZWA-8: Základy PHP – Malý test č. 2"
       objective="Použijete základní PHP syntaxi pro práci s datem, funkcemi, poli a parametry."
       subtitle="Interaktivní prezentace s ukázkami kódu pro PHP základy"
-      footerText="© 2025 ZWA – Cvičení 8: PHP Basics"
+      footerText="© 2025 ZWA – Cvičení 8: Základy PHP"
     >
       <LessonSlideContent slide={current} />
       {current.id === 'ssh' && <SshTutorial />}

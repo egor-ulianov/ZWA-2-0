@@ -16,7 +16,7 @@ export function SandboxedPreview({
   stepIndex = 0,
   inspection = [],
   onMessage,
-  title = 'Sandboxed playground preview',
+  title = 'Náhled izolovaného playgroundu',
   className = 'w-full min-h-40 rounded-lg border bg-white',
 }) {
   const frameRef = useRef(null);

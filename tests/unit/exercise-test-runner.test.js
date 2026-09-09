@@ -12,13 +12,13 @@ test('JavaScript definition run returns the exercise result contract itself', ()
   const result = definition.run({
     source: '',
     result: [
-      { ok: true, text: 'Code executed' },
+      { ok: true, text: 'Kód byl spuštěn' },
       { ok: false, text: 'Requirement failed', hint: 'Try again' },
     ],
   });
 
   assert.deepEqual(result, [
-    { id: 'javascript-step-1-1', ok: true, text: 'Code executed' },
+    { id: 'javascript-step-1-1', ok: true, text: 'Kód byl spuštěn' },
     {
       id: 'javascript-step-1-2',
       ok: false,
@@ -63,14 +63,14 @@ test('runner preserves bounded sandbox result messages while adding stable ids',
     {
       source: '',
       result: [
-        { ok: true, text: 'Code executed' },
+        { ok: true, text: 'Kód byl spuštěn' },
         { ok: false, text: 'Requirement failed' },
       ],
     },
   );
 
   assert.deepEqual(result, [
-    { id: 'javascript-step-1', ok: true, text: 'Code executed' },
+    { id: 'javascript-step-1', ok: true, text: 'Kód byl spuštěn' },
     { id: 'javascript-step-2', ok: false, text: 'Requirement failed' },
   ]);
 });

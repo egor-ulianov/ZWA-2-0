@@ -35,7 +35,7 @@ function sandboxPolicy(mode) {
   if (mode === 'inspect' || mode === 'javascript') {
     return { sandbox: 'allow-scripts' };
   }
-  throw new Error(`Unsupported sandbox mode: ${mode}`);
+  throw new Error(`Nepodporovaný režim sandboxu: ${mode}`);
 }
 
 function escapeAttribute(value) {
@@ -123,7 +123,10 @@ const INSPECTION_BOOTSTRAP = String.raw`(() => {
     const mount = document.getElementById("zwa-mount");
     appendHtml(mount, payload.html);
     send("ready");
-    requestAnimationFrame(() => {
+    // Hidden inspection frames may be positioned outside the viewport, where
+    // requestAnimationFrame can be throttled indefinitely. A bounded timer
+    // still waits for the DOM/styles to settle without blocking validation.
+    setTimeout(() => {
       const elements = payload.inspection.map(({ selector, properties }) => {
         let element = null;
         try { element = mount.querySelector(selector); } catch (_) {}
@@ -137,14 +140,14 @@ const INSPECTION_BOOTSTRAP = String.raw`(() => {
         return { selector, exists: Boolean(element), styles };
       });
       send("result", { value: { kind: "inspection", elements } });
-    });
+    }, 0);
   } catch (error) {
     send("error", { message: String(error && error.message || error).slice(0, 2000) });
   }
 })();`;
 
 function buildInspectionDocument({ html = '', css = '', inspection = [], token } = {}) {
-  if (!token) throw new Error('A sandbox token is required');
+  if (!token) throw new Error('Sandbox vyžaduje bezpečnostní token');
   const payload = serializePayload({
     channel: CHANNEL,
     version: VERSION,
@@ -203,7 +206,7 @@ const JAVASCRIPT_BOOTSTRAP = String.raw`(() => {
   window.confirm = () => false;
 
   const validate = (exportsObject) => {
-    const results = [{ ok: true, text: "Code executed" }];
+    const results = [{ ok: true, text: "Kód byl spuštěn" }];
     const add = (ok, message) => results.push({ ok: Boolean(ok), text: message });
     try {
       if (payload.stepIndex === 0) {
@@ -217,15 +220,15 @@ const JAVASCRIPT_BOOTSTRAP = String.raw`(() => {
         add(typeof exportsObject.total === "function" && exportsObject.total([1, 2, 3]) === 6, "total([1,2,3]) === 6");
       } else if (payload.stepIndex === 4) {
         const element = document.querySelector("#app");
-        add(element && String(element.textContent).includes("Hello JS"), "#app has text 'Hello JS'");
+          add(element && String(element.textContent).includes("Hello JS"), "#app obsahuje text 'Hello JS'");
       } else if (payload.stepIndex === 5) {
         const button = document.querySelector("#btn");
         const count = document.querySelector("#cnt");
         if (button && count) {
           button.dispatchEvent(new Event("click", { bubbles: true }));
-          add(Number(count.textContent || "0") >= 1, "Click increments #cnt");
+          add(Number(count.textContent || "0") >= 1, "Kliknutí zvýší #cnt");
         } else {
-          add(false, "DOM elements #btn/#cnt not found");
+          add(false, "Prvky DOM #btn/#cnt nebyly nalezeny");
         }
       } else if (payload.stepIndex === 6) {
         if (typeof exportsObject.notify === "function") {
@@ -240,7 +243,7 @@ const JAVASCRIPT_BOOTSTRAP = String.raw`(() => {
         }
       }
     } catch (error) {
-      add(false, "Validation error: " + String(error && error.message || error).slice(0, 500));
+      add(false, "Chyba validace: " + String(error && error.message || error).slice(0, 500));
     }
     return results;
   };
@@ -253,11 +256,11 @@ const JAVASCRIPT_BOOTSTRAP = String.raw`(() => {
   window.__zwaFail = (error) => {
     if (completed) return;
     completed = true;
-    send("error", { message: "Runtime error: " + String(error && error.message || error).slice(0, 500) });
+    send("error", { message: "Chyba běhu: " + String(error && error.message || error).slice(0, 500) });
   };
   window.addEventListener("error", (event) => {
     event.preventDefault();
-    window.__zwaFail(event.error || event.message || "Unknown runtime error");
+    window.__zwaFail(event.error || event.message || "Neznámá chyba běhu");
   });
 
   try {
@@ -276,7 +279,7 @@ const JAVASCRIPT_BOOTSTRAP = String.raw`(() => {
 })();`;
 
 function buildJavascriptDocument({ code = null, dom = '', stepIndex = 0, token } = {}) {
-  if (!token) throw new Error('A sandbox token is required');
+  if (!token) throw new Error('Sandbox vyžaduje bezpečnostní token');
   const payload = serializePayload({
     channel: CHANNEL,
     version: VERSION,

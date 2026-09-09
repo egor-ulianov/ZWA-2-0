@@ -7,7 +7,7 @@ import { lessons } from '../src/config/lessons.js';
 
 export default function Home() {
   return (
-    <PortalFrame meta="Course catalogue">
+    <PortalFrame meta="Katalog kurzu">
       <CourseRoadmap lessons={lessons} />
       <footer className="mx-auto flex w-full max-w-6xl justify-end px-4 pb-10 md:px-8">
         <Link

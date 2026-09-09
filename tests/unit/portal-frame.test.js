@@ -41,7 +41,7 @@ function contrastRatio(foreground, background) {
 
 test('portal frame uses textual course identity and no standalone Z mark', async () => {
   const source = await readFile(path.join(root, 'src/components/portal/PortalFrame.jsx'), 'utf8');
-  assert.match(source, /ZWA · Web Applications/);
+  assert.match(source, /ZWA · Webové aplikace/);
   assert.doesNotMatch(source, /w-symbol|aria-label=.Z logo/i);
 });
 

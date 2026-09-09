@@ -41,12 +41,12 @@ function validateCssBasics({ slideId, inspection, htmlCode, cssCode }) {
     );
     results.push({
       ok: hasLink,
-      text: 'Task: <link rel="stylesheet" href="styles.css"> is present',
+      text: 'Úloha: <link rel="stylesheet" href="styles.css"> je přítomen',
     });
     const title = styleFor(inspection, '#title');
     results.push({
       ok: Boolean(title && title.color === 'rgb(22, 163, 74)'),
-      text: 'Task: #title color is green from styles.css',
+      text: 'Úloha: barva #title je zelená ze styles.css',
     });
     return results;
   }
@@ -54,7 +54,7 @@ function validateCssBasics({ slideId, inspection, htmlCode, cssCode }) {
   const title = styleFor(inspection, '#title');
   results.push({
     ok: Boolean(title && title.color === 'rgb(29, 78, 216)' && title['font-size'] === '36px'),
-    text: 'Task 1: h1 is blue and 36px',
+    text: 'Úloha 1: h1 je modrý a má 36 px',
   });
 
   const footerLink = styleFor(inspection, 'footer a');
@@ -66,7 +66,7 @@ function validateCssBasics({ slideId, inspection, htmlCode, cssCode }) {
       footerLink.color === 'rgb(37, 99, 235)' &&
       hasVisitedRule,
     ),
-    text: 'Task 2: footer links styled incl. visited',
+    text: 'Úloha 2: odkazy v patičce mají styl včetně :visited',
   });
 
   const hasFirstLetter = /p\s*\.excerpt\s*::\s*first-letter/i.test(cssCode);
@@ -76,7 +76,7 @@ function validateCssBasics({ slideId, inspection, htmlCode, cssCode }) {
   );
   results.push({
     ok: hasFirstLetter && hasFirstLetterSize && hasFirstLetterBackground,
-    text: 'Task 3: first-letter styled',
+    text: 'Úloha 3: první písmeno je nastylované',
   });
 
   const submenu = styleFor(inspection, 'ol.submenu');
@@ -84,7 +84,7 @@ function validateCssBasics({ slideId, inspection, htmlCode, cssCode }) {
     ok: Boolean(
       submenu && ['lower-alpha', 'lower-alpha outside'].includes(submenu['list-style-type']),
     ),
-    text: 'Task 4: submenu uses lower-alpha',
+    text: 'Úloha 4: submenu používá lower-alpha',
   });
 
   results.push({
@@ -92,7 +92,7 @@ function validateCssBasics({ slideId, inspection, htmlCode, cssCode }) {
       /\.hero\s+img\s*:\s*hover/i.test(cssCode) &&
       /transform\s*:\s*scale\s*\(/i.test(cssCode) &&
       /transition\s*:\s*transform/i.test(cssCode),
-    text: 'Task 5: hover transform + transition',
+    text: 'Úloha 5: efekt hover mění velikost a používá přechod',
   });
   return results;
 }
@@ -112,54 +112,54 @@ function validateCssLayout({ stepIndex, inspection, htmlCode, cssCode }) {
     ['#site-header', '#menu', '#article', '#footer'].forEach((selector) => {
       results.push({
         ok: hasPositiveBoxStyle(styleFor(inspection, selector)),
-        text: `${selector} has some box model styling`,
+        text: `${selector} má nastavené vlastnosti box modelu`,
       });
     });
   } else if (stepIndex === 1) {
     const picture = styleFor(inspection, '#pic');
     results.push({
       ok: Boolean(picture && ['left', 'right'].includes(picture.float)),
-      text: '#pic floats left/right',
+      text: '#pic je obtékán vlevo/vpravo',
     });
     results.push({
       ok: /clear\s*:\s*both/i.test(cssCode) || /::after[\s\S]*clear\s*:\s*both/i.test(cssCode),
-      text: 'clearfix (clear: both) present',
+      text: 'clearfix (clear: both) je přítomen',
     });
   } else if (stepIndex === 2) {
     const picture = styleFor(inspection, '#pic');
     results.push({
       ok: Boolean(picture && picture.position && picture.position !== 'static'),
-      text: '#pic position is not static',
+      text: '#pic má neprázdnou vlastnost position',
     });
   } else if (stepIndex === 3) {
     const highlight = styleFor(inspection, '.hl');
     results.push({
       ok: Boolean(highlight && ['inline-block', 'block'].includes(highlight.display)),
-      text: '.hl display changed (block/inline-block)',
+      text: '.hl má změněné display (block/inline-block)',
     });
     results.push({
       ok: /\.hl[\s\S]*background/i.test(cssCode),
-      text: '.hl has background color',
+      text: '.hl má barvu pozadí',
     });
   } else if (stepIndex === 4) {
     const header = styleFor(inspection, '#site-header');
     results.push({
       ok: Boolean(header && header.display === 'flex'),
-      text: '#site-header uses display:flex',
+      text: '#site-header používá display:flex',
     });
     results.push({
       ok: /#site-header\s+button[\s\S]*margin-left\s*:\s*auto/i.test(cssCode),
-      text: '#site-header button has margin-left:auto',
+      text: '#site-header button má margin-left:auto',
     });
   } else if (stepIndex === 5) {
     results.push({
       ok: /@media\s*\(min-width:\s*800px\)/i.test(cssCode),
-      text: '@media(min-width:800px) present',
+      text: '@media(min-width:800px) je přítomen',
     });
   } else if (stepIndex === 6) {
     results.push({
       ok: /<link[^>]*rel=["']stylesheet["'][^>]*media=["']print["'][^>]*>/i.test(htmlCode),
-      text: '<link rel=stylesheet media=print> present',
+      text: '<link rel=stylesheet media=print> je přítomen',
     });
   }
   return results;

@@ -11,14 +11,16 @@ test.describe('public catalog and lesson navigation', () => {
     const response = await page.goto('/');
     expect(response).not.toBeNull();
     expect(response.ok()).toBe(true);
-    await expect(page.getByText('ZWA · Web Applications', { exact: true })).toBeVisible();
+    await expect(page.getByText('ZWA · Webové aplikace', { exact: true })).toBeVisible();
 
     await expect(page.getByRole('main').getByRole('link')).toHaveCount(12);
     await expect(
-      page.getByRole('link', { name: /Web Presentation with Simulated Linux CLI/ }),
+      page.getByRole('link', { name: /Webová prezentace se simulovanou linuxovou CLI/ }),
     ).toHaveAttribute('href', '/interactive-zwa-1');
 
-    await page.getByRole('link', { name: /Web Presentation with Simulated Linux CLI/ }).click();
+    await page
+      .getByRole('link', { name: /Webová prezentace se simulovanou linuxovou CLI/ })
+      .click();
     await expect(page).toHaveURL(/\/interactive-zwa-1\/?(?:\?slide=title)?$/);
     await expect(page.locator('h1').first()).toBeVisible();
   });
@@ -43,7 +45,7 @@ test.describe('public catalog and lesson navigation', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/');
-    const firstLesson = page.getByRole('link', { name: /Open lesson 1:/ }).first();
+    const firstLesson = page.getByRole('link', { name: /Otevřít lekci 1:/ }).first();
     await firstLesson.focus();
     await expect(firstLesson).toBeFocused();
     await firstLesson.press('Enter');

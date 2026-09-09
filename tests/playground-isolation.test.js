@@ -231,11 +231,11 @@ test('CSS validators preserve task outcomes from serialized iframe styles', () =
       cssCode: css,
     }),
     [
-      { ok: true, text: 'Task 1: h1 is blue and 36px' },
-      { ok: true, text: 'Task 2: footer links styled incl. visited' },
-      { ok: true, text: 'Task 3: first-letter styled' },
-      { ok: true, text: 'Task 4: submenu uses lower-alpha' },
-      { ok: true, text: 'Task 5: hover transform + transition' },
+      { ok: true, text: 'Úloha 1: h1 je modrý a má 36 px' },
+      { ok: true, text: 'Úloha 2: odkazy v patičce mají styl včetně :visited' },
+      { ok: true, text: 'Úloha 3: první písmeno je nastylované' },
+      { ok: true, text: 'Úloha 4: submenu používá lower-alpha' },
+      { ok: true, text: 'Úloha 5: efekt hover mění velikost a používá přechod' },
     ],
   );
   assert.deepEqual(
@@ -246,8 +246,8 @@ test('CSS validators preserve task outcomes from serialized iframe styles', () =
       cssCode: '#site-header button { margin-left: auto; }',
     }),
     [
-      { ok: true, text: '#site-header uses display:flex' },
-      { ok: true, text: '#site-header button has margin-left:auto' },
+      { ok: true, text: '#site-header používá display:flex' },
+      { ok: true, text: '#site-header button má margin-left:auto' },
     ],
   );
 });

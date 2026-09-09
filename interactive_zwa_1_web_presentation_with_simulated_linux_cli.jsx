@@ -25,7 +25,7 @@ class VFS {
     this.files.set(path, content);
   }
   read(path) {
-    if (!this.files.has(path)) throw new Error(`cat: ${path}: No such file`);
+    if (!this.files.has(path)) throw new Error(`cat: ${path}: Soubor neexistuje`);
     return this.files.get(path);
   }
   ls() {
@@ -125,13 +125,18 @@ function Terminal({ prompt = 'student@fel:~$', onCommand, height = 340 }) {
           ))}
           <div className="flex items-center gap-2">
             <span className="text-green-400">{prompt}</span>
+            <label className="sr-only" htmlFor="network-terminal-command">
+              Příkaz terminálu
+            </label>
             <input
+              id="network-terminal-command"
+              aria-label="Příkaz terminálu"
               className="bg-transparent flex-1 outline-none caret-white"
               autoFocus
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
-              placeholder="type a command and press Enter (try: help)"
+              placeholder="zadejte příkaz a stiskněte Enter (zkuste: help)"
             />
           </div>
           <div ref={endRef} />
@@ -147,24 +152,24 @@ function Terminal({ prompt = 'student@fel:~$', onCommand, height = 340 }) {
 function useInterpreter() {
   const vfs = useMemo(() => new VFS(), []);
 
-  const help = `Available commands:
-  help                     show this help
-  clear                    clear the screen
-  host <name|ip>          DNS lookup
+  const help = `Dostupné příkazy:
+  help                     zobrazí tuto nápovědu
+  clear                    vymaže obrazovku
+  host <name|ip>           vyhledání DNS
   nslookup [ -type=TYPE ] <name>
-  ifconfig                 show local interfaces
-  ipconfig                 alias for ifconfig (Windows name)
-  ping <host>              simulate three ICMP pings
-  traceroute <host>        show route hops
-  telnet <host> <port>     connect and send HTTP GET / (demo)
-  grep <pattern> <file>    simple grep
-  cat <file>               print file
-  ls                       list files
-  echo "text" > file       redirect output to a file
+  ifconfig                 zobrazí místní rozhraní
+  ipconfig                 alias pro ifconfig (název ve Windows)
+  ping <host>              simuluje tři ICMP pingy
+  traceroute <host>        zobrazí směrovací skoky
+  telnet <host> <port>     připojí se a odešle HTTP GET / (ukázka)
+  grep <pattern> <file>    jednoduché grep
+  cat <file>               vypíše soubor
+  ls                       vypíše soubory
+  echo "text" > file       přesměruje výstup do souboru
 
-Tips:
-- Try: host cvut.cz | host fel.cvut.cz | host 147.32.85.229
-- Try: ifconfig > ifconfigresult.txt then: grep 192.168. ifconfigresult.txt`;
+Tipy:
+- Zkuste: host cvut.cz | host fel.cvut.cz | host 147.32.85.229
+- Zkuste: ifconfig > ifconfigresult.txt a potom: grep 192.168. ifconfigresult.txt`;
 
   function parse(cmd) {
     // handle redirection: echo "text" > file OR any command ending with > file
@@ -183,61 +188,58 @@ Tips:
   }
 
   function doHost(target) {
-    if (!target) return 'usage: host <name|ip>';
+    if (!target) return 'použití: host <name|ip>';
     const rec = NET.dns[target];
-    if (!rec) return `Host ${target} not found: 3(NXDOMAIN)`;
+    if (!rec) return `Hostitel ${target} nebyl nalezen: 3(NXDOMAIN)`;
     const lines = [];
-    if (rec.A) rec.A.forEach((a) => lines.push(`${target} has address ${a}`));
-    if (rec.NS) rec.NS.forEach((ns) => lines.push(`${target} name server ${ns}`));
-    if (rec.TXT) rec.TXT.forEach((t) => lines.push(`${target} descriptive text \"${t}\"`));
-    if (rec.CAA) rec.CAA.forEach((c) => lines.push(`${target} has CAA record ${c}`));
-    if (rec.PTR) rec.PTR.forEach((p) => lines.push(`${target} domain name pointer ${p}`));
+    if (rec.A) rec.A.forEach((a) => lines.push(`${target} má adresu ${a}`));
+    if (rec.NS) rec.NS.forEach((ns) => lines.push(`${target} jmenný server ${ns}`));
+    if (rec.TXT) rec.TXT.forEach((t) => lines.push(`${target} popisný text \"${t}\"`));
+    if (rec.CAA) rec.CAA.forEach((c) => lines.push(`${target} má záznam CAA ${c}`));
+    if (rec.PTR) rec.PTR.forEach((p) => lines.push(`${target} ukazatel doménového jména ${p}`));
     return lines.join('\n');
   }
 
   function doNslookup(args) {
     // nslookup -type=ns cvut.cz
     const tokens = args.trim().split(/\s+/).filter(Boolean);
-    if (!tokens.length) return 'usage: nslookup [-type=TYPE] <name>';
+    if (!tokens.length) return 'použití: nslookup [-type=TYPE] <name>';
     let type = 'A';
     let name = tokens[tokens.length - 1];
     const typeFlag = tokens.find((t) => t.startsWith('-type='));
     if (typeFlag) type = typeFlag.split('=')[1].toUpperCase();
     const rec = NET.dns[name];
-    if (!rec) return `** server can't find ${name}: NXDOMAIN`;
+    if (!rec) return `** server nemůže najít ${name}: NXDOMAIN`;
     const values = rec[type];
-    if (!values) return `** server can't find ${name} for type ${type}`;
+    if (!values) return `** server nemůže najít ${name} pro typ ${type}`;
     return values.map((v) => `${type}\t${name}\t${v}`).join('\n');
   }
 
   function doPing(host) {
-    if (!host) return 'usage: ping <host>';
+    if (!host) return 'použití: ping <host>';
     const ip = NET.dns[host]?.A?.[0] || host;
     const rtts = [Math.random() * 10 + 10, Math.random() * 10 + 10, Math.random() * 10 + 10].map(
       (n) => n.toFixed(2),
     );
     return rtts
-      .map((r, i) => `64 bytes from ${ip}: icmp_seq=${i + 1} ttl=56 time=${r} ms`)
-      .concat(
-        `--- ${host} ping statistics ---`,
-        `3 packets transmitted, 3 received, 0% packet loss`,
-      )
+      .map((r, i) => `64 bajtů od ${ip}: icmp_seq=${i + 1} ttl=56 čas=${r} ms`)
+      .concat(`--- statistika pingu ${host} ---`, `odeslány 3 pakety, přijaty 3, ztráta 0 %`)
       .join('\n');
   }
 
   function doTraceroute(host) {
-    if (!host) return 'usage: traceroute <host>';
+    if (!host) return 'použití: traceroute <host>';
     const hops = NET.traceroutes[host];
-    if (!hops) return `traceroute: unknown host ${host}`;
+    if (!hops) return `traceroute: neznámý hostitel ${host}`;
     return hops.map((h) => `${h.hop}\t${h.host}\t${h.rtt.toFixed(1)} ms`).join('\n');
   }
 
   function doTelnet(host, port) {
-    if (!host || !port) return 'usage: telnet <host> <port>';
+    if (!host || !port) return 'použití: telnet <host> <port>';
     // Demo: we immediately "send" GET / and show a simple HTTP response
-    const status = `Trying ${NET.dns[host]?.A?.[0] || host}...
-Connected to ${host}.
-Escape character is '^]'.
+    const status = `Připojování k ${NET.dns[host]?.A?.[0] || host}...
+Připojeno k ${host}.
+Únikový znak je '^]'.
 GET / HTTP/1.1
 Host: ${host}
 User-Agent: terminal-sim\n\n`;
@@ -248,7 +250,7 @@ Content-Length: 32\n\n<html><body>Hello ZWA!</body></html>`;
   }
 
   function doGrep(pattern, file) {
-    if (!pattern || !file) return 'usage: grep <pattern> <file>';
+    if (!pattern || !file) return 'použití: grep <pattern> <file>';
     try {
       const text = vfs.read(file);
       const lines = text.split(/\r?\n/).filter((l) => l.includes(pattern));
@@ -319,13 +321,13 @@ Content-Length: 32\n\n<html><body>Hello ZWA!</body></html>`;
         break;
       }
       default:
-        output = `${cmd}: command not found`;
+        output = `${cmd}: příkaz nebyl nalezen`;
     }
 
     if (toFile) {
       const text = typeof output === 'string' ? output : JSON.stringify(output, null, 2);
       vfs.write(toFile, text);
-      return `(output redirected)\nwritten to ${toFile}`;
+      return `(výstup přesměrován)\nzapsáno do ${toFile}`;
     }
 
     return typeof output === 'object' && output?.__clear ? '__CLEAR__' : output;
@@ -1032,7 +1034,7 @@ function TerminalPanel({ clearKey, onCommand }) {
           </div>
           <div className="flex items-center gap-2 text-xs text-zinc-500">
             <kbd className="px-2 py-1 rounded bg-zinc-200/60 dark:bg-zinc-800">Enter</kbd>
-            <span>run command</span>
+            <span>spustit příkaz</span>
           </div>
         </div>
         <div className="p-3">
@@ -1041,8 +1043,8 @@ function TerminalPanel({ clearKey, onCommand }) {
         </div>
       </div>
       <div className="mt-3 text-xs text-zinc-500">
-        Note: This terminal is a classroom simulation (no real network calls). Outputs are
-        simplified to support the exercises.
+        Poznámka: Tento terminál je výuková simulace (bez skutečných síťových volání). Výstupy jsou
+        zjednodušené pro podporu úloh.
       </div>
     </div>
   );
@@ -1077,10 +1079,10 @@ export default function App() {
       slides={slides}
       activeSlide={activeSlide}
       onChange={setActiveSlide}
-      title="ZWA-1: Interactive Web Presentation"
+      title="ZWA-1: Interaktivní webová prezentace"
       objective="Vysvětlíte cestu požadavku od DNS přes TCP až po HTTP a procvičíte diagnostické příkazy v simulovaném terminálu."
-      subtitle="Simulated Linux CLI on the right →"
-      footerText="© 2025 ZWA – Interactive demo for teaching (Egor Ulianov)"
+      subtitle="Simulovaná linuxová CLI vpravo →"
+      footerText="© 2025 ZWA – Interaktivní výuková ukázka (Egor Ulianov)"
       maxWidthClass="max-w-7xl"
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

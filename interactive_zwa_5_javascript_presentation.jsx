@@ -125,13 +125,13 @@ function JsPlayground({ stepIndex }) {
             dom={templates.step.dom}
             stepIndex={stepIndex}
             onConsole={handleConsole}
-            title="JavaScript DOM sandbox"
+            title="Izolovaný JavaScript DOM sandbox"
             className="w-full min-h-[160px] rounded-xl border bg-white"
           />
         }
       />
       <div className="mt-3" data-projector-private="console">
-        <div className="font-semibold text-sm mb-1">Console</div>
+        <div className="font-semibold text-sm mb-1">Konzole</div>
         <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 min-h-[80px] max-h-[180px] overflow-auto text-xs">
           {logs.length === 0 && <div className="text-zinc-500">(žádné výstupy)</div>}
           {logs.map((l, i) => (
@@ -558,14 +558,14 @@ export default function AppJsLesson5() {
       slides={slides}
       activeSlide={activeSlide}
       onChange={setActiveSlide}
-      title="ZWA-6: Interactive JavaScript Presentation"
+      title="ZWA-6: Interaktivní prezentace JavaScriptu"
       objective="Procvičíte proměnné, funkce, DOM a události v JavaScriptu v bezpečném interaktivním playgroundu."
       subtitle={
         <>
-          Editor vlevo, DOM + Console vpravo. Exportujte řešení přes <Code>exports</Code>.
+          Editor vlevo, DOM + konzole vpravo. Exportujte řešení přes <Code>exports</Code>.
         </>
       }
-      footerText="© 2025 ZWA – Interactive JS lesson"
+      footerText="© 2025 ZWA – Interaktivní lekce JavaScriptu"
       maxWidthClass="max-w-7xl"
     >
       <div className={hasTasks ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : ''}>

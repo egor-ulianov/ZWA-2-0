@@ -1,10 +1,12 @@
 import React, {
+  createContext,
   forwardRef,
   useMemo,
   useRef,
   useState,
   useCallback,
   useImperativeHandle,
+  useContext,
 } from 'react';
 import SandboxedPreview from './src/components/playground/SandboxedPreview';
 import { getLessonByNumber } from './src/config/lessons.js';
@@ -15,12 +17,12 @@ import { clsx } from './src/components/lesson/classNames.js';
 import { scrollToId } from './src/components/lesson/navigation.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 
-function HtmlPreview({ html }) {
+function HtmlPreview({ html, title = 'Náhled HTML playgroundu' }) {
   return (
     <SandboxedPreview
       html={html}
       mode="static"
-      title="HTML playground preview"
+      title={title}
       className="w-full min-h-40 rounded-lg border bg-white"
     />
   );
@@ -80,6 +82,139 @@ function MinimalTaskTemplate() {
     '  </body>',
     '</html>',
   ].join('\n');
+}
+
+function runHtmlTaskChecks(text) {
+  const issues = [];
+  const req = (re, msg) => {
+    if (!re.test(text)) issues.push(msg);
+  };
+  req(/<!doctype\s+html>/i, 'Chybí <!doctype html>');
+  req(/<html[^>]*>/i, 'Chybí <html>');
+  req(/<head[^>]*>/i, 'Chybí <head>');
+  req(/<meta[^>]*charset=/i, 'Chybí <meta charset>');
+  req(/<meta[^>]*viewport/i, 'Chybí <meta name="viewport"> (doporučeno)');
+  req(/<title>[^<]+<\/title>/i, 'Chybí <title>');
+  req(/<body[^>]*>/i, 'Chybí <body>');
+  ['header', 'nav', 'section', 'article', 'aside', 'figure', 'figcaption', 'footer'].forEach(
+    (tag) => {
+      if (!new RegExp(`<${tag}[^>]*>`, 'i').test(text)) issues.push(`Doplňte <${tag}> (sémantika)`);
+    },
+  );
+  req(/<img[^>]*alt=/i, 'Obrázek musí mít atribut alt');
+  if (!/(<table[\s\S]*?<th[\s\S]*?<td[\s\S]*?<\/table>)/i.test(text)) {
+    issues.push('Tabulka by měla obsahovat hlavičku (<th>) i buňky (<td>)');
+  }
+  req(/colspan\s*=\s*"\d+"/i, 'V tabulce použijte alespoň jeden colspan');
+  req(/rowspan\s*=\s*"\d+"/i, 'V tabulce použijte alespoň jeden rowspan');
+  return { issues, passed: issues.length === 0 };
+}
+
+const HtmlTaskContext = createContext(null);
+
+const HtmlTaskProvider = forwardRef(function HtmlTaskProvider({ children }, ref) {
+  const [html, setHtml] = useState(MinimalTaskTemplate());
+  const [checking, setChecking] = useState(false);
+  const [results, setResults] = useState(null);
+
+  const validateOnline = useCallback(async () => {
+    setChecking(true);
+    try {
+      const res = await fetch('/api/validate-html', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html }),
+      });
+      const data = await res.json();
+      setResults({ type: 'online', data });
+    } catch (e) {
+      setResults({ type: 'error', error: String(e?.message || e) });
+    } finally {
+      setChecking(false);
+    }
+  }, [html]);
+
+  useImperativeHandle(ref, () => ({ runValidation: validateOnline }), [validateOnline]);
+
+  return (
+    <HtmlTaskContext.Provider
+      value={{ html, setHtml, checking, results, validateOnline, local: runHtmlTaskChecks(html) }}
+    >
+      {children}
+    </HtmlTaskContext.Provider>
+  );
+});
+
+function HtmlTaskEditor() {
+  const { html, setHtml, checking, validateOnline, local } = useContext(HtmlTaskContext);
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium" htmlFor="html-task-editor">
+        Editor HTML pro úkol
+      </label>
+      <textarea
+        id="html-task-editor"
+        aria-label="Editor HTML pro úkol"
+        value={html}
+        onChange={(e) => setHtml(e.target.value)}
+        className="min-h-[360px] w-full rounded-lg border p-3 font-mono text-sm bg-white dark:bg-zinc-900"
+      />
+      <div className="text-xs">
+        <div className={local.passed ? 'text-emerald-600' : 'text-amber-600'}>
+          {local.passed
+            ? 'Lokální kontroly: vše v pořádku.'
+            : `Nalezeno ${local.issues.length} připomínek:`}
+        </div>
+        {!local.passed && (
+          <ul className="list-disc pl-5 mt-1 space-y-0.5">
+            {local.issues.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          className="px-3 py-1.5 rounded bg-sky-600 text-white disabled:opacity-50"
+          onClick={validateOnline}
+          disabled={checking}
+        >
+          {checking ? 'Validuji…' : 'Validovat online (W3C)'}
+        </button>
+        <a
+          className="px-3 py-1.5 rounded border"
+          href="https://validator.w3.org/nu/"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          Otevřít W3C Validator
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function HtmlTaskPreview() {
+  const { html, results } = useContext(HtmlTaskContext);
+  return (
+    <div className="space-y-3">
+      <HtmlPreview html={html} title="Náhled HTML playgroundu" />
+      {results?.type === 'online' && (
+        <div className="text-xs rounded border p-2 bg-white/70 dark:bg-zinc-900/60">
+          <div className="font-medium mb-1">Výsledky W3C (shrnutí)</div>
+          <pre className="whitespace-pre-wrap">
+            {JSON.stringify({ messages: results.data?.messages?.slice(0, 8) || [] }, null, 2)}
+          </pre>
+        </div>
+      )}
+      {results?.type === 'error' && (
+        <div className="text-xs text-rose-600" role="status">
+          Chyba validace: {results.error}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function ValidatorHint() {
@@ -206,8 +341,12 @@ const TaskEditorHtml = forwardRef(function TaskEditorHtml(_, ref) {
   return (
     <div data-projector-private="html-exercise" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="flex flex-col">
-        <label className="text-sm font-medium mb-1">HTML – Úkoly editor</label>
+        <label className="text-sm font-medium mb-1" htmlFor="html-inline-task-editor">
+          Editor HTML pro úkoly
+        </label>
         <textarea
+          id="html-inline-task-editor"
+          aria-label="Editor HTML pro úkoly"
           value={html}
           onChange={(e) => setHtml(e.target.value)}
           className="min-h-[360px] w-full rounded-lg border p-3 font-mono text-sm bg-white dark:bg-zinc-900"
@@ -554,7 +693,7 @@ export default function AppHtml5() {
       slides={slides}
       activeSlide={activeSlide}
       onChange={setActiveSlide}
-      title="ZWA-1: Interactive HTML5 Presentation"
+      title="ZWA-1: Interaktivní prezentace HTML5"
       objective="Vytvoříte validní HTML5 dokument se sémantickou strukturou a ověříte jej validátorem."
       subtitle={
         <>
@@ -570,7 +709,7 @@ export default function AppHtml5() {
           )
         </>
       }
-      footerText="© 2025 ZWA – HTML5 interactive worksheet"
+      footerText="© 2025 ZWA – Interaktivní pracovní list HTML5"
     >
       <SharedSlideCard slide={currentSlide} idPrefix="lesson-html5">
         {activeSlide === 'intro' && (
@@ -648,25 +787,23 @@ export default function AppHtml5() {
                 ))}
               </div>
             </div>
-            <LessonTaskWorkspace
-              privateMarker="html-exercise"
-              task={
-                <>
-                  <p>Vytvořte validní HTML5 dokument se sémantickou strukturou.</p>
-                  <p>
-                    Doplňte do editoru doctype, metadata, sémantické prvky, obrázek s{' '}
-                    <Code>alt</Code> a tabulku s hlavičkou i buňkami.
-                  </p>
-                </>
-              }
-              onRunTests={() => htmlTaskRef.current?.runValidation()}
-              editor={<TaskEditorHtml ref={htmlTaskRef} />}
-              preview={
-                <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                  Náhled dokumentu a lokální/W3C kontroly jsou zachované uvnitř HTML editoru.
-                </p>
-              }
-            />
+            <HtmlTaskProvider ref={htmlTaskRef}>
+              <LessonTaskWorkspace
+                privateMarker="html-exercise"
+                task={
+                  <>
+                    <p>Vytvořte validní HTML5 dokument se sémantickou strukturou.</p>
+                    <p>
+                      Doplňte do editoru doctype, metadata, sémantické prvky, obrázek s{' '}
+                      <Code>alt</Code> a tabulku s hlavičkou i buňkami.
+                    </p>
+                  </>
+                }
+                onRunTests={() => htmlTaskRef.current?.runValidation()}
+                editor={<HtmlTaskEditor />}
+                preview={<HtmlTaskPreview />}
+              />
+            </HtmlTaskProvider>
           </div>
         )}
       </SharedSlideCard>

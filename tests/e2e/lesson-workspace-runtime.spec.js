@@ -44,8 +44,54 @@ test.describe('runtime lesson task workspaces', () => {
     await runTests.click();
 
     const results = page.getByRole('group', { name: 'Výsledky testů' });
-    await expect(results).toContainText('Code executed');
-    await expect(page.locator('iframe[title="JavaScript DOM sandbox"]')).toBeVisible();
+    await expect(results).toContainText('Kód byl spuštěn');
+    await expect(page.locator('iframe[title="Izolovaný JavaScript DOM sandbox"]')).toBeVisible();
+  });
+
+  test('live previews and runtime output stay inside the named preview region', async ({
+    page,
+  }) => {
+    const cases = [
+      {
+        route: '/interactive-zwa-1-html5?slide=tasks',
+        iframeTitle: 'Náhled HTML playgroundu',
+        editorName: 'Editor HTML pro úkol',
+      },
+      {
+        route: '/interactive-zwa-2-forms?slide=tasks',
+        iframeTitle: 'Náhled HTML formuláře',
+        editorName: 'Editor HTML formuláře',
+      },
+      {
+        route: '/interactive-zwa-2?slide=tasks',
+        iframeTitle: 'Náhled CSS playgroundu',
+        editorName: 'Editor HTML a CSS',
+      },
+      {
+        route: '/interactive-zwa-5-css-ii?slide=tasks',
+        iframeTitle: 'Náhled CSS II playgroundu',
+        editorName: 'Editor HTML CSS II',
+      },
+    ];
+
+    for (const testCase of cases) {
+      await installDeterministicNetwork(page);
+      await page.goto(testCase.route);
+      const editor = page.getByRole('region', { name: 'IDE' }).first();
+      const preview = page.getByRole('region', { name: 'Náhled a testy' }).first();
+
+      await expect(editor.getByRole('textbox', { name: testCase.editorName })).toBeVisible();
+      await expect(preview.locator(`iframe[title="${testCase.iframeTitle}"]`)).toBeVisible();
+      await expect(editor.locator(`iframe[title="${testCase.iframeTitle}"]`)).toHaveCount(0);
+
+      await preview.getByRole('button', { name: 'Spustit testy', exact: true }).click();
+      if (testCase.iframeTitle.startsWith('Náhled HTML')) {
+        await expect(preview.getByText(/Chyba validace:/)).toBeVisible();
+      } else {
+        await expect(preview.getByRole('status')).toContainText(/Úloha|#site-header/);
+      }
+      await expect(preview.getByRole('group', { name: 'Výsledky testů' })).toBeVisible();
+    }
   });
 
   test.describe('the unified action invokes the existing runtime checker', () => {
@@ -61,15 +107,13 @@ test.describe('runtime lesson task workspaces', () => {
       {
         route: '/interactive-zwa-2?slide=tasks',
         state: async (page) => {
-          await expect(page.locator('iframe[title="CSS validation sandbox"]')).toHaveCount(1);
+          await expect(page.locator('iframe[title="Sandbox kontroly CSS"]')).toHaveCount(1);
         },
       },
       {
         route: '/interactive-zwa-5-css-ii?slide=tasks',
         state: async (page) => {
-          await expect(page.locator('iframe[title="CSS layout validation sandbox"]')).toHaveCount(
-            1,
-          );
+          await expect(page.locator('iframe[title="Sandbox kontroly CSS II"]')).toHaveCount(1);
         },
       },
     ];
@@ -109,12 +153,12 @@ test.describe('runtime lesson task workspaces', () => {
     await page.goto('/interactive-zwa-1?slide=tasks-net');
 
     const workspace = page.getByRole('region', { name: 'Náhled a testy' }).first();
-    const commandInput = page.getByPlaceholder(/type a command and press Enter/i);
+    const commandInput = page.getByPlaceholder(/zadejte příkaz a stiskněte Enter/i);
     const runTests = workspace.getByRole('button', { name: 'Spustit testy', exact: true });
 
     await commandInput.fill('host cvut.cz');
     await commandInput.press('Enter');
-    await expect(page.getByText(/cvut\.cz has address 147\.32\.0\.1/)).toBeVisible();
+    await expect(page.getByText(/cvut\.cz má adresu 147\.32\.0\.1/)).toBeVisible();
     await runTests.click();
 
     await expect(workspace.getByText('Kontrola neúspěšná')).toBeVisible();
@@ -146,12 +190,12 @@ test.describe('runtime lesson task workspaces', () => {
     });
 
     await page.goto('/interactive-zwa-1?slide=tasks-net');
-    const commandInput = page.getByPlaceholder(/type a command and press Enter/i);
+    const commandInput = page.getByPlaceholder(/zadejte příkaz a stiskněte Enter/i);
     await expect(commandInput).toBeVisible();
     const externalRequestsBeforeCommand = externalRequests.length;
     await commandInput.fill('host cvut.cz');
     await commandInput.press('Enter');
-    await expect(page.getByText(/cvut\.cz has address 147\.32\.0\.1/)).toBeVisible();
+    await expect(page.getByText(/cvut\.cz má adresu 147\.32\.0\.1/)).toBeVisible();
     expect(externalRequests.slice(externalRequestsBeforeCommand)).toEqual([]);
   });
 });

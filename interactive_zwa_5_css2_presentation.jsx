@@ -1,8 +1,10 @@
 import React, {
+  createContext,
   forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
+  useContext,
   useMemo,
   useRef,
   useState,
@@ -148,6 +150,155 @@ function getTaskTemplates(stepIndex) {
   return { step: steps[idx], all: steps };
 }
 
+const Css2TaskContext = createContext(null);
+
+const Css2TaskProvider = forwardRef(function Css2TaskProvider({ stepIndex, children }, ref) {
+  const [htmlCode, setHtmlCode] = useState('');
+  const [cssCode, setCssCode] = useState('');
+  const [applyVersion, setApplyVersion] = useState(0);
+  const [validationVersion, setValidationVersion] = useState(0);
+  const [results, setResults] = useState([]);
+  const templates = useMemo(() => getTaskTemplates(stepIndex), [stepIndex]);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- template changes define a new exercise. */
+  useEffect(() => {
+    setHtmlCode(templates.step.html);
+    setCssCode(templates.step.css);
+    setResults([]);
+    setApplyVersion((version) => version + 1);
+  }, [templates]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  const applyOnce = useCallback(() => setApplyVersion((version) => version + 1), []);
+  const validate = useCallback(() => {
+    setResults([]);
+    setValidationVersion((version) => version + 1);
+  }, []);
+  const handleInspection = useCallback(
+    (message) => {
+      if (message.type === 'result') {
+        setResults(validateCssLayout({ inspection: message.value, htmlCode, cssCode, stepIndex }));
+      } else if (message.type === 'error') {
+        setResults([{ ok: false, text: `Kontrola selhala: ${message.message}` }]);
+      }
+    },
+    [cssCode, htmlCode, stepIndex],
+  );
+
+  useImperativeHandle(ref, () => ({ runValidation: validate }), [validate]);
+
+  return (
+    <Css2TaskContext.Provider
+      value={{
+        htmlCode,
+        cssCode,
+        setHtmlCode,
+        setCssCode,
+        applyVersion,
+        validationVersion,
+        results,
+        applyOnce,
+        validate,
+        handleInspection,
+      }}
+    >
+      {children}
+    </Css2TaskContext.Provider>
+  );
+});
+
+function Css2TaskEditor() {
+  const { htmlCode, cssCode, setHtmlCode, setCssCode, applyOnce } = useContext(Css2TaskContext);
+  return (
+    <div className="space-y-3">
+      <label className="block text-sm font-semibold" htmlFor="css2-html-task-editor">
+        Editor HTML a CSS II — HTML
+      </label>
+      <textarea
+        id="css2-html-task-editor"
+        aria-label="Editor HTML CSS II"
+        value={htmlCode}
+        onChange={(event) => setHtmlCode(event.target.value)}
+        spellCheck={false}
+        className="min-h-[220px] w-full rounded border p-3 font-mono text-xs bg-white dark:bg-zinc-900"
+      />
+      <label className="block text-sm font-semibold" htmlFor="css2-css-task-editor">
+        Editor CSS II — CSS
+      </label>
+      <textarea
+        id="css2-css-task-editor"
+        aria-label="Editor CSS CSS II"
+        value={cssCode}
+        onChange={(event) => setCssCode(event.target.value)}
+        spellCheck={false}
+        className="min-h-[220px] w-full rounded border p-3 font-mono text-xs bg-white dark:bg-zinc-900"
+      />
+      <button
+        type="button"
+        className="px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white"
+        onClick={applyOnce}
+      >
+        Spustit náhled
+      </button>
+    </div>
+  );
+}
+
+function Css2TaskPreview() {
+  const { applyVersion, validationVersion, htmlCode, cssCode, results, handleInspection } =
+    useContext(Css2TaskContext);
+  return (
+    <div className="space-y-3">
+      <SandboxedPreview
+        key={applyVersion}
+        html={htmlCode}
+        css={cssCode}
+        mode="static"
+        title="Náhled CSS II playgroundu"
+        className="w-full rounded-xl border border-zinc-200/60 bg-white min-h-[320px]"
+      />
+      {validationVersion > 0 && (
+        <div
+          className="fixed -left-[10000px] top-0 h-[768px] w-[1024px] overflow-hidden"
+          aria-hidden="true"
+        >
+          <SandboxedPreview
+            key={validationVersion}
+            html={htmlCode}
+            css={cssCode}
+            mode="inspect"
+            inspection={CSS_LAYOUT_INSPECTION}
+            onMessage={handleInspection}
+            title="Sandbox kontroly CSS II"
+            className="h-[768px] w-[1024px]"
+          />
+        </div>
+      )}
+      <div
+        className="rounded-xl border border-zinc-200/70 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/60"
+        role="status"
+        aria-live="polite"
+      >
+        <h3 className="text-sm font-semibold">Výsledky testů CSS II</h3>
+        {results.length === 0 ? (
+          <p className="mt-1 text-sm text-zinc-500">Spusťte testy a ověřte požadavek.</p>
+        ) : (
+          <ul className="mt-2 space-y-1 text-sm">
+            {results.map((result, index) => (
+              <li
+                key={`${result.text}-${index}`}
+                className={result.ok ? 'text-emerald-700' : 'text-rose-700'}
+              >
+                {result.ok ? '✓' : '×'} {result.text}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const VsPlayground = forwardRef(function VsPlayground({ stepIndex }, ref) {
   const [htmlCode, setHtmlCode] = useState('');
   const [cssCode, setCssCode] = useState('');
@@ -186,7 +337,7 @@ const VsPlayground = forwardRef(function VsPlayground({ stepIndex }, ref) {
         }),
       );
     } else if (message.type === 'error') {
-      setResults([{ ok: false, text: `Validation error: ${message.message}` }]);
+      setResults([{ ok: false, text: `Chyba validace: ${message.message}` }]);
     }
   }
 
@@ -198,14 +349,24 @@ const VsPlayground = forwardRef(function VsPlayground({ stepIndex }, ref) {
       <div className="grid grid-cols-1 lg:grid-cols-2">
         <div className="p-3 border-b lg:border-b-0 lg:border-r border-zinc-200/60 dark:border-zinc-800">
           <div className="font-semibold text-sm mb-2">HTML</div>
+          <label className="sr-only" htmlFor="css2-inline-html-editor">
+            Editor HTML a CSS II — HTML
+          </label>
           <textarea
+            id="css2-inline-html-editor"
+            aria-label="Editor HTML a CSS II — HTML"
             value={htmlCode}
             onChange={(e) => setHtmlCode(e.target.value)}
             spellCheck={false}
             className="min-h-[220px] w-full rounded border p-3 font-mono text-xs bg-white dark:bg-zinc-900"
           />
           <div className="font-semibold text-sm mt-3 mb-2">CSS</div>
+          <label className="sr-only" htmlFor="css2-inline-css-editor">
+            Editor HTML a CSS II — CSS
+          </label>
           <textarea
+            id="css2-inline-css-editor"
+            aria-label="Editor HTML a CSS II — CSS"
             value={cssCode}
             onChange={(e) => setCssCode(e.target.value)}
             spellCheck={false}
@@ -251,7 +412,7 @@ const VsPlayground = forwardRef(function VsPlayground({ stepIndex }, ref) {
             html={htmlCode}
             css={cssCode}
             mode="static"
-            title="CSS layout playground preview"
+            title="Náhled CSS II playgroundu"
             className="w-full rounded-xl border border-zinc-200/60 bg-white min-h-[320px]"
           />
           {validationVersion > 0 && (
@@ -266,7 +427,7 @@ const VsPlayground = forwardRef(function VsPlayground({ stepIndex }, ref) {
                 mode="inspect"
                 inspection={CSS_LAYOUT_INSPECTION}
                 onMessage={handleInspection}
-                title="CSS layout validation sandbox"
+                title="Sandbox kontroly CSS II"
                 className="h-[768px] w-[1024px]"
               />
             </div>
@@ -702,7 +863,7 @@ export default function AppCss2Lesson() {
       slides={slides}
       activeSlide={activeSlide}
       onChange={setActiveSlide}
-      title="ZWA-5: Interactive CSS II Presentation"
+      title="ZWA-5: Interaktivní prezentace CSS II"
       objective="Vytvoříte a ověříte responzivní CSS layout pomocí box modelu, flexboxu, media queries a tisku."
       subtitle={
         <>
@@ -718,7 +879,7 @@ export default function AppCss2Lesson() {
           .
         </>
       }
-      footerText="© 2025 ZWA – Interactive CSS II lesson"
+      footerText="© 2025 ZWA – Interaktivní lekce CSS II"
       maxWidthClass="max-w-7xl"
     >
       <div className={hasTasks ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : ''}>
@@ -732,22 +893,20 @@ export default function AppCss2Lesson() {
         {hasTasks && (
           <div>
             <div className="lg:sticky lg:top-8">
-              <LessonTaskWorkspace
-                privateMarker="css-exercise"
-                onRunTests={() => cssTaskRef.current?.runValidation()}
-                task={
-                  <>
-                    <p>{getTaskTemplates(stepIndex).step.title}</p>
-                    <p>{getTaskTemplates(stepIndex).step.desc}</p>
-                  </>
-                }
-                editor={<VsPlayground ref={cssTaskRef} stepIndex={stepIndex} />}
-                preview={
-                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                    Náhled layoutu a kontrola computed stylů jsou zachované uvnitř editoru.
-                  </p>
-                }
-              />
+              <Css2TaskProvider ref={cssTaskRef} stepIndex={stepIndex}>
+                <LessonTaskWorkspace
+                  privateMarker="css-exercise"
+                  onRunTests={() => cssTaskRef.current?.runValidation()}
+                  task={
+                    <>
+                      <p>{getTaskTemplates(stepIndex).step.title}</p>
+                      <p>{getTaskTemplates(stepIndex).step.desc}</p>
+                    </>
+                  }
+                  editor={<Css2TaskEditor />}
+                  preview={<Css2TaskPreview />}
+                />
+              </Css2TaskProvider>
               <div className="mt-3 text-xs text-zinc-500">
                 Pozn.: Validace je zjednodušená (heuristiky pomocí computed styles a regex).
               </div>

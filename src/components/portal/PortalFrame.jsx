@@ -2,7 +2,7 @@ import { portalClassNames } from './portalClasses.js';
 
 export default function PortalFrame({
   children,
-  courseLabel = 'ZWA · Web Applications',
+  courseLabel = 'ZWA · Webové aplikace',
   meta,
   className,
 }) {

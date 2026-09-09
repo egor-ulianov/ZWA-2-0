@@ -25,11 +25,11 @@ export default function CourseRoadmap({ lessons = [] }) {
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8 md:py-14">
       <div className="max-w-3xl">
-        <p className={portalClassNames.kicker}>Course catalogue</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-5xl">Course roadmap</h1>
+        <p className={portalClassNames.kicker}>Katalog kurzu</p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-5xl">Mapa kurzu</h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--portal-text-muted)] md:text-lg">
-          A practical route through the foundations, interfaces, and server-side systems that make
-          modern web applications work.
+          Praktická cesta základy, rozhraními a serverovými systémy, které tvoří moderní webové
+          aplikace.
         </p>
       </div>
 
@@ -41,7 +41,7 @@ export default function CourseRoadmap({ lessons = [] }) {
                 {group.module}
               </h2>
               <p className="text-sm text-[var(--portal-text-muted)]">
-                {group.lessons.length} {group.lessons.length === 1 ? 'lesson' : 'lessons'}
+                {group.lessons.length} {group.lessons.length === 1 ? 'lekce' : 'lekcí'}
               </p>
             </div>
 
@@ -63,9 +63,9 @@ export default function CourseRoadmap({ lessons = [] }) {
                     <Link
                       className={`${portalClassNames.action} mt-auto w-full sm:w-fit`}
                       href={lesson.href}
-                      aria-label={`Open lesson ${lesson.number}: ${lesson.title}`}
+                      aria-label={`Otevřít lekci ${lesson.number}: ${lesson.title}`}
                     >
-                      Open lesson
+                      Otevřít lekci
                     </Link>
                   </article>
                 </li>

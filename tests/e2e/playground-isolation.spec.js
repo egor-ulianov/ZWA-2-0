@@ -24,17 +24,17 @@ const playgroundLessons = [
   {
     name: 'CSS static preview',
     href: '/interactive-zwa-2?slide=tasks',
-    frameTitle: 'CSS playground preview',
+    frameTitle: 'Náhled CSS playgroundu',
   },
   {
     name: 'CSS II static preview',
     href: '/interactive-zwa-5-css-ii?slide=tasks',
-    frameTitle: 'CSS layout playground preview',
+    frameTitle: 'Náhled CSS II playgroundu',
   },
   {
     name: 'JavaScript sandbox preview',
     href: '/interactive-zwa-5-js?slide=tasks',
-    frameTitle: 'JavaScript DOM sandbox',
+    frameTitle: 'Izolovaný JavaScript DOM sandbox',
   },
 ];
 
@@ -85,7 +85,7 @@ test('hostile student JavaScript cannot mutate the parent or block later sandbox
     try { parent.postMessage({ channel: "zwa-playground", version: 1, token: "wrong", type: "unknown" }, "*"); } catch (_) {}
   `);
   await page.getByRole('button', { name: 'Spustit testy' }).click();
-  await expect(page.getByText('Code executed', { exact: true })).toBeVisible();
+  await expect(page.getByText('Kód byl spuštěn', { exact: true })).toBeVisible();
 
   await expect(page.locator('html')).toHaveAttribute('data-playground-host-mutation', 'clean');
   await expect.poll(() => protectedRequests).toBe(0);
@@ -100,7 +100,7 @@ test('hostile student JavaScript cannot mutate the parent or block later sandbox
   await page.getByRole('button', { name: 'Spustit testy' }).click();
   await expect(page.getByText("exports.greeting === 'Ahoj'", { exact: true })).toBeVisible();
   await expect(page.getByText('exports.double(10) === 20', { exact: true })).toBeVisible();
-  await expect(page.locator('iframe[title="JavaScript DOM sandbox"]')).toBeVisible();
+  await expect(page.locator('iframe[title="Izolovaný JavaScript DOM sandbox"]')).toBeVisible();
 });
 
 test('JavaScript exercise workspace runs tests in the isolated preview', async ({ page }) => {
@@ -112,9 +112,9 @@ test('JavaScript exercise workspace runs tests in the isolated preview', async (
   await expect(runTests).toBeFocused();
   await runTests.press('Enter');
   const results = page.getByRole('group', { name: 'Výsledky testů' });
-  await expect(results).toContainText('Code executed');
+  await expect(results).toContainText('Kód byl spuštěn');
   await expect(runTests).toBeFocused();
-  await expect(page.locator('iframe[title="JavaScript DOM sandbox"]')).toBeVisible();
+  await expect(page.locator('iframe[title="Izolovaný JavaScript DOM sandbox"]')).toBeVisible();
 });
 
 test('projector output has one main landmark and no private playground or presenter UI', async ({

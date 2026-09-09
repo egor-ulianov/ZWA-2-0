@@ -1,7 +1,9 @@
 import React, {
+  createContext,
   forwardRef,
   useCallback,
   useImperativeHandle,
+  useContext,
   useMemo,
   useRef,
   useState,
@@ -37,7 +39,7 @@ function FieldRow({ label, children }) {
 function FormInspector({ values }) {
   return (
     <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-3 text-xs">
-      <div className="font-semibold mb-1">Form values</div>
+      <div className="font-semibold mb-1">Hodnoty formuláře</div>
       <pre className="whitespace-pre-wrap">{JSON.stringify(values, null, 2)}</pre>
     </div>
   );
@@ -100,7 +102,7 @@ function FormsPlayground() {
       <div className="space-y-4">
         <form className="space-y-3" onSubmit={onSubmitLocal}>
           <fieldset className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 p-3">
-            <legend className="px-2 text-xs text-zinc-500">Standard elements</legend>
+            <legend className="px-2 text-xs text-zinc-500">Standardní prvky</legend>
             <div className="space-y-2">
               <FieldRow label={<label htmlFor="text">label + input[type=text]</label>}>
                 <input
@@ -176,7 +178,7 @@ function FormsPlayground() {
           </fieldset>
 
           <fieldset className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 p-3">
-            <legend className="px-2 text-xs text-zinc-500">HTML5 inputs</legend>
+            <legend className="px-2 text-xs text-zinc-500">Vstupy HTML5</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <FieldRow label="color">
                 <input
@@ -457,6 +459,132 @@ function FormsPlayground() {
   );
 }
 
+function defaultFormChecks(text) {
+  const issues = [];
+  const must = (re, msg) => {
+    if (!re.test(text)) issues.push(msg);
+  };
+  must(/<!doctype\s+html>/i, 'Chybí <!doctype html>');
+  must(/<form[^>]*>/i, 'Chybí <form>');
+  if (!/type="email"/i.test(text)) issues.push('Zvažte použít input[type=email] pro e‑mail');
+  if (/type="tel"/i.test(text) && !/pattern=/i.test(text)) {
+    issues.push('Pro telefon zvažte atribut pattern');
+  }
+  return { issues, passed: issues.length === 0 };
+}
+
+const FormTaskContext = createContext(null);
+
+const FormTaskProvider = forwardRef(function FormTaskProvider({ initialHtml, children }, ref) {
+  const [html, setHtml] = useState(initialHtml);
+  const [checking, setChecking] = useState(false);
+  const [results, setResults] = useState(null);
+
+  const validateOnline = useCallback(async () => {
+    setChecking(true);
+    try {
+      const res = await fetch('/api/validate-html', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html }),
+      });
+      const data = await res.json();
+      setResults({ type: 'online', data });
+    } catch (e) {
+      setResults({ type: 'error', error: String(e?.message || e) });
+    } finally {
+      setChecking(false);
+    }
+  }, [html]);
+
+  useImperativeHandle(ref, () => ({ runValidation: validateOnline }), [validateOnline]);
+
+  return (
+    <FormTaskContext.Provider
+      value={{ html, setHtml, checking, results, validateOnline, local: defaultFormChecks(html) }}
+    >
+      {children}
+    </FormTaskContext.Provider>
+  );
+});
+
+function FormTaskEditor() {
+  const { html, setHtml, checking, validateOnline, local } = useContext(FormTaskContext);
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium" htmlFor="forms-task-editor">
+        Editor HTML formuláře
+      </label>
+      <textarea
+        id="forms-task-editor"
+        aria-label="Editor HTML formuláře"
+        value={html}
+        onChange={(e) => setHtml(e.target.value)}
+        className="min-h-[280px] w-full rounded border p-2 font-mono text-sm bg-white dark:bg-zinc-900"
+      />
+      <div className="text-xs">
+        <div className={local.passed ? 'text-emerald-600' : 'text-amber-600'}>
+          {local.passed
+            ? 'Lokální kontroly: vše v pořádku.'
+            : `Nalezeno ${local.issues.length} připomínek:`}
+        </div>
+        {!local.passed && (
+          <ul className="list-disc pl-5 mt-1 space-y-0.5">
+            {local.issues.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          className="px-3 py-1.5 rounded bg-fuchsia-600 text-white disabled:opacity-50"
+          onClick={validateOnline}
+          disabled={checking}
+        >
+          {checking ? 'Validuji…' : 'Validovat online (W3C)'}
+        </button>
+        <a
+          className="px-3 py-1.5 rounded border"
+          href="https://validator.w3.org/nu/"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          Otevřít W3C Validator
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function FormTaskPreview() {
+  const { html, results } = useContext(FormTaskContext);
+  return (
+    <div className="space-y-3">
+      <SandboxedPreview
+        html={html}
+        mode="static"
+        title="Náhled HTML formuláře"
+        className="w-full min-h-[280px] rounded border bg-white text-xs"
+      />
+      {results?.type === 'online' && (
+        <div className="text-xs rounded border p-2 bg-white/70 dark:bg-zinc-900/60">
+          <div className="font-medium mb-1">Výsledky W3C (shrnutí)</div>
+          <pre className="whitespace-pre-wrap">
+            {JSON.stringify({ messages: results.data?.messages?.slice(0, 8) || [] }, null, 2)}
+          </pre>
+        </div>
+      )}
+      {results?.type === 'error' && (
+        <div className="text-xs text-rose-600" role="status">
+          Chyba validace: {results.error}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const FormValidationEditor = forwardRef(function FormValidationEditor(
   { initialHtml, localCheck, showPreview = false },
   ref,
@@ -524,7 +652,12 @@ const FormValidationEditor = forwardRef(function FormValidationEditor(
   return (
     <div data-projector-private="forms-exercise" className="grid grid-cols-1 lg:grid-cols-2 gap-3">
       <div className="flex flex-col">
+        <label className="sr-only" htmlFor="forms-inline-task-editor">
+          Editor HTML formuláře
+        </label>
         <textarea
+          id="forms-inline-task-editor"
+          aria-label="Editor HTML formuláře"
           value={html}
           onChange={(e) => setHtml(e.target.value)}
           className="min-h-[280px] w-full rounded border p-2 font-mono text-sm bg-white dark:bg-zinc-900"
@@ -571,7 +704,7 @@ const FormValidationEditor = forwardRef(function FormValidationEditor(
           <SandboxedPreview
             html={html}
             mode="static"
-            title="Form HTML preview"
+            title="Náhled HTML formuláře"
             className="w-full min-h-[280px] rounded border bg-white text-xs"
           />
         ) : (
@@ -1170,7 +1303,7 @@ export default function AppFormsLesson2() {
       slides={slides}
       activeSlide={activeSlide}
       onChange={setActiveSlide}
-      title="ZWA-2: Client-side Forms (Lesson 2)"
+      title="ZWA-2: Klientské formuláře (lekce 2)"
       objective="Rozpoznáte HTML5 prvky formulářů a ověříte jejich atributy i klientskou validaci."
       subtitle={
         <>
@@ -1186,7 +1319,7 @@ export default function AppFormsLesson2() {
           .
         </>
       }
-      footerText="© 2025 ZWA – Lesson 2 interactive forms"
+      footerText="© 2025 ZWA – Interaktivní formuláře, lekce 2"
       maxWidthClass="max-w-7xl"
     >
       <SharedSlideCard slide={currentSlide} idPrefix="lesson-forms">
@@ -1280,46 +1413,41 @@ export default function AppFormsLesson2() {
                 ))}
               </div>
             </SectionCard>
-            <LessonTaskWorkspace
-              privateMarker="forms-exercise"
-              task={
-                <>
-                  <p>Vytvořte přístupný HTML formulář s popisky a nativní validací.</p>
-                  <p>
-                    Zachovejte ukázku standardních prvků, typů HTML5 vstupů a atributů{' '}
-                    <Code>required</Code>/<Code>pattern</Code>.
-                  </p>
-                </>
-              }
-              onRunTests={() => formsTaskRef.current?.runValidation()}
-              editor={
-                <FormValidationEditor
-                  ref={formsTaskRef}
-                  initialHtml={[
-                    '<!doctype html>',
-                    '<html lang="cs">',
-                    '  <head>',
-                    '    <meta charset="utf-8">',
-                    '    <title>Formulář</title>',
-                    '  </head>',
-                    '  <body>',
-                    '    <form>',
-                    '      <label for="email">E-mail</label>',
-                    '      <input id="email" type="email" required>',
-                    '      <button>Odeslat</button>',
-                    '    </form>',
-                    '  </body>',
-                    '</html>',
-                  ].join('\n')}
-                  showPreview
-                />
-              }
-              preview={
-                <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                  Náhled formuláře a lokální/W3C kontroly jsou zachované uvnitř editoru.
-                </p>
-              }
-            />
+            <FormTaskProvider
+              ref={formsTaskRef}
+              initialHtml={[
+                '<!doctype html>',
+                '<html lang="cs">',
+                '  <head>',
+                '    <meta charset="utf-8">',
+                '    <title>Formulář</title>',
+                '  </head>',
+                '  <body>',
+                '    <form>',
+                '      <label for="email">E-mail</label>',
+                '      <input id="email" type="email" required>',
+                '      <button>Odeslat</button>',
+                '    </form>',
+                '  </body>',
+                '</html>',
+              ].join('\n')}
+            >
+              <LessonTaskWorkspace
+                privateMarker="forms-exercise"
+                task={
+                  <>
+                    <p>Vytvořte přístupný HTML formulář s popisky a nativní validací.</p>
+                    <p>
+                      Zachovejte ukázku standardních prvků, typů HTML5 vstupů a atributů{' '}
+                      <Code>required</Code>/<Code>pattern</Code>.
+                    </p>
+                  </>
+                }
+                onRunTests={() => formsTaskRef.current?.runValidation()}
+                editor={<FormTaskEditor />}
+                preview={<FormTaskPreview />}
+              />
+            </FormTaskProvider>
           </div>
         )}
       </SharedSlideCard>

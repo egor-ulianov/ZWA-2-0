@@ -38,7 +38,7 @@ function runExerciseTests(testDefinition, { source = '', result = [] } = {}) {
       {
         id: `${testDefinition.id || 'exercise'}-runner-error`,
         ok: false,
-        text: 'Tests could not be completed.',
+        text: 'Testy se nepodařilo dokončit.',
       },
     ];
   }

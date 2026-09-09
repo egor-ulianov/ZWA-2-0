@@ -111,11 +111,11 @@ test.describe('F2 lesson composition and deep links', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-5-css-ii?slide=theory');
-    await expect(page.getByTitle('CSS layout playground preview')).toHaveCount(0);
+    await expect(page.getByTitle('Náhled CSS II playgroundu')).toHaveCount(0);
     await expect(page.getByRole('textbox')).toHaveCount(0);
 
     await page.goto('/interactive-zwa-5-css-ii?slide=tasks');
-    await expect(page.getByTitle('CSS layout playground preview')).toBeVisible();
+    await expect(page.getByTitle('Náhled CSS II playgroundu')).toBeVisible();
     await expect(page.getByRole('textbox')).toHaveCount(2);
   });
 
@@ -124,13 +124,13 @@ test.describe('F2 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-5-js?slide=theory');
     await expect(page.getByRole('region', { name: 'Zadání', exact: true })).toHaveCount(0);
-    await expect(page.getByTitle('JavaScript DOM sandbox')).toHaveCount(0);
+    await expect(page.getByTitle('Izolovaný JavaScript DOM sandbox')).toHaveCount(0);
 
     await page.goto('/interactive-zwa-5-js?slide=tasks');
     const workspace = page.locator('[data-projector-private="exercise-workspace"]');
     await expect(workspace).toBeVisible();
     await expect(workspace.getByRole('textbox')).toBeVisible();
-    await expect(workspace.getByTitle('JavaScript DOM sandbox')).toBeVisible();
+    await expect(workspace.getByTitle('Izolovaný JavaScript DOM sandbox')).toBeVisible();
   });
 
   test('classes and AJAX lesson keeps its task deep link and learning objective', async ({

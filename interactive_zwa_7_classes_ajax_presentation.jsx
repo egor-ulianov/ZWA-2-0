@@ -1336,7 +1336,7 @@ export default function AppJsLesson7() {
       slides={slides}
       activeSlide={activeSlide}
       onChange={setActiveSlide}
-      title="ZWA-7: Classes and AJAX"
+      title="ZWA-7: Třídy a AJAX"
       objective="Vysvětlíte základy tříd v JavaScriptu a AJAXu a procvičíte práci s asynchronními požadavky."
       subtitle="Interaktivní prezentace s příklady kódu a úkoly"
       footerText="© 2025 ZWA – Cvičení 7: Třídy a AJAX"

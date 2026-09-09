@@ -12,7 +12,7 @@ test('homepage renders the lesson catalog and protected workspace entry point', 
 
   expect(response).not.toBeNull();
   expect(response.ok()).toBe(true);
-  await expect(page.getByText('ZWA · Web Applications', { exact: true })).toBeVisible();
+  await expect(page.getByText('ZWA · Webové aplikace', { exact: true })).toBeVisible();
   await expect(page.getByRole('main').getByRole('link')).toHaveCount(12);
   await expect(page.getByRole('link', { name: 'Attendance (protected)' })).toBeVisible();
 });

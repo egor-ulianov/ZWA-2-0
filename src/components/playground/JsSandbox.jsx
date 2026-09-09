@@ -11,7 +11,7 @@ export function JsSandbox({
   onReady,
   onConsole,
   resetKey = 0,
-  title = 'Isolated JavaScript playground',
+  title = 'Izolovaný JavaScript playground',
   className = 'w-full min-h-[160px] rounded-xl border bg-white',
 }) {
   const [finished, setFinished] = useState(code === null);
@@ -46,7 +46,7 @@ export function JsSandbox({
       const result = [
         {
           ok: false,
-          text: `Runtime error: execution exceeded ${EXECUTION_TIMEOUT_MS} ms`,
+          text: `Chyba běhu: běh překročil časový limit ${EXECUTION_TIMEOUT_MS} ms`,
         },
       ];
       setTimedOut(true);

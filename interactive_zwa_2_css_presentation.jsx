@@ -1,8 +1,10 @@
 import React, {
+  createContext,
   forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
+  useContext,
   useMemo,
   useRef,
   useState,
@@ -153,6 +155,217 @@ function getTaskTemplates(slideId, stepIndex) {
   return { html: baseHtml, css: cssPlaceholders[idx] };
 }
 
+const CssTaskContext = createContext(null);
+
+const CssTaskProvider = forwardRef(function CssTaskProvider({ slideId, stepIndex, children }, ref) {
+  const [activeTab, setActiveTab] = useState('css');
+  const [autoApply, setAutoApply] = useState(true);
+  const [applyVersion, setApplyVersion] = useState(0);
+  const [validationVersion, setValidationVersion] = useState(0);
+  const [results, setResults] = useState([]);
+  const templates = useMemo(() => getTaskTemplates(slideId, stepIndex), [slideId, stepIndex]);
+  const [htmlCode, setHtmlCode] = useState(templates.html);
+  const [cssCode, setCssCode] = useState(templates.css);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- template changes define a new exercise. */
+  useEffect(() => {
+    setHtmlCode(templates.html);
+    setCssCode(templates.css);
+    setResults([]);
+  }, [templates]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  const previewCss = useMemo(() => {
+    if (slideId !== 'linking') return cssCode;
+    const hasLink = /<link[^>]*rel=["']stylesheet["'][^>]*href=["']styles\.css["'][^>]*>/i.test(
+      htmlCode,
+    );
+    return hasLink ? cssCode : '';
+  }, [cssCode, htmlCode, slideId]);
+
+  const applyOnce = useCallback(() => setApplyVersion((version) => version + 1), []);
+  const onHtmlChange = useCallback(
+    (value) => {
+      setHtmlCode(value);
+      if (autoApply) setApplyVersion((version) => version + 1);
+    },
+    [autoApply],
+  );
+  const onCssChange = useCallback(
+    (value) => {
+      setCssCode(value);
+      if (autoApply) setApplyVersion((version) => version + 1);
+    },
+    [autoApply],
+  );
+  const validate = useCallback(() => {
+    setResults([]);
+    setValidationVersion((version) => version + 1);
+  }, []);
+  const handleInspection = useCallback(
+    (message) => {
+      if (message.type === 'result') {
+        setResults(
+          validateCssBasics({ slideId, stepIndex, inspection: message.value, htmlCode, cssCode }),
+        );
+      } else if (message.type === 'error') {
+        setResults([{ ok: false, text: 'Úloha: kontrola použitých stylů selhala.' }]);
+      }
+    },
+    [cssCode, htmlCode, slideId, stepIndex],
+  );
+
+  useImperativeHandle(ref, () => ({ runValidation: validate }), [validate]);
+
+  return (
+    <CssTaskContext.Provider
+      value={{
+        activeTab,
+        setActiveTab,
+        autoApply,
+        setAutoApply,
+        applyVersion,
+        validationVersion,
+        results,
+        htmlCode,
+        cssCode,
+        previewCss,
+        applyOnce,
+        onHtmlChange,
+        onCssChange,
+        validate,
+        handleInspection,
+      }}
+    >
+      {children}
+    </CssTaskContext.Provider>
+  );
+});
+
+function CssTaskEditor() {
+  const {
+    activeTab,
+    setActiveTab,
+    autoApply,
+    setAutoApply,
+    htmlCode,
+    cssCode,
+    onHtmlChange,
+    onCssChange,
+    applyOnce,
+  } = useContext(CssTaskContext);
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="font-semibold text-sm">Editor HTML a CSS</div>
+        <label className="text-xs flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={autoApply}
+            onChange={(event) => setAutoApply(event.target.checked)}
+          />
+          Použít automaticky
+        </label>
+      </div>
+      <div className="flex items-center gap-1 mb-2">
+        {[
+          ['html', 'HTML'],
+          ['css', 'CSS'],
+        ].map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            className={clsx(
+              'px-3 py-1.5 text-xs rounded-t-lg border',
+              activeTab === id
+                ? 'bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700'
+                : 'bg-zinc-100/70 dark:bg-zinc-800/60 border-transparent',
+            )}
+            onClick={() => setActiveTab(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <label className="sr-only" htmlFor="css-task-editor">
+        {activeTab === 'css' ? 'Editor CSS' : 'Editor HTML'}
+      </label>
+      <textarea
+        id="css-task-editor"
+        aria-label="Editor HTML a CSS"
+        value={activeTab === 'css' ? cssCode : htmlCode}
+        onChange={(event) =>
+          activeTab === 'css' ? onCssChange(event.target.value) : onHtmlChange(event.target.value)
+        }
+        spellCheck={false}
+        className="min-h-[450px] w-full resize-y rounded-xl border border-zinc-200/60 bg-zinc-950 p-3 font-mono text-xs leading-5 text-zinc-100 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+      />
+      <button
+        type="button"
+        className="mt-2 px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white"
+        onClick={applyOnce}
+      >
+        Spustit náhled
+      </button>
+    </div>
+  );
+}
+
+function CssTaskPreview() {
+  const { applyVersion, validationVersion, htmlCode, previewCss, results, handleInspection } =
+    useContext(CssTaskContext);
+  return (
+    <div className="space-y-3">
+      <SandboxedPreview
+        key={applyVersion}
+        html={htmlCode}
+        css={previewCss}
+        mode="static"
+        title="Náhled CSS playgroundu"
+        className="w-full rounded-xl border border-zinc-200/60 bg-white min-h-[320px]"
+      />
+      {validationVersion > 0 && (
+        <div
+          className="fixed -left-[10000px] top-0 h-[768px] w-[1024px] overflow-hidden"
+          aria-hidden="true"
+        >
+          <SandboxedPreview
+            key={validationVersion}
+            html={htmlCode}
+            css={previewCss}
+            mode="inspect"
+            inspection={CSS_BASICS_INSPECTION}
+            onMessage={handleInspection}
+            title="Sandbox kontroly CSS"
+            className="h-[768px] w-[1024px]"
+          />
+        </div>
+      )}
+      <div
+        className="rounded-xl border border-zinc-200/70 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/60"
+        role="status"
+        aria-live="polite"
+      >
+        <h3 className="text-sm font-semibold">Výsledky testů CSS</h3>
+        {results.length === 0 ? (
+          <p className="mt-1 text-sm text-zinc-500">Spusťte testy a ověřte požadavek.</p>
+        ) : (
+          <ul className="mt-2 space-y-1 text-sm">
+            {results.map((result, index) => (
+              <li
+                key={`${result.text}-${index}`}
+                className={result.ok ? 'text-emerald-700' : 'text-rose-700'}
+              >
+                {result.ok ? '✓' : '×'} {result.text}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const VsPlayground = forwardRef(function VsPlayground({ slideId, stepIndex }, ref) {
   const [activeTab, setActiveTab] = useState('css');
   const [autoApply, setAutoApply] = useState(true);
@@ -224,7 +437,7 @@ const VsPlayground = forwardRef(function VsPlayground({ slideId, stepIndex }, re
         }),
       );
     } else if (message.type === 'error') {
-      setResults([{ ok: false, text: 'Task: Error checking applied styles' }]);
+      setResults([{ ok: false, text: 'Úloha: při kontrole použitých stylů nastala chyba' }]);
     }
   }
 
@@ -278,7 +491,12 @@ const VsPlayground = forwardRef(function VsPlayground({ slideId, stepIndex }, re
             >
               {activeTab === 'css' ? highlightCss(cssCode) : highlightHtml(htmlCode)}
             </pre>
+            <label className="sr-only" htmlFor="css-inline-editor">
+              Editor HTML a CSS
+            </label>
             <textarea
+              id="css-inline-editor"
+              aria-label="Editor HTML a CSS"
               ref={textRef}
               value={activeTab === 'css' ? cssCode : htmlCode}
               onChange={(e) =>
@@ -332,7 +550,7 @@ const VsPlayground = forwardRef(function VsPlayground({ slideId, stepIndex }, re
             html={htmlCode}
             css={previewCss}
             mode="static"
-            title="CSS playground preview"
+            title="Náhled CSS playgroundu"
             className="w-full rounded-xl border border-zinc-200/60 bg-white min-h-[320px]"
           />
           {validationVersion > 0 && (
@@ -347,7 +565,7 @@ const VsPlayground = forwardRef(function VsPlayground({ slideId, stepIndex }, re
                 mode="inspect"
                 inspection={CSS_BASICS_INSPECTION}
                 onMessage={handleInspection}
-                title="CSS validation sandbox"
+                title="Sandbox kontroly CSS"
                 className="h-[768px] w-[1024px]"
               />
             </div>
@@ -701,10 +919,10 @@ export default function App() {
       slides={slides}
       activeSlide={activeSlide}
       onChange={setActiveSlide}
-      title="ZWA-2: Interactive CSS Presentation"
+      title="ZWA-2: Interaktivní prezentace CSS"
       objective="Použijete základní CSS selektory, pseudo-elementy a propojení stylopisu v praktickém playgroundu."
-      subtitle="Editor vlevo, náhled vpravo. Upravit → Run → Check."
-      footerText="© 2025 ZWA – Interactive demo for teaching (Egor Ulianov)"
+      subtitle="Editor vlevo, náhled vpravo. Upravte kód → prohlédněte náhled → spusťte testy."
+      footerText="© 2025 ZWA – Interaktivní výuková ukázka (Egor Ulianov)"
       maxWidthClass="max-w-7xl"
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -718,24 +936,20 @@ export default function App() {
         <div>
           <div className="lg:sticky lg:top-8">
             {current.id === 'tasks' ? (
-              <LessonTaskWorkspace
-                privateMarker="css-exercise"
-                onRunTests={() => cssTaskRef.current?.runValidation()}
-                task={
-                  <>
-                    <p>{current.steps?.[stepIndex]?.title}</p>
-                    <p>{current.steps?.[stepIndex]?.desc}</p>
-                  </>
-                }
-                editor={
-                  <VsPlayground ref={cssTaskRef} slideId={activeSlide} stepIndex={stepIndex} />
-                }
-                preview={
-                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                    Náhled HTML/CSS a kontrola computed stylů jsou zachované uvnitř editoru.
-                  </p>
-                }
-              />
+              <CssTaskProvider ref={cssTaskRef} slideId={activeSlide} stepIndex={stepIndex}>
+                <LessonTaskWorkspace
+                  privateMarker="css-exercise"
+                  onRunTests={() => cssTaskRef.current?.runValidation()}
+                  task={
+                    <>
+                      <p>{current.steps?.[stepIndex]?.title}</p>
+                      <p>{current.steps?.[stepIndex]?.desc}</p>
+                    </>
+                  }
+                  editor={<CssTaskEditor />}
+                  preview={<CssTaskPreview />}
+                />
+              </CssTaskProvider>
             ) : (
               <VsPlayground slideId={activeSlide} stepIndex={hasSteps ? stepIndex : 0} />
             )}
