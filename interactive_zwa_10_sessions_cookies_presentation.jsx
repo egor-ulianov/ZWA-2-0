@@ -1,11 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
 import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
-import ClickToRevealSolution from './src/components/lesson/ClickToRevealSolution.jsx';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 import { clsx } from './src/components/lesson/classNames.js';
 
@@ -26,13 +27,32 @@ function LessonSlideContent({ slide }) {
       {slide.id === 'theory-security' && <TheorySecurity />}
       {slide.id === 'theory-examples' && <TheoryExamples />}
 
-      {slide.id === 'tasks' && <Tasks />}
+      {LESSON10_TASKS.some((task) => task.id === slide.id) && (
+        <SessionTaskSlide task={LESSON10_TASKS.find((task) => task.id === slide.id)} />
+      )}
       {slide.id === 'summary' && <SummarySlide />}
     </SharedSlideCard>
   );
 }
 
-function StaticLessonTask({ id, task, draft, required, expected, children }) {
+function StaticLessonTask({ id, task, draft, required, expected, solution = draft }) {
+  const [source, setSource] = useState(draft);
+  const fileName = 'sessions.php';
+  const studentPanel = (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        Soubor: {fileName}
+      </p>
+      <SyntaxCodeEditor
+        value={source}
+        onChange={setSource}
+        language="php"
+        label="Editor – zdrojový kód"
+        minHeight="320px"
+      />
+    </div>
+  );
+
   return (
     <LessonTaskWorkspace
       privateMarker={`static-${id}`}
@@ -43,16 +63,33 @@ function StaticLessonTask({ id, task, draft, required, expected, children }) {
             <strong>Konkrétní vstup studenta:</strong> upravte PHP zdrojový kód pro soubory
             session/cookies podle jednotlivých bodů zadání.
           </p>
-          {children}
         </div>
       }
       editor={{
         source: draft,
         label: 'Editor – zdrojový kód',
         language: 'php',
-        fileName: 'sessions.php (PHP)',
+        fileName,
       }}
-      staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
+      ideTabs={
+        <WorkspaceIdeTabs
+          files={[{ id: 'student-file', label: fileName, panel: studentPanel }]}
+          solution={{
+            label: 'Řešení',
+            panel: (
+              <SyntaxCodeEditor
+                value={solution}
+                language="php"
+                label={`Řešení — ${fileName}`}
+                editable={false}
+                readOnly
+                minHeight="320px"
+              />
+            ),
+          }}
+        />
+      }
+      staticCheck={() => runStaticTaskChecks({ id, required }, source)}
       preview={
         <div className="space-y-4">
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
@@ -434,84 +471,79 @@ setcookie('__Host-remember', $token, [
   );
 }
 
-function Tasks() {
-  return (
-    <StaticLessonTask
-      id="zwa10-tasks"
-      task="Procvičte bezpečné cookies, session, CSRF ochranu, přihlášení, flash zprávu a odhlášení."
-      draft={`<?php
-setcookie('theme', 'dark', ['expires' => time() + 7 * 24 * 60 * 60, 'path' => '/']);
-session_start();
-session_regenerate_id(true);
-?>`}
-      required={["setcookie('theme'", 'session_start()', 'session_regenerate_id']}
-      expected="Ukázky nastaví bezpečné atributy cookie, udrží stav v session a po přihlášení obmění její ID."
-    >
-      <div className="space-y-6">
-        <h3 className="text-xl font-semibold">Zadání</h3>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">1) Nastavte cookie s tématem vzhledu</h4>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>
-              Vytvořte <Code>theme.php</Code>. Nastavte cookie <Code>theme=dark</Code> na 7 dní,{' '}
-              <Code>Secure</Code>, <Code>HttpOnly</Code>, <Code>SameSite=Lax</Code>.
-            </li>
-            <li>
-              Stránka má vypsat aktuální hodnotu <Code>$_COOKIE[&apos;theme&apos;]</Code>.
-            </li>
-          </ul>
-          <ClickToRevealSolution hint="setcookie('theme','dark',[...]); echo $_COOKIE['theme'] ?? 'light';">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
+const LESSON10_TASKS = [
+  {
+    id: 'task1',
+    title: 'Úkol 1: Nastavte cookie s tématem vzhledu',
+    task: 'Nastavte theme=dark na 7 dní s atributy Secure, HttpOnly a SameSite=Lax a hodnotu vypište.',
+    draft: `<?php
 setcookie('theme', 'dark', [
-  'expires'  => time() + 7*24*60*60,
-  'path'     => '/',
-  'secure'   => true,
+  'expires' => time() + 7 * 24 * 60 * 60,
+  'path' => '/',
+  'secure' => true,
+  'httponly' => true,
+]);
+?>`,
+    required: ["setcookie('theme'", "'secure' => true", "'httponly' => true"],
+    expected: 'Cookie má bezpečné atributy a stránka vypíše aktuální hodnotu.',
+    solution: `<?php
+setcookie('theme', 'dark', [
+  'expires' => time() + 7 * 24 * 60 * 60,
+  'path' => '/',
+  'secure' => true,
   'httponly' => true,
   'samesite' => 'Lax',
 ]);
-echo htmlspecialchars($_COOKIE['theme'] ?? 'light');`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">2) Počítadlo návštěv v session</h4>
-          <ClickToRevealSolution hint="session_start(); $_SESSION['counter'] = ($_SESSION['counter'] ?? 0) + 1;">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
+echo htmlspecialchars($_COOKIE['theme'] ?? 'light', ENT_QUOTES, 'UTF-8');`,
+  },
+  {
+    id: 'task2',
+    title: 'Úkol 2: Počítadlo návštěv v session',
+    task: 'Spusťte session, zvyšujte počítadlo návštěv a vypište jeho hodnotu.',
+    draft: `<?php
+session_start();
+$_SESSION['counter'] = ($_SESSION['counter'] ?? 0) + 1;`,
+    required: ['session_start()', "$_SESSION['counter']"],
+    expected: 'Počet návštěv se uchovává na serveru v session.',
+    solution: `<?php
 session_start();
 $_SESSION['counter'] = (int)(($_SESSION['counter'] ?? 0) + 1);
-echo $_SESSION['counter'];`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">3) CSRF token pro formulář</h4>
-          <ClickToRevealSolution hint="$_SESSION['csrf']=...; ve formuláři <input type=hidden name=csrf ...>; při POST ověřit hash_equals">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
+echo $_SESSION['counter'];`,
+  },
+  {
+    id: 'task3',
+    title: 'Úkol 3: CSRF token pro formulář',
+    task: 'Vygenerujte token v session, vložte jej do formuláře a při POST ověřte hash_equals.',
+    draft: `<?php
 session_start();
-if (empty($_SESSION['csrf'])) {
-  $_SESSION['csrf'] = bin2hex(random_bytes(32));
+$_SESSION['csrf'] = bin2hex(random_bytes(32));`,
+    required: ["$_SESSION['csrf']", 'hash_equals', "$_POST['csrf']"],
+    expected: 'Server odmítne POST s chybějícím nebo neplatným CSRF tokenem.',
+    solution: `<?php
+session_start();
+if (empty($_SESSION['csrf'])) $_SESSION['csrf'] = bin2hex(random_bytes(32));
+if ($_SERVER['REQUEST_METHOD'] === 'POST' &&
+    !hash_equals($_SESSION['csrf'], $_POST['csrf'] ?? '')) {
+  http_response_code(400);
+  exit('CSRF!');
 }
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  if (!hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf'] ?? '')) {
-    exit('CSRF!');
-  }
-  echo 'OK';
-}`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">4) Přihlášení s regenerací session ID</h4>
-          <ClickToRevealSolution hint="Po validaci hesla zavolejte session_regenerate_id(true) a nastavte $_SESSION['user']">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
+?>
+<form method="post">
+  <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
+  <button type="submit">Odeslat</button>
+</form>`,
+  },
+  {
+    id: 'task4',
+    title: 'Úkol 4: Přihlášení s regenerací session ID',
+    task: 'Po úspěšném ověření hesla obměňte ID session a uložte uživatele.',
+    draft: `<?php
+session_start();
+session_regenerate_id(true);
+$_SESSION['user'] = 'admin';`,
+    required: ['session_regenerate_id', "$_SESSION['user']"],
+    expected: 'Úspěšné přihlášení brání fixation útoku regenerací ID.',
+    solution: `<?php
 session_start();
 if (($_POST['u'] ?? '') === 'admin' && ($_POST['p'] ?? '') === 'secret') {
   session_regenerate_id(true);
@@ -519,62 +551,70 @@ if (($_POST['u'] ?? '') === 'admin' && ($_POST['p'] ?? '') === 'secret') {
   echo 'OK';
 } else {
   echo 'Bad credentials';
-}`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">5) Flash zpráva</h4>
-          <ClickToRevealSolution hint="$_SESSION['flash']='...'; a na další stránce vypsat a unset">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
-// set
+}`,
+  },
+  {
+    id: 'task5',
+    title: 'Úkol 5: Flash zpráva',
+    task: 'Uložte jednorázovou flash zprávu do session, po přesměrování ji vypište a odstraňte.',
+    draft: `<?php
+session_start();
+$_SESSION['flash'] = 'Hotovo';`,
+    required: ["$_SESSION['flash']", 'unset', 'session_start()'],
+    expected: 'Flash zpráva se zobrazí právě jednou.',
+    solution: `<?php
 session_start();
 $_SESSION['flash'] = 'Hotovo';
-header('Location: /');`}</code>
-            </pre>
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mt-2">
-              <code className="language-php">{`<?php
-// show
-session_start();
-$f = $_SESSION['flash'] ?? null;
+header('Location: /');
+
+// Na cílové stránce:
+$flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
-if ($f) echo htmlspecialchars($f);`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
+if ($flash) echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8');`,
+  },
+  {
+    id: 'task6',
+    title: 'Úkol 6: Smazání cookie „theme“',
+    task: 'Smažte cookie theme nastavením prošlého data při zachování stejné cesty.',
+    draft: `<?php
+setcookie('theme', '', ['expires' => time() - 3600, 'path' => '/']);`,
+    required: ["setcookie('theme'", "'expires' => time() - 3600", "'path' => '/'"],
+    expected: 'Prohlížeč odstraní cookie theme.',
+    solution: `<?php
+setcookie('theme', '', [
+  'expires' => time() - 3600,
+  'path' => '/',
+  'secure' => true,
+  'httponly' => true,
+  'samesite' => 'Lax',
+]);`,
+  },
+  {
+    id: 'task7',
+    title: 'Úkol 7: BONUS: Remember‑me cookie s hashem v DB',
+    task: 'Uložte do DB pouze hash remember-me tokenu a plaintext token pošlete v bezpečné cookie.',
+    draft: `<?php
+$token = bin2hex(random_bytes(32));
+$hash = hash('sha256', $token);
+setcookie('__Host-remember', $token, ['secure' => true, 'httponly' => true]);`,
+    required: ["hash('sha256'", "'__Host-remember'", 'random_bytes'],
+    expected: 'Databáze neobsahuje plaintext token a cookie má bezpečné atributy.',
+    solution: `<?php
+$token = bin2hex(random_bytes(32));
+$hash = hash('sha256', $token);
+// DB uloží user_id, $hash a expiraci; plaintext zůstane jen v cookie.
+setcookie('__Host-remember', $token, [
+  'expires' => time() + 30 * 24 * 60 * 60,
+  'path' => '/',
+  'secure' => true,
+  'httponly' => true,
+  'samesite' => 'Lax',
+]);`,
+  },
+];
 
-        <section className="space-y-3">
-          <h4 className="font-semibold">6) Smazání cookie „theme“</h4>
-          <ClickToRevealSolution hint="setcookie('theme','', ['expires'=>time()-3600,'path'=>'/'])">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
-setcookie('theme', '', ['expires' => time() - 3600, 'path' => '/']);`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">BONUS: Remember‑me cookie s hashem v DB</h4>
-          <ClickToRevealSolution hint="hash(token) uložit do DB, plaintext do cookie __Host-remember">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
-$t = bin2hex(random_bytes(32));
-// db.save(user_id, hash('sha256',$t), expires)
-setcookie('__Host-remember', $t, [
-  'expires' => time() + 30*24*60*60,
-  'path'    => '/',
-  'secure'  => true,
-  'httponly'=> true,
-  'samesite'=> 'Lax',
-]);`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-      </div>
-    </StaticLessonTask>
-  );
+function SessionTaskSlide({ task }) {
+  return <StaticLessonTask {...task} />;
 }
 
 function SummarySlide() {
@@ -624,6 +664,9 @@ function SummarySlide() {
 }
 
 export default function AppPhpLesson10() {
+  const legacyTasksRequested =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('slide') === 'tasks';
   const slides = useMemo(
     () => [
       {
@@ -654,13 +697,17 @@ export default function AppPhpLesson10() {
         title: 'Teorie – Praktické vzory (login, flash, remember‑me)',
         activityType: 'learn',
       },
-      { id: 'tasks', title: 'Úkoly', activityType: 'apply' },
+      ...LESSON10_TASKS.map(({ id, title }) => ({ id, title, activityType: 'apply' })),
       { id: 'summary', title: 'Shrnutí a odkazy', activityType: 'learn' },
     ],
     [],
   );
   const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
   const current = slides.find((s) => s.id === activeSlide) || slides[0];
+
+  useEffect(() => {
+    if (legacyTasksRequested) setActiveSlide('task1');
+  }, [legacyTasksRequested, setActiveSlide]);
 
   return (
     <LessonShell

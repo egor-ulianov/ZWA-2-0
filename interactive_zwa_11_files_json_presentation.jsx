@@ -1,11 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
 import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
-import ClickToRevealSolution from './src/components/lesson/ClickToRevealSolution.jsx';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 import { clsx } from './src/components/lesson/classNames.js';
 
@@ -25,13 +26,32 @@ function LessonSlideContent({ slide }) {
       {slide.id === 'theory-library' && <TheoryUsersLibrary />}
       {slide.id === 'theory-pagination' && <TheoryPagination />}
 
-      {slide.id === 'tasks' && <Tasks />}
+      {LESSON11_TASKS.some((task) => task.id === slide.id) && (
+        <FileTaskSlide task={LESSON11_TASKS.find((task) => task.id === slide.id)} />
+      )}
       {slide.id === 'summary' && <SummarySlide />}
     </SharedSlideCard>
   );
 }
 
-function StaticLessonTask({ id, task, draft, required, expected, children }) {
+function StaticLessonTask({ id, task, draft, required, expected, solution = draft }) {
+  const [source, setSource] = useState(draft);
+  const fileName = 'users.lib.php';
+  const studentPanel = (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        Soubor: {fileName}
+      </p>
+      <SyntaxCodeEditor
+        value={source}
+        onChange={setSource}
+        language="php"
+        label="Editor – zdrojový kód"
+        minHeight="320px"
+      />
+    </div>
+  );
+
   return (
     <LessonTaskWorkspace
       privateMarker={`static-${id}`}
@@ -42,16 +62,33 @@ function StaticLessonTask({ id, task, draft, required, expected, children }) {
             <strong>Konkrétní vstup studenta:</strong> upravte PHP zdrojový kód pro práci se
             soubory, JSON a stránkováním.
           </p>
-          {children}
         </div>
       }
       editor={{
         source: draft,
         label: 'Editor – zdrojový kód',
         language: 'php',
-        fileName: 'users.lib.php (PHP)',
+        fileName,
       }}
-      staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
+      ideTabs={
+        <WorkspaceIdeTabs
+          files={[{ id: 'student-file', label: fileName, panel: studentPanel }]}
+          solution={{
+            label: 'Řešení',
+            panel: (
+              <SyntaxCodeEditor
+                value={solution}
+                language="php"
+                label={`Řešení — ${fileName}`}
+                editable={false}
+                readOnly
+                minHeight="320px"
+              />
+            ),
+          }}
+        />
+      }
+      staticCheck={() => runStaticTaskChecks({ id, required }, source)}
       preview={
         <div className="space-y-4">
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
@@ -328,134 +365,133 @@ function list_users_paginated(?int $limit = null, int $offset = 0): array {
   );
 }
 
-function Tasks() {
-  return (
-    <StaticLessonTask
-      id="zwa11-tasks"
-      task="Procvičte lokální práci se soubory, JSON, knihovnu uživatelů a stránkování."
-      draft={`<?php
+const LESSON11_TASKS = [
+  {
+    id: 'task1',
+    title: 'Úkol 1: První experimenty se soubory',
+    task: 'Vytvořte data.txt, zapište do něj text a přečtěte ho zpět s LOCK_EX.',
+    draft: `<?php
 $path = __DIR__ . '/data.txt';
 file_put_contents($path, "Hello\\n", LOCK_EX);
-$raw = file_get_contents($path);
-$data = json_decode($raw, true);
-$page = array_slice($data ?? [], 0, 3);
-?>`}
-      required={['file_put_contents', 'json_decode', 'array_slice']}
-      expected="Výsledný serverový program čte a zapisuje data, převádí JSON na pole a stránkuje záznamy."
-    >
-      <div className="space-y-6">
-        <h3 className="text-xl font-semibold">Zadání</h3>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">1) První experimenty se soubory</h4>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>
-              Vytvořte <Code>data.txt</Code>, zapište do něj text a přečtěte ho zpět.
-            </li>
-            <li>
-              Vyzkoušejte <Code>LOCK_EX</Code> a práci s cestou přes <Code>__DIR__</Code>.
-            </li>
-          </ul>
-          <ClickToRevealSolution hint="file_put_contents(__DIR__.'/data.txt', 'Hello', LOCK_EX); file_get_contents(...);">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
-$p = __DIR__ . '/data.txt';
-file_put_contents($p, "Hello\\n", LOCK_EX);
-echo file_get_contents($p);`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">2) JSON – načtení a uložení</h4>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>
-              Uložte pole do <Code>data.json</Code> a načtěte ho jako asociativní pole.
-            </li>
-            <li>
-              Použijte <Code>JSON_PRETTY_PRINT</Code> a <Code>JSON_UNESCAPED_UNICODE</Code>.
-            </li>
-          </ul>
-          <ClickToRevealSolution hint="json_encode($arr, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE); json_decode($raw, true);">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
-$arr = ['greeting' => 'Ahoj', 'n' => 3];
-$json = json_encode($arr, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
+$raw = file_get_contents($path);`,
+    required: ['file_put_contents', 'file_get_contents', '__DIR__', 'LOCK_EX'],
+    expected: 'Program bezpečně zapíše a přečte lokální textový soubor.',
+    solution: `<?php
+$path = __DIR__ . '/data.txt';
+file_put_contents($path, "Hello\\n", LOCK_EX);
+echo file_get_contents($path);`,
+  },
+  {
+    id: 'task2',
+    title: 'Úkol 2: JSON – načtení a uložení',
+    task: 'Uložte pole do data.json v čitelném UTF-8 JSON a načtěte jej jako asociativní pole.',
+    draft: `<?php
+$data = ['greeting' => 'Ahoj'];
+$json = json_encode($data);
+$decoded = json_decode($json, true);`,
+    required: ['json_encode', 'JSON_PRETTY_PRINT', 'json_decode', 'JSON_UNESCAPED_UNICODE'],
+    expected: 'JSON se uloží čitelně a po načtení vznikne asociativní pole.',
+    solution: `<?php
+$data = ['greeting' => 'Ahoj', 'n' => 3];
+$json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 file_put_contents(__DIR__ . '/data.json', $json, LOCK_EX);
 $raw = file_get_contents(__DIR__ . '/data.json');
-$back = json_decode($raw, true);
-var_dump($back);`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">3) Knihovna uživatelů</h4>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>
-              Implementujte v <Code>users.lib.php</Code> funkce: <Code>list_users</Code>,{' '}
-              <Code>get_user</Code>, <Code>add_user</Code>, <Code>delete_user</Code>,{' '}
-              <Code>edit_user</Code>.
-            </li>
-            <li>
-              Testujte pomocí připraveného <Code>index.php</Code> a souboru <Code>users.json</Code>.
-            </li>
-          </ul>
-          <ClickToRevealSolution hint="viz ukázka v Teorie – Knihovna uživatelů">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
-require __DIR__.'/users.lib.php';
-$id = add_user('Alice','alice@example.com','😊');
-$u = get_user($id);
-var_dump($u);
-delete_user($id);`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">4) Stránkování</h4>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>
-              Rozšiřte <Code>list_users()</Code> o parametry <Code>$limit</Code> a{' '}
-              <Code>$offset</Code> a připravte HTML s odkazem na další/předchozí stránku (3 položky
-              na stránku).
-            </li>
-          </ul>
-          <ClickToRevealSolution hint="array_slice(load_all_users(), $offset, $limit);">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
+$decoded = json_decode($raw, true);
+var_dump($decoded);`,
+  },
+  {
+    id: 'task3',
+    title: 'Úkol 3: Knihovna uživatelů',
+    task: 'Implementujte list_users, get_user, add_user, delete_user a edit_user nad users.json.',
+    draft: `<?php
+function list_users(): array { return []; }
+function get_user(int $id): ?array { return null; }
+function add_user(string $name, string $email): int { return 1; }
+function delete_user(int $id): bool { return true; }
+function edit_user(int $id, array $data): bool { return true; }`,
+    required: [
+      'function list_users',
+      'function get_user',
+      'function add_user',
+      'function delete_user',
+      'function edit_user',
+    ],
+    expected: 'Knihovna poskytuje základní CRUD operace s uživateli.',
+    solution: `<?php
+function users_path(): string { return __DIR__ . '/users.json'; }
+function load_all_users(): array {
+  $raw = @file_get_contents(users_path());
+  $users = json_decode($raw ?: '[]', true);
+  return is_array($users) ? $users : [];
+}
+function save_all_users(array $users): void {
+  file_put_contents(users_path(), json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+}
+function list_users(): array { return load_all_users(); }
+function get_user(int $id): ?array {
+  foreach (load_all_users() as $user) if ((int)($user['id'] ?? 0) === $id) return $user;
+  return null;
+}
+function add_user(string $name, string $email, string $avatar = ''): int {
+  $users = load_all_users();
+  $id = count($users) ? max(array_column($users, 'id')) + 1 : 1;
+  $users[] = compact('id', 'name', 'email', 'avatar');
+  save_all_users($users);
+  return $id;
+}
+function delete_user(int $id): bool {
+  $before = load_all_users();
+  $after = array_values(array_filter($before, fn($user) => (int)($user['id'] ?? 0) !== $id));
+  save_all_users($after);
+  return count($after) !== count($before);
+}
+function edit_user(int $id, array $data): bool {
+  $users = load_all_users();
+  foreach ($users as &$user) if ((int)($user['id'] ?? 0) === $id) { $user = array_merge($user, $data); save_all_users($users); return true; }
+  return false;
+}`,
+  },
+  {
+    id: 'task4',
+    title: 'Úkol 4: Stránkování',
+    task: 'Rozšiřte list_users o limit a offset a připravte odkazy na další/předchozí stránku.',
+    draft: `<?php
 function list_users(int $limit = 3, int $offset = 0): array {
-  return array_slice(load_all_users(), max(0,$offset), $limit);
-}`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
+  return array_slice(load_all_users(), $offset, $limit);
+}`,
+    required: ['array_slice', '$limit', '$offset'],
+    expected: 'Výpis vrací právě požadovanou stránku uživatelů.',
+    solution: `<?php
+function list_users(int $limit = 3, int $offset = 0): array {
+  $limit = max(1, $limit);
+  $offset = max(0, $offset);
+  return array_slice(load_all_users(), $offset, $limit);
+}
+$page = max(0, (int)($_GET['page'] ?? 0));
+$users = list_users(3, $page * 3);`,
+  },
+  {
+    id: 'task5',
+    title: 'Úkol 5: BONUS: Robustnější zpracování',
+    task: 'Validujte e-mail a avatar, ošetřete chyby JSON a chraňte souběžný zápis.',
+    draft: `<?php
+$email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+$raw = file_get_contents(__DIR__ . '/users.json');
+$users = json_decode($raw, true) ?? [];`,
+    required: ['FILTER_VALIDATE_EMAIL', 'json_last_error', 'LOCK_EX'],
+    expected: 'Neplatné vstupy a poškozený JSON se zpracují bezpečně.',
+    solution: `<?php
+$email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+if ($email === false) throw new InvalidArgumentException('Neplatný e-mail');
+$raw = file_get_contents(__DIR__ . '/users.json');
+$users = json_decode($raw, true);
+if (json_last_error() !== JSON_ERROR_NONE || !is_array($users)) $users = [];
+file_put_contents(__DIR__ . '/users.json', json_encode($users, JSON_UNESCAPED_UNICODE), LOCK_EX);`,
+  },
+];
 
-        <section className="space-y-3">
-          <h4 className="font-semibold">BONUS: Robustnější zpracování</h4>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>
-              Validujte vstupy (email, nepovinný avatar), ošetřete chyby <Code>json_decode</Code>/
-              <Code>json_encode</Code>.
-            </li>
-            <li>Zvažte kontrolu souběžných zápisů (LOCK_EX) a zálohu staré verze souboru.</li>
-          </ul>
-        </section>
-        <div className="text-xs text-zinc-500">
-          Materiál vychází z:{' '}
-          <a
-            className="underline"
-            href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/11/start"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            B6B39ZWA – Cvičení 11: Soubory
-          </a>
-        </div>
-      </div>
-    </StaticLessonTask>
-  );
+function FileTaskSlide({ task }) {
+  return <StaticLessonTask {...task} />;
 }
 
 function SummarySlide() {
@@ -507,6 +543,9 @@ function SummarySlide() {
 }
 
 export default function AppPhpLesson11() {
+  const legacyTasksRequested =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('slide') === 'tasks';
   const slides = useMemo(
     () => [
       {
@@ -528,13 +567,17 @@ export default function AppPhpLesson11() {
         title: 'Teorie – Stránkování (limit/offset)',
         activityType: 'learn',
       },
-      { id: 'tasks', title: 'Úkoly', activityType: 'apply' },
+      ...LESSON11_TASKS.map(({ id, title }) => ({ id, title, activityType: 'apply' })),
       { id: 'summary', title: 'Shrnutí a odkazy', activityType: 'learn' },
     ],
     [],
   );
   const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
   const current = slides.find((s) => s.id === activeSlide) || slides[0];
+
+  useEffect(() => {
+    if (legacyTasksRequested) setActiveSlide('task1');
+  }, [legacyTasksRequested, setActiveSlide]);
 
   return (
     <LessonShell

@@ -1,11 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
 import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
-import ClickToRevealSolution from './src/components/lesson/ClickToRevealSolution.jsx';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 import { clsx } from './src/components/lesson/classNames.js';
 
@@ -27,13 +28,32 @@ function LessonSlideContent({ slide }) {
       {slide.id === 'theory-login-session' && <TheoryLoginSession />}
       {slide.id === 'theory-security' && <TheorySecurity />}
 
-      {slide.id === 'tasks' && <Tasks />}
+      {LESSON12_TASKS.some((task) => task.id === slide.id) && (
+        <AuthTaskSlide task={LESSON12_TASKS.find((task) => task.id === slide.id)} />
+      )}
       {slide.id === 'summary' && <SummarySlide />}
     </SharedSlideCard>
   );
 }
 
-function StaticLessonTask({ id, task, draft, required, expected, children }) {
+function StaticLessonTask({ id, task, draft, required, expected, solution = draft }) {
+  const [source, setSource] = useState(draft);
+  const fileName = 'auth.php';
+  const studentPanel = (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        Soubor: {fileName}
+      </p>
+      <SyntaxCodeEditor
+        value={source}
+        onChange={setSource}
+        language="php"
+        label="Editor – zdrojový kód"
+        minHeight="320px"
+      />
+    </div>
+  );
+
   return (
     <LessonTaskWorkspace
       privateMarker={`static-${id}`}
@@ -44,16 +64,33 @@ function StaticLessonTask({ id, task, draft, required, expected, children }) {
             <strong>Konkrétní vstup studenta:</strong> upravte PHP zdrojový kód pro přihlášení,
             session a ochranu formulářů.
           </p>
-          {children}
         </div>
       }
       editor={{
         source: draft,
         label: 'Editor – zdrojový kód',
         language: 'php',
-        fileName: 'login.php (PHP)',
+        fileName,
       }}
-      staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
+      ideTabs={
+        <WorkspaceIdeTabs
+          files={[{ id: 'student-file', label: fileName, panel: studentPanel }]}
+          solution={{
+            label: 'Řešení',
+            panel: (
+              <SyntaxCodeEditor
+                value={solution}
+                language="php"
+                label={`Řešení — ${fileName}`}
+                editable={false}
+                readOnly
+                minHeight="320px"
+              />
+            ),
+          }}
+        />
+      }
+      staticCheck={() => runStaticTaskChecks({ id, required }, source)}
       preview={
         <div className="space-y-4">
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
@@ -319,123 +356,119 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   );
 }
 
-function Tasks() {
-  return (
-    <StaticLessonTask
-      id="zwa12-tasks"
-      task="Procvičte bezpečné přihlášení, práci se session, odhlášení a návrh CSRF ochrany."
-      draft={`<?php
+const LESSON12_TASKS = [
+  {
+    id: 'task1',
+    title: 'Úkol 1: Přihlašovací formulář',
+    task: 'Vytvořte přihlašovací formulář a ověřte heslo proti uloženému hashi.',
+    draft: `<?php
 $hash = password_hash('secret', PASSWORD_DEFAULT);
+$password = $_POST['password'] ?? '';
+$valid = password_verify($password, $hash);`,
+    required: ['password_hash', 'password_verify', "$_POST['password']"],
+    expected: 'Formulář předá heslo přes POST a server porovná jeho hash bez ukládání plaintextu.',
+    solution: `<?php
+$storedHash = password_hash('secret', PASSWORD_DEFAULT);
+$username = trim($_POST['username'] ?? '');
+$password = $_POST['password'] ?? '';
+$errors = [];
+if ($username === '') $errors[] = 'Zadejte uživatelské jméno.';
+if (!password_verify($password, $storedHash)) $errors[] = 'Neplatné přihlašovací údaje.';
+?>
+<form method="post">
+  <label>Uživatel <input name="username" required></label>
+  <label>Heslo <input type="password" name="password" required></label>
+  <button type="submit">Přihlásit</button>
+</form>
+<?php if ($errors): ?><p><?= htmlspecialchars($errors[0], ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>`,
+  },
+  {
+    id: 'task2',
+    title: 'Úkol 2: Sezení a ochrana',
+    task: 'Po úspěšném přihlášení regenerujte ID session a chraňte stránku před anonymním přístupem.',
+    draft: `<?php
 session_start();
-session_regenerate_id(true);
-$_SESSION['user'] = 'admin';
-session_destroy();
-?>`}
-      required={['password_hash', 'session_regenerate_id', 'session_destroy']}
-      expected="Přihlášení ověřuje hash hesla, chráněná stránka používá session a odhlášení session zruší."
-    >
-      <div className="space-y-6">
-        <h3 className="text-xl font-semibold">Zadání</h3>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">1) Přihlašovací formulář</h4>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>
-              Vytvořte jednoduchou stránku s formulářem (username +{' '}
-              <Code>input type=&quot;password&quot;</Code>
-              ).
-            </li>
-            <li>
-              Po odeslání v PHP ověřte přes <Code>password_hash</Code>/<Code>password_verify</Code>{' '}
-              oproti uložené hodnotě.
-            </li>
-          </ul>
-          <ClickToRevealSolution hint="password_hash(...); password_verify($_POST['password'], $hash);">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
-$hash = password_hash('secret', PASSWORD_DEFAULT);
-if (password_verify($_POST['password'] ?? '', $hash)) {
-  echo 'OK';
-} else {
-  echo 'Bad';
-}`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">2) Sezení a ochrana</h4>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>
-              Po úspěšném přihlášení nastavte <Code>$_SESSION[&apos;user&apos;]</Code> a proveďte{' '}
-              <Code>session_regenerate_id(true)</Code>.
-            </li>
-            <li>Zobrazte chráněnou stránku pouze přihlášeným; jinak přesměrujte na login.</li>
-          </ul>
-          <ClickToRevealSolution hint="session_start(); session_regenerate_id(true); $_SESSION['user']=...;">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
-session_start();
-if (!isset($_SESSION['user'])) {
-  header('Location: /login.php'); exit;
+if ($valid) {
+  session_regenerate_id(true);
+  $_SESSION['user'] = $username;
 }
-echo 'Vítejte, ' . htmlspecialchars($_SESSION['user']['name'] ?? '');`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">3) Odhlášení</h4>
-          <ClickToRevealSolution hint="unset($_SESSION['user']); session_destroy(); smazání session cookie dle potřeby">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<?php
+if (!isset($_SESSION['user'])) header('Location: /login.php');`,
+    required: ['session_start()', 'session_regenerate_id', "$_SESSION['user']", 'isset'],
+    expected:
+      'Session se po přihlášení zafixuje na novém ID a chráněný obsah uvidí jen přihlášený uživatel.',
+    solution: `<?php
+session_start();
+$storedHash = password_hash('secret', PASSWORD_DEFAULT);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && password_verify($_POST['password'] ?? '', $storedHash)) {
+  session_regenerate_id(true);
+  $_SESSION['user'] = ['name' => trim($_POST['username'] ?? '')];
+  header('Location: /account.php');
+  exit;
+}
+if (!isset($_SESSION['user'])) {
+  header('Location: /login.php');
+  exit;
+}
+echo 'Vítejte, ' . htmlspecialchars($_SESSION['user']['name'], ENT_QUOTES, 'UTF-8');`,
+  },
+  {
+    id: 'task3',
+    title: 'Úkol 3: Odhlášení',
+    task: 'Implementujte odhlášení, které odstraní data session a přesměruje na přihlášení.',
+    draft: `<?php
 session_start();
 $_SESSION = [];
 session_destroy();
-header('Location: /login.php');`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
+header('Location: /login.php');`,
+    required: ['session_start()', '$_SESSION = []', 'session_destroy'],
+    expected: 'Odhlášení odstraní session data a uživatel se vrátí na přihlašovací stránku.',
+    solution: `<?php
+session_start();
+$_SESSION = [];
+if (ini_get('session.use_cookies')) {
+  $params = session_get_cookie_params();
+  setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+}
+session_destroy();
+header('Location: /login.php');
+exit;`,
+  },
+  {
+    id: 'task4',
+    title: 'Úkol 4: Domácí úkol: CSRF',
+    task: 'Přidejte do formuláře CSRF token generovaný v session a ověřte jej při POST.',
+    draft: `<?php
+session_start();
+$_SESSION['csrf'] = bin2hex(random_bytes(32));
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !hash_equals($_SESSION['csrf'], $_POST['csrf'] ?? '')) {
+  exit('CSRF');
+}`,
+    required: [
+      'session_start()',
+      'random_bytes',
+      'hash_equals',
+      "$_SESSION['csrf']",
+      "$_POST['csrf']",
+    ],
+    expected: 'Server přijme pouze POST s tokenem, který odpovídá hodnotě uložené v session.',
+    solution: `<?php
+session_start();
+if (empty($_SESSION['csrf'])) $_SESSION['csrf'] = bin2hex(random_bytes(32));
+if ($_SERVER['REQUEST_METHOD'] === 'POST' &&
+    !hash_equals($_SESSION['csrf'], $_POST['csrf'] ?? '')) {
+  http_response_code(400);
+  exit('CSRF verification failed');
+}
+?>
+<form method="post">
+  <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf'], ENT_QUOTES, 'UTF-8') ?>">
+  <button type="submit">Uložit</button>
+</form>`,
+  },
+];
 
-        <section className="space-y-3">
-          <h4 className="font-semibold">Domácí úkol: CSRF</h4>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>Přidejte do formulářů CSRF tokeny – generované a ověřované v session.</li>
-          </ul>
-        </section>
-
-        <div className="text-xs text-zinc-500">
-          Materiál vychází z:{' '}
-          <a
-            className="underline"
-            href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/12/start"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            Cvičení 12 – zadání
-          </a>{' '}
-          •{' '}
-          <a
-            className="underline"
-            href="https://cw.fel.cvut.cz/wiki/_media/courses/b6b39zwa/lectures/10a/autentizace_a_autorizace_2020.pdf"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            Autentizace a autorizace – slidy
-          </a>{' '}
-          •{' '}
-          <a
-            className="underline"
-            href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/12/start"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            Cvičení 12 – zadání
-          </a>
-        </div>
-      </div>
-    </StaticLessonTask>
-  );
+function AuthTaskSlide({ task }) {
+  return <StaticLessonTask {...task} />;
 }
 
 function SummarySlide() {
@@ -496,6 +529,9 @@ function SummarySlide() {
 }
 
 export default function AppPhpLesson12() {
+  const legacyTasksRequested =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('slide') === 'tasks';
   const slides = useMemo(
     () => [
       {
@@ -519,13 +555,17 @@ export default function AppPhpLesson12() {
         title: 'Teorie – Bezpečnost (CSRF, fixation, hijacking)',
         activityType: 'learn',
       },
-      { id: 'tasks', title: 'Úkoly', activityType: 'apply' },
+      ...LESSON12_TASKS.map(({ id, title }) => ({ id, title, activityType: 'apply' })),
       { id: 'summary', title: 'Shrnutí a odkazy', activityType: 'learn' },
     ],
     [],
   );
   const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
   const current = slides.find((s) => s.id === activeSlide) || slides[0];
+
+  useEffect(() => {
+    if (legacyTasksRequested) setActiveSlide('task1');
+  }, [legacyTasksRequested, setActiveSlide]);
 
   return (
     <LessonShell

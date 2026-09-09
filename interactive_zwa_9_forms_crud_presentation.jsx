@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import mvcImg from './src/interactive-zwa-8/ssr-mvc.png';
 import restImg from './src/interactive-zwa-8/resful.jpg';
 import gloryImg from './src/interactive-zwa-8/gloryofrest.png';
@@ -8,9 +8,10 @@ import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonS
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
-import ClickToRevealSolution from './src/components/lesson/ClickToRevealSolution.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 
 function LessonSlideContent({ slide }) {
@@ -57,7 +58,9 @@ function LessonSlideContent({ slide }) {
       {slide.id === 'theory-arch' && <TheoryArchitecture />}
       {slide.id === 'rest-glory' && <GloryRestSlide />}
 
-      {slide.id === 'tasks' && <TasksFromTutorial />}
+      {LESSON9_TASKS.some((task) => task.id === slide.id) && (
+        <TutorialTaskSlide task={LESSON9_TASKS.find((task) => task.id === slide.id)} />
+      )}
       {slide.id === 'summary' && <SummarySlide />}
     </SharedSlideCard>
   );
@@ -69,9 +72,25 @@ function StaticLessonTask({
   draft,
   required,
   expected,
-  children,
   fileName = 'form.php',
+  solution = draft,
 }) {
+  const [source, setSource] = useState(draft);
+  const studentPanel = (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        Soubor: {fileName}
+      </p>
+      <SyntaxCodeEditor
+        value={source}
+        onChange={setSource}
+        language="php"
+        label="Editor – zdrojový kód"
+        minHeight="320px"
+      />
+    </div>
+  );
+
   return (
     <LessonTaskWorkspace
       privateMarker={`static-${id}`}
@@ -82,7 +101,25 @@ function StaticLessonTask({
         language: 'php',
         fileName,
       }}
-      staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
+      ideTabs={
+        <WorkspaceIdeTabs
+          files={[{ id: 'student-file', label: fileName, panel: studentPanel }]}
+          solution={{
+            label: 'Řešení',
+            panel: (
+              <SyntaxCodeEditor
+                value={solution}
+                language="php"
+                label={`Řešení — ${fileName}`}
+                editable={false}
+                readOnly
+                minHeight="320px"
+              />
+            ),
+          }}
+        />
+      }
+      staticCheck={() => runStaticTaskChecks({ id, required }, source)}
       preview={
         <div className="space-y-4">
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
@@ -92,7 +129,6 @@ function StaticLessonTask({
             Náhled je pouze statické vysvětlení; PHP ani serverové zpracování se v tomto prohlížeči
             nespouští.
           </p>
-          {children}
         </div>
       }
     />
@@ -755,125 +791,130 @@ function GloryRestSlide() {
   );
 }
 
-function TasksFromTutorial() {
-  return (
-    <StaticLessonTask
-      id="zwa9-tasks"
-      task="Procvičte odesílání formulářů, skupiny radio/checkbox, validaci a bezpečné CRUD vzory."
-      draft={`<form action="handle.php" method="post">
-  <input type="radio" name="spam" value="promo">
-  <input type="checkbox" name="interests[]" value="web">
+const LESSON9_TASKS = [
+  {
+    id: 'task1',
+    title: 'Úkol 1: Úprava formuláře + otázky',
+    task: 'Upravte formulář tak, aby používal explicitní POST a bezpečně četl odeslané hodnoty.',
+    draft: `<form action="handle.php" method="post">
+  <input type="checkbox" name="agree" value="1">
 </form>
 <?php
 $email = $_POST['email'] ?? '';
-?>`}
-      required={['method="post"', 'name="interests[]"', "$_POST['email']"]}
-      expected="Formulář používá explicitní POST, pole pro vícenásobný výběr a serverovou validaci vstupů."
-    >
-      <div className="space-y-6">
-        <h3 className="text-xl font-semibold">Zadání dle tutoriálu</h3>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">1) Úprava formuláře + otázky</h4>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>
-              Kam se odesílají data? Jaká hodnota se pošle zaškrtnutým/ nezaškrtnutým checkboxem?
-            </li>
-            <li>Rozdíl mezi metodami GET a POST; co je v {`$_REQUEST`} a kolize jmen.</li>
-          </ul>
-          <ClickToRevealSolution hint="action, method, name=..., value=..., checkbox posílá value jen když je zaškrtnutý">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`<form action="handle.php" method="post">
-  <input type="checkbox" name="agree" value="1"> Souhlasím
+?>`,
+    required: ['method="post"', "$_POST['email']"],
+    expected: 'Formulář odesílá data metodou POST a server pracuje s explicitními vstupy.',
+    solution: `<form action="handle.php" method="post">
+  <label>E-mail <input type="email" name="email" required></label>
+  <label><input type="checkbox" name="agree" value="1"> Souhlasím</label>
+  <button type="submit">Odeslat</button>
 </form>
 <?php
-// Checkbox posílá '1' pouze pokud je zaškrtnut. Jinak není klíč v $_POST vůbec přítomen.
-// $_REQUEST kombinuje $_GET, $_POST a $_COOKIE – hrozí kolize jmen.
-?>`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">
-            2) Spam – pouze jedna možnost (radio) + rekurze pro pole
-          </h4>
-          <ClickToRevealSolution hint="name='spam' pro všechny radio, funkce pro výpis pole viz dříve">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-html">{`<label><input type="radio" name="spam" value="promo"> Promo</label>
-<label><input type="radio" name="spam" value="news"> Newsletter</label>`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">3) Zájmy – posílat vybrané položky v jednom poli</h4>
-          <ClickToRevealSolution hint="name='interests[]'">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-html">{`<input type="checkbox" name="interests[]" value="music"> Hudba
-<input type="checkbox" name="interests[]" value="web"> Web`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">4) Oblíbené předměty – multi‑select</h4>
-          <ClickToRevealSolution hint="multiple + name='subjects[]'">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-html">{`<select name="subjects[]" multiple>
+$email = trim($_POST['email'] ?? '');
+$agreed = isset($_POST['agree']);
+?>`,
+  },
+  {
+    id: 'task2',
+    title: 'Úkol 2: Spam – pouze jedna možnost (radio) + rekurze pro pole',
+    task: 'Vytvořte skupinu radio tlačítek se stejným name a vypište vybranou hodnotu.',
+    draft: `<label><input type="radio" name="spam" value="promo"> Promo</label>
+<label><input type="radio" name="spam" value="news"> Newsletter</label>`,
+    required: ['name="spam"', 'value="promo"'],
+    expected: 'Radio volby sdílejí name a server obdrží nejvýše jednu hodnotu.',
+    solution: `<?php
+$spam = $_POST['spam'] ?? null;
+?>
+<label><input type="radio" name="spam" value="promo"> Promo</label>
+<label><input type="radio" name="spam" value="news"> Newsletter</label>
+<?php if ($spam !== null): ?>
+  <p>Vybráno: <?= htmlspecialchars($spam, ENT_QUOTES, 'UTF-8') ?></p>
+<?php endif; ?>`,
+  },
+  {
+    id: 'task3',
+    title: 'Úkol 3: Zájmy – posílat vybrané položky v jednom poli',
+    task: 'Použijte name="interests[]" pro vícenásobný výběr zájmů.',
+    draft: `<input type="checkbox" name="interests[]" value="music"> Hudba
+<input type="checkbox" name="interests[]" value="web"> Web`,
+    required: ['name="interests[]"'],
+    expected: 'Server obdrží vybrané zájmy jako pole hodnot.',
+    solution: `<form method="post">
+  <label><input type="checkbox" name="interests[]" value="music"> Hudba</label>
+  <label><input type="checkbox" name="interests[]" value="web"> Web</label>
+  <button type="submit">Uložit</button>
+</form>
+<?php
+$interests = is_array($_POST['interests'] ?? null) ? $_POST['interests'] : [];
+?>`,
+  },
+  {
+    id: 'task4',
+    title: 'Úkol 4: Oblíbené předměty – multi‑select',
+    task: 'Vytvořte multi-select se jménem subjects[] a zpracujte vybrané předměty.',
+    draft: `<select name="subjects[]" multiple>
   <option value="ZWA">ZWA</option>
   <option value="PA1">PA1</option>
-</select>`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">Obsluha formuláře (validace)</h4>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>Validujte e‑mail; vyžadujte alespoň jeden zájem a typ spamu.</li>
-            <li>„Nejlepší předmět“ musí být i mezi oblíbenými.</li>
-            <li>Při chybě zobrazte zprávy a předvyplňte hodnoty.</li>
-          </ul>
-          <ClickToRevealSolution hint="viz blok TheoryValidation + předvyplnění hodnot">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-php">{`$values = [
+</select>`,
+    required: ['multiple', 'name="subjects[]"'],
+    expected: 'Multi-select posílá serveru všechny vybrané předměty jako pole.',
+    solution: `<form method="post">
+  <select name="subjects[]" multiple>
+    <option value="ZWA">ZWA</option>
+    <option value="PA1">PA1</option>
+  </select>
+  <button type="submit">Uložit</button>
+</form>
+<?php
+$subjects = is_array($_POST['subjects'] ?? null) ? $_POST['subjects'] : [];
+?>`,
+  },
+  {
+    id: 'task5',
+    title: 'Úkol 5: Obsluha formuláře (validace)',
+    task: 'Validujte e-mail, požadujte zájem a typ spamu a při chybě zachovejte hodnoty.',
+    draft: `$values = [
   'email' => $_POST['email'] ?? '',
   'interests' => $_POST['interests'] ?? [],
   'spam' => $_POST['spam'] ?? null,
-  'subjects' => $_POST['subjects'] ?? [],
-  'best_subject' => $_POST['best_subject'] ?? null,
-];`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
-
-        <section className="space-y-3">
-          <h4 className="font-semibold">BONUS: potvrzení před smazáním + uložení do session</h4>
-          <ClickToRevealSolution hint="confirm() + $_SESSION">
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-html">{`<form method="post" action="delete.php" onsubmit="return confirm('Opravdu smazat?')">
-  <input type="hidden" name="_method" value="DELETE">
+];
+$errors = [];`,
+    required: ["$_POST['email']", 'filter_var', "$_POST['interests']"],
+    expected: 'Neplatný nebo neúplný formulář vrátí srozumitelné chyby bez ztráty vstupu.',
+    solution: `<?php
+$values = [
+  'email' => trim($_POST['email'] ?? ''),
+  'interests' => is_array($_POST['interests'] ?? null) ? $_POST['interests'] : [],
+  'spam' => $_POST['spam'] ?? null,
+];
+$errors = [];
+if (!filter_var($values['email'], FILTER_VALIDATE_EMAIL)) $errors['email'] = 'Neplatný e-mail';
+if ($values['interests'] === []) $errors['interests'] = 'Vyberte alespoň jeden zájem';
+if ($values['spam'] === null) $errors['spam'] = 'Vyberte typ spamu';
+?>`,
+  },
+  {
+    id: 'task6',
+    title: 'Úkol 6: BONUS: potvrzení před smazáním + uložení do session',
+    task: 'Přidejte potvrzení mazání a uložte stav posledního odeslání do session.',
+    draft: `<form method="post" action="delete.php" onsubmit="return confirm('Opravdu smazat?')">
   <button type="submit">Smazat</button>
-</form>`}</code>
-            </pre>
-          </ClickToRevealSolution>
-        </section>
+</form>
+<?php session_start(); $_SESSION['last_action'] = 'delete'; ?>`,
+    required: ['confirm(', '$_SESSION'],
+    expected: 'Mazání vyžaduje potvrzení a server uchová stav akce v session.',
+    solution: `<?php
+session_start();
+$_SESSION['last_action'] = 'delete';
+?>
+<form method="post" action="delete.php" onsubmit="return confirm('Opravdu smazat?')">
+  <button type="submit">Smazat</button>
+</form>`,
+  },
+];
 
-        <div className="text-xs text-zinc-500">
-          Zadání a kontext:{' '}
-          <a
-            className="underline"
-            href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/09/start"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            B6B39ZWA – Cvičení 09
-          </a>
-        </div>
-      </div>
-    </StaticLessonTask>
-  );
+function TutorialTaskSlide({ task }) {
+  return <StaticLessonTask {...task} />;
 }
 
 function SummarySlide() {
@@ -929,6 +970,9 @@ function SummarySlide() {
 }
 
 export default function AppPhpLesson9() {
+  const legacyTasksRequested =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('slide') === 'tasks';
   const slides = useMemo(
     () => [
       {
@@ -954,13 +998,17 @@ export default function AppPhpLesson9() {
       { id: 'theory-crud', title: 'Teorie – Mini CRUD', activityType: 'learn' },
       { id: 'theory-arch', title: 'Kontekst – SSR/MVC a REST', activityType: 'learn' },
       { id: 'rest-glory', title: 'REST Maturity – Glory of REST', activityType: 'learn' },
-      { id: 'tasks', title: 'Úkoly dle tutoriálu', activityType: 'apply' },
+      ...LESSON9_TASKS.map(({ id, title }) => ({ id, title, activityType: 'apply' })),
       { id: 'summary', title: 'Shrnutí a odkazy', activityType: 'learn' },
     ],
     [],
   );
   const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
   const current = slides.find((s) => s.id === activeSlide) || slides[0];
+
+  useEffect(() => {
+    if (legacyTasksRequested) setActiveSlide('task1');
+  }, [legacyTasksRequested, setActiveSlide]);
 
   return (
     <LessonShell

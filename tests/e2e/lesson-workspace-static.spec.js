@@ -12,7 +12,83 @@ const taskRoutes = [
   '/interactive-zwa-12-auth?slide=tasks',
 ];
 
+const splitTaskCases = [
+  {
+    aggregateRoute: '/interactive-zwa-9?slide=tasks',
+    taskIds: ['task1', 'task2', 'task3', 'task4', 'task5', 'task6'],
+    titles: [
+      'Úkol 1: Úprava formuláře + otázky',
+      'Úkol 2: Spam – pouze jedna možnost (radio) + rekurze pro pole',
+      'Úkol 3: Zájmy – posílat vybrané položky v jednom poli',
+      'Úkol 4: Oblíbené předměty – multi‑select',
+      'Úkol 5: Obsluha formuláře (validace)',
+      'Úkol 6: BONUS: potvrzení před smazáním + uložení do session',
+    ],
+  },
+  {
+    aggregateRoute: '/interactive-zwa-10-sessions-cookies?slide=tasks',
+    taskIds: ['task1', 'task2', 'task3', 'task4', 'task5', 'task6', 'task7'],
+    titles: [
+      'Úkol 1: Nastavte cookie s tématem vzhledu',
+      'Úkol 2: Počítadlo návštěv v session',
+      'Úkol 3: CSRF token pro formulář',
+      'Úkol 4: Přihlášení s regenerací session ID',
+      'Úkol 5: Flash zpráva',
+      'Úkol 6: Smazání cookie „theme“',
+      'Úkol 7: BONUS: Remember‑me cookie s hashem v DB',
+    ],
+  },
+  {
+    aggregateRoute: '/interactive-zwa-11-files-json?slide=tasks',
+    taskIds: ['task1', 'task2', 'task3', 'task4', 'task5'],
+    titles: [
+      'Úkol 1: První experimenty se soubory',
+      'Úkol 2: JSON – načtení a uložení',
+      'Úkol 3: Knihovna uživatelů',
+      'Úkol 4: Stránkování',
+      'Úkol 5: BONUS: Robustnější zpracování',
+    ],
+  },
+  {
+    aggregateRoute: '/interactive-zwa-12-auth?slide=tasks',
+    taskIds: ['task1', 'task2', 'task3', 'task4'],
+    titles: [
+      'Úkol 1: Přihlašovací formulář',
+      'Úkol 2: Sezení a ochrana',
+      'Úkol 3: Odhlášení',
+      'Úkol 4: Domácí úkol: CSRF',
+    ],
+  },
+];
+
 test.describe('static lesson task workspaces', () => {
+  test('splits lessons 9–12 into outline tasks with IDE solutions', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    for (const testCase of splitTaskCases) {
+      await page.goto(testCase.aggregateRoute);
+      await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('task1');
+
+      const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
+      for (const title of testCase.titles) {
+        await expect(outline.getByRole('button', { name: title, exact: true })).toBeVisible();
+      }
+
+      for (const taskId of testCase.taskIds) {
+        const route = testCase.aggregateRoute.replace('slide=tasks', `slide=${taskId}`);
+        await page.goto(route);
+        const ide = page.getByRole('region', { name: 'IDE' });
+        const tabs = ide.getByRole('tablist', { name: 'Soubory IDE' });
+        await expect(tabs).toBeVisible();
+        await expect(tabs.getByRole('tab', { name: 'Řešení', exact: true })).toHaveCount(1);
+        await expect(page.getByText('Řešení je zamčené', { exact: true })).toHaveCount(0);
+        await expect(
+          page.getByRole('button', { name: /Zobrazit řešení|Klikněte zde/ }),
+        ).toHaveCount(0);
+      }
+    }
+  });
+
   test('ZWA-7 task 1 exposes the expected HTML source in a local syntax editor', async ({
     page,
   }) => {
