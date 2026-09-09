@@ -5,6 +5,8 @@ import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
 import ClickToRevealSolution from './src/components/lesson/ClickToRevealSolution.jsx';
+import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 import { clsx } from './src/components/lesson/classNames.js';
 
 function LessonSlideContent({ slide }) {
@@ -28,6 +30,29 @@ function LessonSlideContent({ slide }) {
       {slide.id === 'tasks' && <Tasks />}
       {slide.id === 'summary' && <SummarySlide />}
     </SharedSlideCard>
+  );
+}
+
+function StaticLessonTask({ id, task, draft, required, expected, children }) {
+  return (
+    <LessonTaskWorkspace
+      privateMarker={`static-${id}`}
+      task={task}
+      editor={{ source: draft, label: 'Editor – zdrojový kód', language: 'php' }}
+      staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
+      preview={
+        <div className="space-y-4">
+          <p className="text-sm text-zinc-700 dark:text-zinc-300">
+            <strong>Očekávaný výsledek:</strong> {expected}
+          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Náhled je pouze statické vysvětlení; PHP ani serverový kód se v tomto prohlížeči
+            nespouští.
+          </p>
+          {children}
+        </div>
+      }
+    />
   );
 }
 
@@ -283,106 +308,120 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 function Tasks() {
   return (
-    <div className="space-y-6">
-      <h3 className="text-xl font-semibold">Zadání</h3>
+    <StaticLessonTask
+      id="zwa12-tasks"
+      task="Procvičte bezpečné přihlášení, práci se session, odhlášení a návrh CSRF ochrany."
+      draft={`<?php
+$hash = password_hash('secret', PASSWORD_DEFAULT);
+session_start();
+session_regenerate_id(true);
+$_SESSION['user'] = 'admin';
+session_destroy();
+?>`}
+      required={['password_hash', 'session_regenerate_id', 'session_destroy']}
+      expected="Přihlášení ověřuje hash hesla, chráněná stránka používá session a odhlášení session zruší."
+    >
+      <div className="space-y-6">
+        <h3 className="text-xl font-semibold">Zadání</h3>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">1) Přihlašovací formulář</h4>
-        <ul className="list-disc pl-6 space-y-1 text-sm">
-          <li>
-            Vytvořte jednoduchou stránku s formulářem (username +{' '}
-            <Code>input type=&quot;password&quot;</Code>
-            ).
-          </li>
-          <li>
-            Po odeslání v PHP ověřte přes <Code>password_hash</Code>/<Code>password_verify</Code>{' '}
-            oproti uložené hodnotě.
-          </li>
-        </ul>
-        <ClickToRevealSolution hint="password_hash(...); password_verify($_POST['password'], $hash);">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">1) Přihlašovací formulář</h4>
+          <ul className="list-disc pl-6 space-y-1 text-sm">
+            <li>
+              Vytvořte jednoduchou stránku s formulářem (username +{' '}
+              <Code>input type=&quot;password&quot;</Code>
+              ).
+            </li>
+            <li>
+              Po odeslání v PHP ověřte přes <Code>password_hash</Code>/<Code>password_verify</Code>{' '}
+              oproti uložené hodnotě.
+            </li>
+          </ul>
+          <ClickToRevealSolution hint="password_hash(...); password_verify($_POST['password'], $hash);">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 $hash = password_hash('secret', PASSWORD_DEFAULT);
 if (password_verify($_POST['password'] ?? '', $hash)) {
   echo 'OK';
 } else {
   echo 'Bad';
 }`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">2) Sezení a ochrana</h4>
-        <ul className="list-disc pl-6 space-y-1 text-sm">
-          <li>
-            Po úspěšném přihlášení nastavte <Code>$_SESSION[&apos;user&apos;]</Code> a proveďte{' '}
-            <Code>session_regenerate_id(true)</Code>.
-          </li>
-          <li>Zobrazte chráněnou stránku pouze přihlášeným; jinak přesměrujte na login.</li>
-        </ul>
-        <ClickToRevealSolution hint="session_start(); session_regenerate_id(true); $_SESSION['user']=...;">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">2) Sezení a ochrana</h4>
+          <ul className="list-disc pl-6 space-y-1 text-sm">
+            <li>
+              Po úspěšném přihlášení nastavte <Code>$_SESSION[&apos;user&apos;]</Code> a proveďte{' '}
+              <Code>session_regenerate_id(true)</Code>.
+            </li>
+            <li>Zobrazte chráněnou stránku pouze přihlášeným; jinak přesměrujte na login.</li>
+          </ul>
+          <ClickToRevealSolution hint="session_start(); session_regenerate_id(true); $_SESSION['user']=...;">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 session_start();
 if (!isset($_SESSION['user'])) {
   header('Location: /login.php'); exit;
 }
 echo 'Vítejte, ' . htmlspecialchars($_SESSION['user']['name'] ?? '');`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">3) Odhlášení</h4>
-        <ClickToRevealSolution hint="unset($_SESSION['user']); session_destroy(); smazání session cookie dle potřeby">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">3) Odhlášení</h4>
+          <ClickToRevealSolution hint="unset($_SESSION['user']); session_destroy(); smazání session cookie dle potřeby">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 session_start();
 $_SESSION = [];
 session_destroy();
 header('Location: /login.php');`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">Domácí úkol: CSRF</h4>
-        <ul className="list-disc pl-6 space-y-1 text-sm">
-          <li>Přidejte do formulářů CSRF tokeny – generované a ověřované v session.</li>
-        </ul>
-      </section>
+        <section className="space-y-3">
+          <h4 className="font-semibold">Domácí úkol: CSRF</h4>
+          <ul className="list-disc pl-6 space-y-1 text-sm">
+            <li>Přidejte do formulářů CSRF tokeny – generované a ověřované v session.</li>
+          </ul>
+        </section>
 
-      <div className="text-xs text-zinc-500">
-        Materiál vychází z:{' '}
-        <a
-          className="underline"
-          href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/12/start"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          Cvičení 12 – zadání
-        </a>{' '}
-        •{' '}
-        <a
-          className="underline"
-          href="https://cw.fel.cvut.cz/wiki/_media/courses/b6b39zwa/lectures/10a/autentizace_a_autorizace_2020.pdf"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          Autentizace a autorizace – slidy
-        </a>{' '}
-        •{' '}
-        <a
-          className="underline"
-          href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/12/start"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          Cvičení 12 – zadání
-        </a>
+        <div className="text-xs text-zinc-500">
+          Materiál vychází z:{' '}
+          <a
+            className="underline"
+            href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/12/start"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            Cvičení 12 – zadání
+          </a>{' '}
+          •{' '}
+          <a
+            className="underline"
+            href="https://cw.fel.cvut.cz/wiki/_media/courses/b6b39zwa/lectures/10a/autentizace_a_autorizace_2020.pdf"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            Autentizace a autorizace – slidy
+          </a>{' '}
+          •{' '}
+          <a
+            className="underline"
+            href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/12/start"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            Cvičení 12 – zadání
+          </a>
+        </div>
       </div>
-    </div>
+    </StaticLessonTask>
   );
 }
 

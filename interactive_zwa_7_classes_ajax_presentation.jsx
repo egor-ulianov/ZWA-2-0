@@ -8,6 +8,8 @@ import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
+import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 
 function QuizSection() {
   const [answers, setAnswers] = useState({});
@@ -250,6 +252,29 @@ function ChallengeReveal({ children }) {
         </p>
       )}
     </div>
+  );
+}
+
+function StaticLessonTask({ id, task, draft, required, expected, children }) {
+  return (
+    <LessonTaskWorkspace
+      privateMarker={`static-${id}`}
+      task={task}
+      editor={{ source: draft, label: 'Editor – zdrojový kód', language: 'text' }}
+      staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
+      preview={
+        <div className="space-y-4">
+          <p className="text-sm text-zinc-700 dark:text-zinc-300">
+            <strong>Očekávaný výsledek:</strong> {expected}
+          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Náhled je pouze statické vysvětlení; JavaScript ani serverový kód se v tomto prohlížeči
+            nespouští.
+          </p>
+          {children}
+        </div>
+      }
+    />
   );
 }
 
@@ -843,19 +868,54 @@ function AjaxPracticeSlide() {
 
 function Task1Slide() {
   return (
-    <div>
-      <h3 className="text-lg font-semibold mb-3">Zadání</h3>
-      <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-3">
-        Vytvořte formulář pro registraci studenta ČVUT:
-      </p>
-      <ul className="list-disc pl-6 space-y-1 text-sm text-zinc-700 dark:text-zinc-300 mb-4">
-        <li>Jméno, Příjmení, Heslo</li>
-        <li>Číslo osoby ČVUT</li>
-        <li>Fakulta, Studijní program</li>
-      </ul>
+    <StaticLessonTask
+      id="zwa7-task1"
+      task={
+        <>
+          <p>Vytvořte formulář pro registraci studenta ČVUT.</p>
+          <ul className="list-disc pl-6 space-y-1">
+            <li>Jméno, příjmení a heslo</li>
+            <li>Číslo osoby ČVUT</li>
+            <li>Fakulta a studijní program</li>
+          </ul>
+        </>
+      }
+      draft={`class FacultyProgram {
+  constructor(faculty, program) {
+    this.faculty = faculty;
+    this.program = program;
+  }
+}
 
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-6">
-        <code className="language-js">{`class FacultyProgram {
+class CvutStudent {
+  constructor(name, surname, password, personId, fp) {
+    this.name = name;
+    this.surname = surname;
+    this.password = password;
+    this.personId = personId;
+    this.facultyProgram = fp;
+  }
+}
+
+document.getElementById('registration-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+});`}
+      required={['class FacultyProgram', 'class CvutStudent', 'addEventListener']}
+      expected="Po odeslání vznikne objekt studenta s vnořeným oborem fakulty a programu."
+    >
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Zadání</h3>
+        <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-3">
+          Vytvořte formulář pro registraci studenta ČVUT:
+        </p>
+        <ul className="list-disc pl-6 space-y-1 text-sm text-zinc-700 dark:text-zinc-300 mb-4">
+          <li>Jméno, Příjmení, Heslo</li>
+          <li>Číslo osoby ČVUT</li>
+          <li>Fakulta, Studijní program</li>
+        </ul>
+
+        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-6">
+          <code className="language-js">{`class FacultyProgram {
   constructor(faculty, program) {
     this.faculty = faculty;
     this.program = program;
@@ -876,18 +936,18 @@ class CvutStudent {
 const fp = new FacultyProgram(faculty, program);
 const student = new CvutStudent(name, surname, pwd, id, fp);
 console.log(student);`}</code>
-      </pre>
+        </pre>
 
-      <ChallengeReveal>
-        <div className="mt-6 p-6 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border-2 border-emerald-300 dark:border-emerald-800">
-          <h4 className="font-semibold text-lg mb-4 text-emerald-900 dark:text-emerald-100">
-            ✅ Řešení odhaleno
-          </h4>
+        <ChallengeReveal>
+          <div className="mt-6 p-6 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border-2 border-emerald-300 dark:border-emerald-800">
+            <h4 className="font-semibold text-lg mb-4 text-emerald-900 dark:text-emerald-100">
+              ✅ Řešení odhaleno
+            </h4>
 
-          <div className="mb-4">
-            <h5 className="font-semibold mb-2">HTML (index.html)</h5>
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-html">{`<!DOCTYPE html>
+            <div className="mb-4">
+              <h5 className="font-semibold mb-2">HTML (index.html)</h5>
+              <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+                <code className="language-html">{`<!DOCTYPE html>
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
@@ -932,13 +992,13 @@ console.log(student);`}</code>
   </form>
 </body>
 </html>`}</code>
-            </pre>
-          </div>
+              </pre>
+            </div>
 
-          <div>
-            <h5 className="font-semibold mb-2">JavaScript (script.js)</h5>
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-js">{`// Definice tříd
+            <div>
+              <h5 className="font-semibold mb-2">JavaScript (script.js)</h5>
+              <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+                <code className="language-js">{`// Definice tříd
 class FacultyProgram {
   constructor(faculty, program) {
     this.faculty = faculty;
@@ -1009,61 +1069,78 @@ document.addEventListener('DOMContentLoaded', () => {
     // e.target.reset();
   });
 });`}</code>
-            </pre>
+              </pre>
+            </div>
           </div>
-        </div>
-      </ChallengeReveal>
-    </div>
+        </ChallengeReveal>
+      </div>
+    </StaticLessonTask>
   );
 }
 
 function Task2Slide({ password, setPassword, isWeakPassword }) {
   return (
-    <div>
-      <h3 className="text-lg font-semibold mb-3">Zadání</h3>
-      <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-3">
-        Vytvořte pouze klientský náhled slabého hesla; skutečnou politiku hesel musí vynucovat
-        server.
-      </p>
+    <StaticLessonTask
+      id="zwa7-task2"
+      task={
+        <p>
+          Vytvořte pouze klientský náhled slabého hesla; skutečnou politiku hesel musí vynucovat
+          server.
+        </p>
+      }
+      draft={`const demoWeakPasswords = new Set(["password", "123456", "qwerty"]);
+passwordInput.addEventListener('input', () => {
+  showWarning(demoWeakPasswords.has(passwordInput.value));
+});
+// Skutečnou politiku hesel musí ověřit server.`}
+      required={['demoWeakPasswords', 'addEventListener', 'server']}
+      expected="Při zadání známého slabého hesla se zobrazí pouze orientační upozornění."
+    >
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Zadání</h3>
+        <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-3">
+          Vytvořte pouze klientský náhled slabého hesla; skutečnou politiku hesel musí vynucovat
+          server.
+        </p>
 
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-4">
-        <code className="language-js">{`const demoWeakPasswords = new Set(["password", "123456", "qwerty"]);
+        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-4">
+          <code className="language-js">{`const demoWeakPasswords = new Set(["password", "123456", "qwerty"]);
 passwordInput.addEventListener('input', () => {
   showWarning(demoWeakPasswords.has(passwordInput.value));
 });`}</code>
-      </pre>
+        </pre>
 
-      <div className="rounded-xl bg-zinc-50 dark:bg-zinc-800/60 p-4 mb-6">
-        <h4 className="font-semibold mb-2">Demo hint (není bezpečnostní kontrola):</h4>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Zadejte heslo..."
-          className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm mb-2"
-        />
-        {isWeakPassword && (
-          <div className="text-sm text-rose-600 dark:text-rose-400 font-medium">
-            ⚠️ Toto heslo vypadá slabě (demo hint).
-          </div>
-        )}
-        {!isWeakPassword && password && (
-          <div className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-            ✓ Demo nápověda nenašla známé slabé heslo
-          </div>
-        )}
-      </div>
+        <div className="rounded-xl bg-zinc-50 dark:bg-zinc-800/60 p-4 mb-6">
+          <h4 className="font-semibold mb-2">Demo hint (není bezpečnostní kontrola):</h4>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Zadejte heslo..."
+            className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm mb-2"
+          />
+          {isWeakPassword && (
+            <div className="text-sm text-rose-600 dark:text-rose-400 font-medium">
+              ⚠️ Toto heslo vypadá slabě (demo hint).
+            </div>
+          )}
+          {!isWeakPassword && password && (
+            <div className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+              ✓ Demo nápověda nenašla známé slabé heslo
+            </div>
+          )}
+        </div>
 
-      <ChallengeReveal>
-        <div className="mt-6 p-6 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border-2 border-emerald-300 dark:border-emerald-800">
-          <h4 className="font-semibold text-lg mb-4 text-emerald-900 dark:text-emerald-100">
-            ✅ Řešení odhaleno
-          </h4>
+        <ChallengeReveal>
+          <div className="mt-6 p-6 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border-2 border-emerald-300 dark:border-emerald-800">
+            <h4 className="font-semibold text-lg mb-4 text-emerald-900 dark:text-emerald-100">
+              ✅ Řešení odhaleno
+            </h4>
 
-          <div className="mb-4">
-            <h5 className="font-semibold mb-2">HTML (index.html)</h5>
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-html">{`<!DOCTYPE html>
+            <div className="mb-4">
+              <h5 className="font-semibold mb-2">HTML (index.html)</h5>
+              <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+                <code className="language-html">{`<!DOCTYPE html>
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
@@ -1098,13 +1175,13 @@ passwordInput.addEventListener('input', () => {
   </div>
 </body>
 </html>`}</code>
-            </pre>
-          </div>
+              </pre>
+            </div>
 
-          <div>
-            <h5 className="font-semibold mb-2">JavaScript (script.js)</h5>
-            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-              <code className="language-js">{`// Pouze UX nápověda; nikdy nenahrazuje serverovou validaci.
+            <div>
+              <h5 className="font-semibold mb-2">JavaScript (script.js)</h5>
+              <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+                <code className="language-js">{`// Pouze UX nápověda; nikdy nenahrazuje serverovou validaci.
 const demoWeakPasswords = new Set(['password', '123456', 'qwerty']);
 
 // Čekání na načtení DOMu
@@ -1161,11 +1238,12 @@ document.addEventListener('DOMContentLoaded', () => {
   passwordInput.addEventListener('input', checkPassword);
 });
 */`}</code>
-            </pre>
+              </pre>
+            </div>
           </div>
-        </div>
-      </ChallengeReveal>
-    </div>
+        </ChallengeReveal>
+      </div>
+    </StaticLessonTask>
   );
 }
 

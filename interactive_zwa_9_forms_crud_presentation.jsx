@@ -10,6 +10,8 @@ import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
 import ClickToRevealSolution from './src/components/lesson/ClickToRevealSolution.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
+import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 
 function LessonSlideContent({ slide }) {
   return (
@@ -58,6 +60,29 @@ function LessonSlideContent({ slide }) {
       {slide.id === 'tasks' && <TasksFromTutorial />}
       {slide.id === 'summary' && <SummarySlide />}
     </SharedSlideCard>
+  );
+}
+
+function StaticLessonTask({ id, task, draft, required, expected, children }) {
+  return (
+    <LessonTaskWorkspace
+      privateMarker={`static-${id}`}
+      task={task}
+      editor={{ source: draft, label: 'Editor – zdrojový kód', language: 'php' }}
+      staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
+      preview={
+        <div className="space-y-4">
+          <p className="text-sm text-zinc-700 dark:text-zinc-300">
+            <strong>Očekávaný výsledek:</strong> {expected}
+          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Náhled je pouze statické vysvětlení; PHP ani serverové zpracování se v tomto prohlížeči
+            nespouští.
+          </p>
+          {children}
+        </div>
+      }
+    />
   );
 }
 
@@ -719,106 +744,122 @@ function GloryRestSlide() {
 
 function TasksFromTutorial() {
   return (
-    <div className="space-y-6">
-      <h3 className="text-xl font-semibold">Zadání dle tutoriálu</h3>
+    <StaticLessonTask
+      id="zwa9-tasks"
+      task="Procvičte odesílání formulářů, skupiny radio/checkbox, validaci a bezpečné CRUD vzory."
+      draft={`<form action="handle.php" method="post">
+  <input type="radio" name="spam" value="promo">
+  <input type="checkbox" name="interests[]" value="web">
+</form>
+<?php
+$email = $_POST['email'] ?? '';
+?>`}
+      required={['method="post"', 'name="interests[]"', "$_POST['email']"]}
+      expected="Formulář používá explicitní POST, pole pro vícenásobný výběr a serverovou validaci vstupů."
+    >
+      <div className="space-y-6">
+        <h3 className="text-xl font-semibold">Zadání dle tutoriálu</h3>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">1) Úprava formuláře + otázky</h4>
-        <ul className="list-disc pl-6 space-y-1 text-sm">
-          <li>
-            Kam se odesílají data? Jaká hodnota se pošle zaškrtnutým/ nezaškrtnutým checkboxem?
-          </li>
-          <li>Rozdíl mezi metodami GET a POST; co je v {`$_REQUEST`} a kolize jmen.</li>
-        </ul>
-        <ClickToRevealSolution hint="action, method, name=..., value=..., checkbox posílá value jen když je zaškrtnutý">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<form action="handle.php" method="post">
+        <section className="space-y-3">
+          <h4 className="font-semibold">1) Úprava formuláře + otázky</h4>
+          <ul className="list-disc pl-6 space-y-1 text-sm">
+            <li>
+              Kam se odesílají data? Jaká hodnota se pošle zaškrtnutým/ nezaškrtnutým checkboxem?
+            </li>
+            <li>Rozdíl mezi metodami GET a POST; co je v {`$_REQUEST`} a kolize jmen.</li>
+          </ul>
+          <ClickToRevealSolution hint="action, method, name=..., value=..., checkbox posílá value jen když je zaškrtnutý">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<form action="handle.php" method="post">
   <input type="checkbox" name="agree" value="1"> Souhlasím
 </form>
 <?php
 // Checkbox posílá '1' pouze pokud je zaškrtnut. Jinak není klíč v $_POST vůbec přítomen.
 // $_REQUEST kombinuje $_GET, $_POST a $_COOKIE – hrozí kolize jmen.
 ?>`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">2) Spam – pouze jedna možnost (radio) + rekurze pro pole</h4>
-        <ClickToRevealSolution hint="name='spam' pro všechny radio, funkce pro výpis pole viz dříve">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-html">{`<label><input type="radio" name="spam" value="promo"> Promo</label>
+        <section className="space-y-3">
+          <h4 className="font-semibold">
+            2) Spam – pouze jedna možnost (radio) + rekurze pro pole
+          </h4>
+          <ClickToRevealSolution hint="name='spam' pro všechny radio, funkce pro výpis pole viz dříve">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-html">{`<label><input type="radio" name="spam" value="promo"> Promo</label>
 <label><input type="radio" name="spam" value="news"> Newsletter</label>`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">3) Zájmy – posílat vybrané položky v jednom poli</h4>
-        <ClickToRevealSolution hint="name='interests[]'">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-html">{`<input type="checkbox" name="interests[]" value="music"> Hudba
+        <section className="space-y-3">
+          <h4 className="font-semibold">3) Zájmy – posílat vybrané položky v jednom poli</h4>
+          <ClickToRevealSolution hint="name='interests[]'">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-html">{`<input type="checkbox" name="interests[]" value="music"> Hudba
 <input type="checkbox" name="interests[]" value="web"> Web`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">4) Oblíbené předměty – multi‑select</h4>
-        <ClickToRevealSolution hint="multiple + name='subjects[]'">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-html">{`<select name="subjects[]" multiple>
+        <section className="space-y-3">
+          <h4 className="font-semibold">4) Oblíbené předměty – multi‑select</h4>
+          <ClickToRevealSolution hint="multiple + name='subjects[]'">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-html">{`<select name="subjects[]" multiple>
   <option value="ZWA">ZWA</option>
   <option value="PA1">PA1</option>
 </select>`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">Obsluha formuláře (validace)</h4>
-        <ul className="list-disc pl-6 space-y-1 text-sm">
-          <li>Validujte e‑mail; vyžadujte alespoň jeden zájem a typ spamu.</li>
-          <li>„Nejlepší předmět“ musí být i mezi oblíbenými.</li>
-          <li>Při chybě zobrazte zprávy a předvyplňte hodnoty.</li>
-        </ul>
-        <ClickToRevealSolution hint="viz blok TheoryValidation + předvyplnění hodnot">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`$values = [
+        <section className="space-y-3">
+          <h4 className="font-semibold">Obsluha formuláře (validace)</h4>
+          <ul className="list-disc pl-6 space-y-1 text-sm">
+            <li>Validujte e‑mail; vyžadujte alespoň jeden zájem a typ spamu.</li>
+            <li>„Nejlepší předmět“ musí být i mezi oblíbenými.</li>
+            <li>Při chybě zobrazte zprávy a předvyplňte hodnoty.</li>
+          </ul>
+          <ClickToRevealSolution hint="viz blok TheoryValidation + předvyplnění hodnot">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`$values = [
   'email' => $_POST['email'] ?? '',
   'interests' => $_POST['interests'] ?? [],
   'spam' => $_POST['spam'] ?? null,
   'subjects' => $_POST['subjects'] ?? [],
   'best_subject' => $_POST['best_subject'] ?? null,
 ];`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">BONUS: potvrzení před smazáním + uložení do session</h4>
-        <ClickToRevealSolution hint="confirm() + $_SESSION">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-html">{`<form method="post" action="delete.php" onsubmit="return confirm('Opravdu smazat?')">
+        <section className="space-y-3">
+          <h4 className="font-semibold">BONUS: potvrzení před smazáním + uložení do session</h4>
+          <ClickToRevealSolution hint="confirm() + $_SESSION">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-html">{`<form method="post" action="delete.php" onsubmit="return confirm('Opravdu smazat?')">
   <input type="hidden" name="_method" value="DELETE">
   <button type="submit">Smazat</button>
 </form>`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <div className="text-xs text-zinc-500">
-        Zadání a kontext:{' '}
-        <a
-          className="underline"
-          href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/09/start"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          B6B39ZWA – Cvičení 09
-        </a>
+        <div className="text-xs text-zinc-500">
+          Zadání a kontext:{' '}
+          <a
+            className="underline"
+            href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/09/start"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            B6B39ZWA – Cvičení 09
+          </a>
+        </div>
       </div>
-    </div>
+    </StaticLessonTask>
   );
 }
 

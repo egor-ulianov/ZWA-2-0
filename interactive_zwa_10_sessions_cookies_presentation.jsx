@@ -5,6 +5,8 @@ import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
 import ClickToRevealSolution from './src/components/lesson/ClickToRevealSolution.jsx';
+import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 import { clsx } from './src/components/lesson/classNames.js';
 
 function LessonSlideContent({ slide }) {
@@ -27,6 +29,29 @@ function LessonSlideContent({ slide }) {
       {slide.id === 'tasks' && <Tasks />}
       {slide.id === 'summary' && <SummarySlide />}
     </SharedSlideCard>
+  );
+}
+
+function StaticLessonTask({ id, task, draft, required, expected, children }) {
+  return (
+    <LessonTaskWorkspace
+      privateMarker={`static-${id}`}
+      task={task}
+      editor={{ source: draft, label: 'Editor – zdrojový kód', language: 'php' }}
+      staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
+      preview={
+        <div className="space-y-4">
+          <p className="text-sm text-zinc-700 dark:text-zinc-300">
+            <strong>Očekávaný výsledek:</strong> {expected}
+          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Náhled je pouze statické vysvětlení; PHP ani serverový kód se v tomto prohlížeči
+            nespouští.
+          </p>
+          {children}
+        </div>
+      }
+    />
   );
 }
 
@@ -398,23 +423,34 @@ setcookie('__Host-remember', $token, [
 
 function Tasks() {
   return (
-    <div className="space-y-6">
-      <h3 className="text-xl font-semibold">Zadání</h3>
+    <StaticLessonTask
+      id="zwa10-tasks"
+      task="Procvičte bezpečné cookies, session, CSRF ochranu, přihlášení, flash zprávu a odhlášení."
+      draft={`<?php
+setcookie('theme', 'dark', ['expires' => time() + 7 * 24 * 60 * 60, 'path' => '/']);
+session_start();
+session_regenerate_id(true);
+?>`}
+      required={["setcookie('theme'", 'session_start()', 'session_regenerate_id']}
+      expected="Ukázky nastaví bezpečné atributy cookie, udrží stav v session a po přihlášení obmění její ID."
+    >
+      <div className="space-y-6">
+        <h3 className="text-xl font-semibold">Zadání</h3>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">1) Nastavte cookie s tématem vzhledu</h4>
-        <ul className="list-disc pl-6 space-y-1 text-sm">
-          <li>
-            Vytvořte <Code>theme.php</Code>. Nastavte cookie <Code>theme=dark</Code> na 7 dní,{' '}
-            <Code>Secure</Code>, <Code>HttpOnly</Code>, <Code>SameSite=Lax</Code>.
-          </li>
-          <li>
-            Stránka má vypsat aktuální hodnotu <Code>$_COOKIE[&apos;theme&apos;]</Code>.
-          </li>
-        </ul>
-        <ClickToRevealSolution hint="setcookie('theme','dark',[...]); echo $_COOKIE['theme'] ?? 'light';">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">1) Nastavte cookie s tématem vzhledu</h4>
+          <ul className="list-disc pl-6 space-y-1 text-sm">
+            <li>
+              Vytvořte <Code>theme.php</Code>. Nastavte cookie <Code>theme=dark</Code> na 7 dní,{' '}
+              <Code>Secure</Code>, <Code>HttpOnly</Code>, <Code>SameSite=Lax</Code>.
+            </li>
+            <li>
+              Stránka má vypsat aktuální hodnotu <Code>$_COOKIE[&apos;theme&apos;]</Code>.
+            </li>
+          </ul>
+          <ClickToRevealSolution hint="setcookie('theme','dark',[...]); echo $_COOKIE['theme'] ?? 'light';">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 setcookie('theme', 'dark', [
   'expires'  => time() + 7*24*60*60,
   'path'     => '/',
@@ -423,27 +459,27 @@ setcookie('theme', 'dark', [
   'samesite' => 'Lax',
 ]);
 echo htmlspecialchars($_COOKIE['theme'] ?? 'light');`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">2) Počítadlo návštěv v session</h4>
-        <ClickToRevealSolution hint="session_start(); $_SESSION['counter'] = ($_SESSION['counter'] ?? 0) + 1;">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">2) Počítadlo návštěv v session</h4>
+          <ClickToRevealSolution hint="session_start(); $_SESSION['counter'] = ($_SESSION['counter'] ?? 0) + 1;">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 session_start();
 $_SESSION['counter'] = (int)(($_SESSION['counter'] ?? 0) + 1);
 echo $_SESSION['counter'];`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">3) CSRF token pro formulář</h4>
-        <ClickToRevealSolution hint="$_SESSION['csrf']=...; ve formuláři <input type=hidden name=csrf ...>; při POST ověřit hash_equals">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">3) CSRF token pro formulář</h4>
+          <ClickToRevealSolution hint="$_SESSION['csrf']=...; ve formuláři <input type=hidden name=csrf ...>; při POST ověřit hash_equals">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 session_start();
 if (empty($_SESSION['csrf'])) {
   $_SESSION['csrf'] = bin2hex(random_bytes(32));
@@ -454,15 +490,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
   echo 'OK';
 }`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">4) Přihlášení s regenerací session ID</h4>
-        <ClickToRevealSolution hint="Po validaci hesla zavolejte session_regenerate_id(true) a nastavte $_SESSION['user']">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">4) Přihlášení s regenerací session ID</h4>
+          <ClickToRevealSolution hint="Po validaci hesla zavolejte session_regenerate_id(true) a nastavte $_SESSION['user']">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 session_start();
 if (($_POST['u'] ?? '') === 'admin' && ($_POST['p'] ?? '') === 'secret') {
   session_regenerate_id(true);
@@ -471,46 +507,46 @@ if (($_POST['u'] ?? '') === 'admin' && ($_POST['p'] ?? '') === 'secret') {
 } else {
   echo 'Bad credentials';
 }`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">5) Flash zpráva</h4>
-        <ClickToRevealSolution hint="$_SESSION['flash']='...'; a na další stránce vypsat a unset">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">5) Flash zpráva</h4>
+          <ClickToRevealSolution hint="$_SESSION['flash']='...'; a na další stránce vypsat a unset">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 // set
 session_start();
 $_SESSION['flash'] = 'Hotovo';
 header('Location: /');`}</code>
-          </pre>
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mt-2">
-            <code className="language-php">{`<?php
+            </pre>
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mt-2">
+              <code className="language-php">{`<?php
 // show
 session_start();
 $f = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 if ($f) echo htmlspecialchars($f);`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">6) Smazání cookie „theme“</h4>
-        <ClickToRevealSolution hint="setcookie('theme','', ['expires'=>time()-3600,'path'=>'/'])">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">6) Smazání cookie „theme“</h4>
+          <ClickToRevealSolution hint="setcookie('theme','', ['expires'=>time()-3600,'path'=>'/'])">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 setcookie('theme', '', ['expires' => time() - 3600, 'path' => '/']);`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">BONUS: Remember‑me cookie s hashem v DB</h4>
-        <ClickToRevealSolution hint="hash(token) uložit do DB, plaintext do cookie __Host-remember">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">BONUS: Remember‑me cookie s hashem v DB</h4>
+          <ClickToRevealSolution hint="hash(token) uložit do DB, plaintext do cookie __Host-remember">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 $t = bin2hex(random_bytes(32));
 // db.save(user_id, hash('sha256',$t), expires)
 setcookie('__Host-remember', $t, [
@@ -520,10 +556,11 @@ setcookie('__Host-remember', $t, [
   'httponly'=> true,
   'samesite'=> 'Lax',
 ]);`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
-    </div>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
+      </div>
+    </StaticLessonTask>
   );
 }
 

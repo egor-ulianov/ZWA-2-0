@@ -5,6 +5,8 @@ import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
 import ClickToRevealSolution from './src/components/lesson/ClickToRevealSolution.jsx';
+import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 import { clsx } from './src/components/lesson/classNames.js';
 
 function LessonSlideContent({ slide }) {
@@ -26,6 +28,29 @@ function LessonSlideContent({ slide }) {
       {slide.id === 'tasks' && <Tasks />}
       {slide.id === 'summary' && <SummarySlide />}
     </SharedSlideCard>
+  );
+}
+
+function StaticLessonTask({ id, task, draft, required, expected, children }) {
+  return (
+    <LessonTaskWorkspace
+      privateMarker={`static-${id}`}
+      task={task}
+      editor={{ source: draft, label: 'Editor – zdrojový kód', language: 'php' }}
+      staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
+      preview={
+        <div className="space-y-4">
+          <p className="text-sm text-zinc-700 dark:text-zinc-300">
+            <strong>Očekávaný výsledek:</strong> {expected}
+          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Náhled je pouze statické vysvětlení; PHP ani souborový/serverový kód se v tomto
+            prohlížeči nespouští.
+          </p>
+          {children}
+        </div>
+      }
+    />
   );
 }
 
@@ -292,117 +317,131 @@ function list_users_paginated(?int $limit = null, int $offset = 0): array {
 
 function Tasks() {
   return (
-    <div className="space-y-6">
-      <h3 className="text-xl font-semibold">Zadání</h3>
+    <StaticLessonTask
+      id="zwa11-tasks"
+      task="Procvičte lokální práci se soubory, JSON, knihovnu uživatelů a stránkování."
+      draft={`<?php
+$path = __DIR__ . '/data.txt';
+file_put_contents($path, "Hello\\n", LOCK_EX);
+$raw = file_get_contents($path);
+$data = json_decode($raw, true);
+$page = array_slice($data ?? [], 0, 3);
+?>`}
+      required={['file_put_contents', 'json_decode', 'array_slice']}
+      expected="Výsledný serverový program čte a zapisuje data, převádí JSON na pole a stránkuje záznamy."
+    >
+      <div className="space-y-6">
+        <h3 className="text-xl font-semibold">Zadání</h3>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">1) První experimenty se soubory</h4>
-        <ul className="list-disc pl-6 space-y-1 text-sm">
-          <li>
-            Vytvořte <Code>data.txt</Code>, zapište do něj text a přečtěte ho zpět.
-          </li>
-          <li>
-            Vyzkoušejte <Code>LOCK_EX</Code> a práci s cestou přes <Code>__DIR__</Code>.
-          </li>
-        </ul>
-        <ClickToRevealSolution hint="file_put_contents(__DIR__.'/data.txt', 'Hello', LOCK_EX); file_get_contents(...);">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">1) První experimenty se soubory</h4>
+          <ul className="list-disc pl-6 space-y-1 text-sm">
+            <li>
+              Vytvořte <Code>data.txt</Code>, zapište do něj text a přečtěte ho zpět.
+            </li>
+            <li>
+              Vyzkoušejte <Code>LOCK_EX</Code> a práci s cestou přes <Code>__DIR__</Code>.
+            </li>
+          </ul>
+          <ClickToRevealSolution hint="file_put_contents(__DIR__.'/data.txt', 'Hello', LOCK_EX); file_get_contents(...);">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 $p = __DIR__ . '/data.txt';
 file_put_contents($p, "Hello\\n", LOCK_EX);
 echo file_get_contents($p);`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">2) JSON – načtení a uložení</h4>
-        <ul className="list-disc pl-6 space-y-1 text-sm">
-          <li>
-            Uložte pole do <Code>data.json</Code> a načtěte ho jako asociativní pole.
-          </li>
-          <li>
-            Použijte <Code>JSON_PRETTY_PRINT</Code> a <Code>JSON_UNESCAPED_UNICODE</Code>.
-          </li>
-        </ul>
-        <ClickToRevealSolution hint="json_encode($arr, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE); json_decode($raw, true);">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">2) JSON – načtení a uložení</h4>
+          <ul className="list-disc pl-6 space-y-1 text-sm">
+            <li>
+              Uložte pole do <Code>data.json</Code> a načtěte ho jako asociativní pole.
+            </li>
+            <li>
+              Použijte <Code>JSON_PRETTY_PRINT</Code> a <Code>JSON_UNESCAPED_UNICODE</Code>.
+            </li>
+          </ul>
+          <ClickToRevealSolution hint="json_encode($arr, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE); json_decode($raw, true);">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 $arr = ['greeting' => 'Ahoj', 'n' => 3];
 $json = json_encode($arr, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
 file_put_contents(__DIR__ . '/data.json', $json, LOCK_EX);
 $raw = file_get_contents(__DIR__ . '/data.json');
 $back = json_decode($raw, true);
 var_dump($back);`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">3) Knihovna uživatelů</h4>
-        <ul className="list-disc pl-6 space-y-1 text-sm">
-          <li>
-            Implementujte v <Code>users.lib.php</Code> funkce: <Code>list_users</Code>,{' '}
-            <Code>get_user</Code>, <Code>add_user</Code>, <Code>delete_user</Code>,{' '}
-            <Code>edit_user</Code>.
-          </li>
-          <li>
-            Testujte pomocí připraveného <Code>index.php</Code> a souboru <Code>users.json</Code>.
-          </li>
-        </ul>
-        <ClickToRevealSolution hint="viz ukázka v Teorie – Knihovna uživatelů">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">3) Knihovna uživatelů</h4>
+          <ul className="list-disc pl-6 space-y-1 text-sm">
+            <li>
+              Implementujte v <Code>users.lib.php</Code> funkce: <Code>list_users</Code>,{' '}
+              <Code>get_user</Code>, <Code>add_user</Code>, <Code>delete_user</Code>,{' '}
+              <Code>edit_user</Code>.
+            </li>
+            <li>
+              Testujte pomocí připraveného <Code>index.php</Code> a souboru <Code>users.json</Code>.
+            </li>
+          </ul>
+          <ClickToRevealSolution hint="viz ukázka v Teorie – Knihovna uživatelů">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 require __DIR__.'/users.lib.php';
 $id = add_user('Alice','alice@example.com','😊');
 $u = get_user($id);
 var_dump($u);
 delete_user($id);`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">4) Stránkování</h4>
-        <ul className="list-disc pl-6 space-y-1 text-sm">
-          <li>
-            Rozšiřte <Code>list_users()</Code> o parametry <Code>$limit</Code> a{' '}
-            <Code>$offset</Code> a připravte HTML s odkazem na další/předchozí stránku (3 položky na
-            stránku).
-          </li>
-        </ul>
-        <ClickToRevealSolution hint="array_slice(load_all_users(), $offset, $limit);">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
-            <code className="language-php">{`<?php
+        <section className="space-y-3">
+          <h4 className="font-semibold">4) Stránkování</h4>
+          <ul className="list-disc pl-6 space-y-1 text-sm">
+            <li>
+              Rozšiřte <Code>list_users()</Code> o parametry <Code>$limit</Code> a{' '}
+              <Code>$offset</Code> a připravte HTML s odkazem na další/předchozí stránku (3 položky
+              na stránku).
+            </li>
+          </ul>
+          <ClickToRevealSolution hint="array_slice(load_all_users(), $offset, $limit);">
+            <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <code className="language-php">{`<?php
 function list_users(int $limit = 3, int $offset = 0): array {
   return array_slice(load_all_users(), max(0,$offset), $limit);
 }`}</code>
-          </pre>
-        </ClickToRevealSolution>
-      </section>
+            </pre>
+          </ClickToRevealSolution>
+        </section>
 
-      <section className="space-y-3">
-        <h4 className="font-semibold">BONUS: Robustnější zpracování</h4>
-        <ul className="list-disc pl-6 space-y-1 text-sm">
-          <li>
-            Validujte vstupy (email, nepovinný avatar), ošetřete chyby <Code>json_decode</Code>/
-            <Code>json_encode</Code>.
-          </li>
-          <li>Zvažte kontrolu souběžných zápisů (LOCK_EX) a zálohu staré verze souboru.</li>
-        </ul>
-      </section>
-      <div className="text-xs text-zinc-500">
-        Materiál vychází z:{' '}
-        <a
-          className="underline"
-          href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/11/start"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          B6B39ZWA – Cvičení 11: Soubory
-        </a>
+        <section className="space-y-3">
+          <h4 className="font-semibold">BONUS: Robustnější zpracování</h4>
+          <ul className="list-disc pl-6 space-y-1 text-sm">
+            <li>
+              Validujte vstupy (email, nepovinný avatar), ošetřete chyby <Code>json_decode</Code>/
+              <Code>json_encode</Code>.
+            </li>
+            <li>Zvažte kontrolu souběžných zápisů (LOCK_EX) a zálohu staré verze souboru.</li>
+          </ul>
+        </section>
+        <div className="text-xs text-zinc-500">
+          Materiál vychází z:{' '}
+          <a
+            className="underline"
+            href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/11/start"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            B6B39ZWA – Cvičení 11: Soubory
+          </a>
+        </div>
       </div>
-    </div>
+    </StaticLessonTask>
   );
 }
 

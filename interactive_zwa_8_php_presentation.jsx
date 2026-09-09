@@ -6,6 +6,8 @@ import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
 import ClickToRevealSolution from './src/components/lesson/ClickToRevealSolution.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
+import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 
 function LessonSlideContent({ slide }) {
   return (
@@ -72,9 +74,39 @@ function LessonSlideContent({ slide }) {
   );
 }
 
+function StaticLessonTask({ id, task, draft, required, expected, children }) {
+  return (
+    <LessonTaskWorkspace
+      privateMarker={`static-${id}`}
+      task={task}
+      editor={{ source: draft, label: 'Editor – zdrojový kód', language: 'php' }}
+      staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
+      preview={
+        <div className="space-y-4">
+          <p className="text-sm text-zinc-700 dark:text-zinc-300">
+            <strong>Očekávaný výsledek:</strong> {expected}
+          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Náhled je pouze statické vysvětlení; PHP ani jiný serverový kód se v tomto prohlížeči
+            nespouští.
+          </p>
+          {children}
+        </div>
+      }
+    />
+  );
+}
+
 function Task1() {
   return (
-    <div>
+    <StaticLessonTask
+      id="zwa8-task1"
+      task="Vytvořte soubor datum.php a do HTML vložte kód, který vypíše dnešní datum."
+      draft={`<!DOCTYPE html>
+<p>Dnešní datum je: <?php echo date('j.n.Y'); ?></p>`}
+      required={['<?php', "date('j.n.Y')", 'Dnešní datum']}
+      expected="HTML stránka vypíše dnešní datum ve formátu den.měsíc.rok."
+    >
       <h3 className="text-xl font-semibold mb-3">1 – Výpis aktuálního data</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-4">
         Vytvořte soubor <Code>datum.php</Code> a do HTML vložte PHP kód, který vypíše dnešní datum.
@@ -133,13 +165,22 @@ function Task1() {
           </pre>
         </div>
       </ClickToRevealSolution>
-    </div>
+    </StaticLessonTask>
   );
 }
 
 function Task2() {
   return (
-    <div>
+    <StaticLessonTask
+      id="zwa8-task2"
+      task="Rozložte datum, vytvořte timestamp a vypište český den v týdnu."
+      draft={`$datum = "12.6.2008";
+list($den, $mesic, $rok) = explode('.', $datum);
+$timestamp = mktime(0, 0, 0, (int)$mesic, (int)$den, (int)$rok);
+$cisloDne = (int)date('N', $timestamp);`}
+      required={['explode', 'mktime', "date('N'"]}
+      expected="Z řetězce den.měsíc.rok vznikne timestamp a český název dne."
+    >
       <h3 className="text-xl font-semibold mb-3">2 – Práce s datem</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
         Mějte proměnnou <Code>$datum</Code> ve tvaru <Code>den.mesic.rok</Code>. Naplňte{' '}
@@ -208,13 +249,22 @@ $cisloDne = (int)date('N', $timestamp);
 echo "$den.$mesic.$rok je " . $dny[$cisloDne];`}</code>
         </pre>
       </ClickToRevealSolution>
-    </div>
+    </StaticLessonTask>
   );
 }
 
 function Task3() {
   return (
-    <div>
+    <StaticLessonTask
+      id="zwa8-task3"
+      task="Převeďte řešení práce s datem na funkci vracející datum a den v týdnu."
+      draft={`function formatCzechDate(string $dateStr): string {
+  list($den, $mesic, $rok) = explode('.', $dateStr);
+  return "$den.$mesic.$rok";
+}`}
+      required={['function formatCzechDate', 'return', 'explode']}
+      expected="Funkce přijme řetězec data a vrátí čitelný text s českým dnem."
+    >
       <h3 className="text-xl font-semibold mb-3">3 – Funkce</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
         Převeďte řešení z 2 na funkci, která přijme řetězec data a vrátí text s datem a dnem v
@@ -276,13 +326,22 @@ function formatCzechDate(string $dateStr): string {
 echo formatCzechDate("12.6.2008");`}</code>
         </pre>
       </ClickToRevealSolution>
-    </div>
+    </StaticLessonTask>
   );
 }
 
 function Task4() {
   return (
-    <div>
+    <StaticLessonTask
+      id="zwa8-task4"
+      task="Projíždějte pole dat a vypište pořadí, datum i den v týdnu pro každý řádek."
+      draft={`$data = ["12.6.2008", "5.1.2020", "1.12.2024"];
+foreach ($data as $i => $d) {
+  echo ($i + 1) . ". " . formatCzechDate($d);
+}`}
+      required={['foreach', '$i + 1', 'formatCzechDate']}
+      expected="Každé datum se vypíše s pořadím od jedné a formátovaným dnem."
+    >
       <h3 className="text-xl font-semibold mb-3">4 – Průchod pole</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
         Mějte pole řetězců s daty jako v příkladu 2. Pro každý řádek vypište pořadí (od 1), datum a
@@ -347,13 +406,24 @@ foreach ($data as $i => $d) {
 }`}</code>
         </pre>
       </ClickToRevealSolution>
-    </div>
+    </StaticLessonTask>
   );
 }
 
 function Task5() {
   return (
-    <div>
+    <StaticLessonTask
+      id="zwa8-task5"
+      task="Napište funkci, která vrátí pole všech čísel měsíců z pole dat."
+      draft={`function extractMonths(array $dates): array {
+  return array_map(function ($str) {
+    $parts = explode('.', $str);
+    return (int)($parts[1] ?? 0);
+  }, $dates);
+}`}
+      required={['function extractMonths', 'array_map', 'explode']}
+      expected="Z každého řetězce se vybere měsíc a zachová se pořadí vstupního pole."
+    >
       <h3 className="text-xl font-semibold mb-3">5 – Vytváření pole</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
         Napište funkci, která vrátí pole všech čísel měsíců z pole dat.
@@ -411,13 +481,21 @@ $data = ["12.6.2008", "5.1.2020", "1.12.2024", "20.1.2021"];
 print_r(extractMonths($data)); // např. [6,1,12,1]`}</code>
         </pre>
       </ClickToRevealSolution>
-    </div>
+    </StaticLessonTask>
   );
 }
 
 function Task6() {
   return (
-    <div>
+    <StaticLessonTask
+      id="zwa8-task6"
+      task="Upravte funkci tak, aby vracela pouze unikátní čísla měsíců bez duplicit."
+      draft={`$unique = array_values(array_unique($months));
+sort($unique);
+return $unique;`}
+      required={['array_unique', 'array_values', 'sort']}
+      expected="Výsledné měsíce jsou jedinečné, seřazené a znovu indexované."
+    >
       <h3 className="text-xl font-semibold mb-3">6 – Různé měsíce</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
         Upravte funkci tak, aby vracela pouze unikátní čísla měsíců (bez duplicit).
@@ -477,13 +555,21 @@ $data = ["12.6.2008", "5.1.2020", "1.12.2024", "20.1.2021"];
 print_r(extractUniqueMonths($data)); // např. [1,6,12]`}</code>
         </pre>
       </ClickToRevealSolution>
-    </div>
+    </StaticLessonTask>
   );
 }
 
 function Task7() {
   return (
-    <div>
+    <StaticLessonTask
+      id="zwa8-task7"
+      task="Napište funkci, která zjistí, zda řetězec představuje kladné celé číslo."
+      draft={`function isPositiveInt(string $s): bool {
+  return $s !== '' && ctype_digit($s) && (int)$s > 0;
+}`}
+      required={['function isPositiveInt', 'ctype_digit', '(int)$s > 0']}
+      expected="Kontrola přijme jen neprázdné číselné řetězce s hodnotou větší než nula."
+    >
       <h3 className="text-xl font-semibold mb-3">7 – Zjištění typu proměnné</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
         Napište funkci, která zjistí, zda řetězec představuje kladné celé číslo.
@@ -542,13 +628,23 @@ var_dump(isPositiveInt("-1"));  // false
 var_dump(isPositiveInt("12a")); // false`}</code>
         </pre>
       </ClickToRevealSolution>
-    </div>
+    </StaticLessonTask>
   );
 }
 
 function Task8() {
   return (
-    <div>
+    <StaticLessonTask
+      id="zwa8-task8"
+      task="Rozšiřte kontrolu kladného čísla o nepovinné parametry min a max."
+      draft={`function isPositiveInt(string $s, ?int $min = null, ?int $max = null): bool {
+  if ($s === '' || !ctype_digit($s)) return false;
+  $val = (int)$s;
+  return $val > 0 && ($min === null || $val >= $min) && ($max === null || $val <= $max);
+}`}
+      required={['?int $min = null', '?int $max = null', '$val >= $min']}
+      expected="Funkce respektuje volitelné dolní a horní meze při zachování kontroly kladného čísla."
+    >
       <h3 className="text-xl font-semibold mb-3">8 – Nepovinné parametry funkcí</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
         Rozšiřte funkci o nepovinné parametry <Code>$min</Code> a <Code>$max</Code> dle zadání.
@@ -611,7 +707,7 @@ var_dump(isPositiveInt("12", 5, 10));     // false (12 > 10)
 var_dump(isPositiveInt("7", 5, 10));      // true`}</code>
         </pre>
       </ClickToRevealSolution>
-    </div>
+    </StaticLessonTask>
   );
 }
 
