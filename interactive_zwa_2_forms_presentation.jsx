@@ -6,6 +6,7 @@ import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import { scrollToId } from './src/components/lesson/navigation.js';
+import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 
 function SectionCard({ title, children, footer }) {
   return (
@@ -1266,6 +1267,44 @@ export default function AppFormsLesson2() {
                 ))}
               </div>
             </SectionCard>
+            <LessonTaskWorkspace
+              privateMarker="forms-exercise"
+              task={
+                <>
+                  <p>Vytvořte přístupný HTML formulář s popisky a nativní validací.</p>
+                  <p>
+                    Zachovejte ukázku standardních prvků, typů HTML5 vstupů a atributů{' '}
+                    <Code>required</Code>/<Code>pattern</Code>.
+                  </p>
+                </>
+              }
+              editor={
+                <FormValidationEditor
+                  initialHtml={[
+                    '<!doctype html>',
+                    '<html lang="cs">',
+                    '  <head>',
+                    '    <meta charset="utf-8">',
+                    '    <title>Formulář</title>',
+                    '  </head>',
+                    '  <body>',
+                    '    <form>',
+                    '      <label for="email">E-mail</label>',
+                    '      <input id="email" type="email" required>',
+                    '      <button>Odeslat</button>',
+                    '    </form>',
+                    '  </body>',
+                    '</html>',
+                  ].join('\n')}
+                  showPreview
+                />
+              }
+              preview={
+                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                  Náhled formuláře a lokální/W3C kontroly jsou zachované uvnitř editoru.
+                </p>
+              }
+            />
           </div>
         )}
       </SharedSlideCard>

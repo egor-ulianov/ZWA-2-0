@@ -4,6 +4,7 @@ import { getLessonByNumber } from './src/config/lessons.js';
 import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
+import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 
 import {
   CSS_LAYOUT_INSPECTION,
@@ -205,10 +206,10 @@ function VsPlayground({ stepIndex }) {
               className="px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white"
               onClick={applyOnce}
             >
-              Run
+              Spustit náhled
             </button>
             <button className="px-3 py-1.5 text-sm rounded-lg border" onClick={validate}>
-              Check tasks
+              Spustit testy
             </button>
           </div>
           {Array.isArray(results) && results.length > 0 && (
@@ -234,7 +235,7 @@ function VsPlayground({ stepIndex }) {
           )}
         </div>
         <div className="p-3">
-          <div className="font-semibold text-sm mb-2">Preview</div>
+          <div className="font-semibold text-sm mb-2">Náhled</div>
           <SandboxedPreview
             key={applyVersion}
             html={htmlCode}
@@ -720,7 +721,21 @@ export default function AppCss2Lesson() {
         {hasTasks && (
           <div>
             <div className="lg:sticky lg:top-8">
-              <VsPlayground stepIndex={stepIndex} />
+              <LessonTaskWorkspace
+                privateMarker="css-exercise"
+                task={
+                  <>
+                    <p>{getTaskTemplates(stepIndex).step.title}</p>
+                    <p>{getTaskTemplates(stepIndex).step.desc}</p>
+                  </>
+                }
+                editor={<VsPlayground stepIndex={stepIndex} />}
+                preview={
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                    Náhled layoutu a kontrola computed stylů jsou zachované uvnitř editoru.
+                  </p>
+                }
+              />
               <div className="mt-3 text-xs text-zinc-500">
                 Pozn.: Validace je zjednodušená (heuristiky pomocí computed styles a regex).
               </div>

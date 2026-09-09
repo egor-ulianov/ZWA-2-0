@@ -8,6 +8,7 @@ import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import { getLessonByNumber } from './src/config/lessons.js';
 import { clsx } from './src/components/lesson/classNames.js';
+import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 
 // Interactive ZWA-1 presentation with a built-in simulated Linux CLI (no external libs)
 // Tailwind is available in canvas preview. All code is self-contained.
@@ -1006,6 +1007,34 @@ function TaskChecklist({ commandLog }) {
   );
 }
 
+function TerminalPanel({ clearKey, onCommand }) {
+  return (
+    <div className="lg:sticky lg:top-8">
+      <div className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 shadow">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-200/60 dark:border-zinc-800">
+          <div className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-full bg-red-500/90" />
+            <span className="h-3 w-3 rounded-full bg-amber-400/90" />
+            <span className="h-3 w-3 rounded-full bg-green-500/90" />
+          </div>
+          <div className="flex items-center gap-2 text-xs text-zinc-500">
+            <kbd className="px-2 py-1 rounded bg-zinc-200/60 dark:bg-zinc-800">Enter</kbd>
+            <span>run command</span>
+          </div>
+        </div>
+        <div className="p-3">
+          {/* key forces remount to clear history */}
+          <Terminal key={clearKey} onCommand={onCommand} />
+        </div>
+      </div>
+      <div className="mt-3 text-xs text-zinc-500">
+        Note: This terminal is a classroom simulation (no real network calls). Outputs are
+        simplified to support the exercises.
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const { run } = useInterpreter();
   const [clearKey, setClearKey] = useState(0);
@@ -1045,29 +1074,21 @@ export default function App() {
         </div>
 
         <div>
-          <div className="lg:sticky lg:top-8">
-            <div className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 shadow">
-              <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-200/60 dark:border-zinc-800">
-                <div className="flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded-full bg-red-500/90" />
-                  <span className="h-3 w-3 rounded-full bg-amber-400/90" />
-                  <span className="h-3 w-3 rounded-full bg-green-500/90" />
-                </div>
-                <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  <kbd className="px-2 py-1 rounded bg-zinc-200/60 dark:bg-zinc-800">Enter</kbd>
-                  <span>run command</span>
-                </div>
-              </div>
-              <div className="p-3">
-                {/* key forces remount to clear history */}
-                <Terminal key={clearKey} onCommand={handleCommand} />
-              </div>
-            </div>
-            <div className="mt-3 text-xs text-zinc-500">
-              Note: This terminal is a classroom simulation (no real network calls). Outputs are
-              simplified to support the exercises.
-            </div>
-          </div>
+          {current.id === 'tasks-net' ? (
+            <LessonTaskWorkspace
+              privateMarker="network-exercise"
+              task={
+                <>
+                  <p>V terminálu proveďte DNS, síťové, směrovací a TCP/HTTP příkazy.</p>
+                  <p>Výsledky jsou deterministické a zůstávají pouze v tomto okně prohlížeče.</p>
+                </>
+              }
+              editor={<TerminalPanel clearKey={clearKey} onCommand={handleCommand} />}
+              preview={<TaskChecklist commandLog={commandLog} />}
+            />
+          ) : (
+            <TerminalPanel clearKey={clearKey} onCommand={handleCommand} />
+          )}
         </div>
       </div>
     </LessonShell>

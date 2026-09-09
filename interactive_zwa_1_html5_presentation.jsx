@@ -6,6 +6,7 @@ import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import { scrollToId } from './src/components/lesson/navigation.js';
+import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 
 function HtmlPreview({ html }) {
   return (
@@ -637,6 +638,24 @@ export default function AppHtml5() {
                 ))}
               </div>
             </div>
+            <LessonTaskWorkspace
+              privateMarker="html-exercise"
+              task={
+                <>
+                  <p>Vytvořte validní HTML5 dokument se sémantickou strukturou.</p>
+                  <p>
+                    Doplňte do editoru doctype, metadata, sémantické prvky, obrázek s{' '}
+                    <Code>alt</Code> a tabulku s hlavičkou i buňkami.
+                  </p>
+                </>
+              }
+              editor={<TaskEditorHtml />}
+              preview={
+                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                  Náhled dokumentu a lokální/W3C kontroly jsou zachované uvnitř HTML editoru.
+                </p>
+              }
+            />
           </div>
         )}
       </SharedSlideCard>

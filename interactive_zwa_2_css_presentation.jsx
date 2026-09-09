@@ -6,6 +6,7 @@ import { getLessonByNumber } from './src/config/lessons.js';
 import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
+import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 
 import {
   CSS_BASICS_INSPECTION,
@@ -232,7 +233,7 @@ function VsPlayground({ slideId, stepIndex }) {
                 checked={autoApply}
                 onChange={(e) => setAutoApply(e.target.checked)}
               />
-              Auto apply
+              Použít automaticky
             </label>
           </div>
           <div className="flex items-center gap-1 mb-2">
@@ -283,10 +284,10 @@ function VsPlayground({ slideId, stepIndex }) {
               className="px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white"
               onClick={applyOnce}
             >
-              Run
+              Spustit náhled
             </button>
             <button className="px-3 py-1.5 text-sm rounded-lg border" onClick={validate}>
-              Check tasks
+              Spustit testy
             </button>
           </div>
           {Array.isArray(results) && results.length > 0 && (
@@ -316,7 +317,7 @@ function VsPlayground({ slideId, stepIndex }) {
           </div>
         </div>
         <div className="p-3">
-          <div className="font-semibold text-sm mb-2">Preview</div>
+          <div className="font-semibold text-sm mb-2">Náhled</div>
           <SandboxedPreview
             html={htmlCode}
             css={previewCss}
@@ -705,7 +706,25 @@ export default function App() {
         </div>
         <div>
           <div className="lg:sticky lg:top-8">
-            <VsPlayground slideId={activeSlide} stepIndex={hasSteps ? stepIndex : 0} />
+            {current.id === 'tasks' ? (
+              <LessonTaskWorkspace
+                privateMarker="css-exercise"
+                task={
+                  <>
+                    <p>{current.steps?.[stepIndex]?.title}</p>
+                    <p>{current.steps?.[stepIndex]?.desc}</p>
+                  </>
+                }
+                editor={<VsPlayground slideId={activeSlide} stepIndex={stepIndex} />}
+                preview={
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                    Náhled HTML/CSS a kontrola computed stylů jsou zachované uvnitř editoru.
+                  </p>
+                }
+              />
+            ) : (
+              <VsPlayground slideId={activeSlide} stepIndex={hasSteps ? stepIndex : 0} />
+            )}
             <div className="mt-3 text-xs text-zinc-500">
               Pozn.: Toto je výuková simulace pro procvičení CSS. Výsledky jsou zjednodušené kvůli
               spolehlivému automatickému vyhodnocení.
