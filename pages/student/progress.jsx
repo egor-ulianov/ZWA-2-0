@@ -11,6 +11,7 @@ export default function StudentProgress() {
   const [attendance, setAttendance] = React.useState({});
   const [grades, setGrades] = React.useState({});
   const [loadAttempt, setLoadAttempt] = React.useState(0);
+
   React.useEffect(() => {
     let mounted = true;
     const controller = new AbortController();
@@ -76,7 +77,7 @@ export default function StudentProgress() {
     return (
       <PortalFrame meta="Student progress">
         <main className="mx-auto w-full max-w-4xl px-4 py-10 md:px-8 md:py-14">
-          <section className="portal-panel p-6">
+          <section className="portal-panel p-6" role="status" aria-live="polite">
             <p className="text-[var(--portal-text-muted)]">Loading…</p>
           </section>
         </main>
@@ -86,111 +87,155 @@ export default function StudentProgress() {
 
   const p = data.progress || {};
   const dates = Object.keys(attendance).sort();
-  const total = dates.reduce((acc, d) => acc + (attendance[d] ? 1 : 0), 0);
+  const presentCount = dates.filter((date) => Boolean(attendance[date])).length;
+  const evaluationEntries = Object.entries(grades).filter(([, evaluation]) => evaluation);
+  const evaluationCount = evaluationEntries.length;
 
   return (
     <PortalFrame meta="Student progress">
       <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8 md:py-14">
-        <header className="flex flex-wrap items-start justify-between gap-5">
-          <div>
-            <p className={portalClassNames.kicker}>Student access</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
-              Your Progress
-            </h1>
-            <p className="mt-2 text-sm text-[var(--portal-text-muted)]">
-              Username:{' '}
-              <span className="font-semibold text-[var(--portal-text)]">{data.username}</span>
-            </p>
+        <header className="portal-panel p-6 md:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-5">
+            <div>
+              <p className={portalClassNames.kicker}>Student access</p>
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+                Your study record
+              </h1>
+              <p className="mt-3 text-sm leading-6 text-[var(--portal-text-muted)]">
+                A read-only record of your attendance, assignment checks, and available evaluations.
+              </p>
+              <p className="mt-3 text-sm text-[var(--portal-text-muted)]">
+                Username:{' '}
+                <span className="font-semibold text-[var(--portal-text)]">{data.username}</span>
+              </p>
+            </div>
+            <button type="button" className={portalClassNames.action} onClick={logout}>
+              Logout
+            </button>
           </div>
-          <button type="button" className={portalClassNames.action} onClick={logout}>
-            Logout
-          </button>
         </header>
 
-        <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <section className="portal-panel" aria-labelledby="scores-title">
-            <div className="flex items-center justify-between gap-4 border-b border-[var(--portal-border)] px-4 py-3">
-              <h2 id="scores-title" className="text-lg font-semibold">
-                Scores & Assignment
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <section className="portal-panel p-5" role="region" aria-labelledby="glance-title">
+            <div className="border-b border-[var(--portal-border)] pb-4">
+              <p className={portalClassNames.kicker}>Summary</p>
+              <h2 id="glance-title" className="mt-2 text-xl font-semibold">
+                At a glance
               </h2>
-              <span className="text-xs font-semibold uppercase tracking-wide text-[var(--portal-text-muted)]">
-                Updated
-              </span>
+              <p className="mt-2 text-sm leading-6 text-[var(--portal-text-muted)]">
+                Counts and checks shown here come directly from the records available to you.
+              </p>
             </div>
-            <div className="p-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <DataItem label="Task checked" value={p.assignment_task_checked ? 'Yes' : 'No'} />
-                <DataItem label="Mid‑term" value={p.assignment_midterm_ok ? 'OK' : '—'} />
-                <DataItem
-                  label="Partner"
-                  value={p.assignment_partner || '—'}
-                  className="col-span-2"
-                />
-                <DataItem
-                  label="Final points"
-                  value={p.assignment_final_points ?? '—'}
-                  className="col-span-2"
-                />
-              </div>
-              <div className="mt-6 space-y-3">
-                {[1, 2, 3, 4].map((tn) => {
-                  const g = grades[tn] || null;
-                  if (!g) return null;
-                  return (
-                    <div key={tn} className="rounded border border-[var(--portal-border)] p-3">
-                      <div className="mb-1 text-sm font-semibold">Evaluation – Test {tn}</div>
-                      <div className="text-sm">
-                        <span className="font-medium">Points:</span> {g.points ?? '—'}
-                      </div>
-                      {g.reasoning ? (
-                        <div className="mt-2">
-                          <div className="text-xs font-semibold uppercase tracking-wide text-[var(--portal-text-muted)]">
-                            AI reasoning
-                          </div>
-                          <div className="prose prose-sm dark:prose-invert mt-1 max-w-none">
-                            <ReactMarkdown>{g.reasoning}</ReactMarkdown>
-                          </div>
-                        </div>
-                      ) : null}
-                      {g.teacher_comment ? (
-                        <div className="mt-3">
-                          <div className="text-xs font-semibold uppercase tracking-wide text-[var(--portal-text-muted)]">
-                            Teacher comment
-                          </div>
-                          <div className="mt-1 whitespace-pre-wrap text-sm text-[var(--portal-text)]">
-                            {g.teacher_comment}
-                          </div>
-                        </div>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <DataItem
+                label="Attendance"
+                value={formatCount(presentCount, 'attendance record', 'attendance records')}
+              />
+              <DataItem
+                label="Evaluations"
+                value={formatCount(evaluationCount, 'evaluation', 'evaluations')}
+              />
+              <DataItem label="Task checked" value={p.assignment_task_checked ? 'Yes' : 'No'} />
+              <DataItem label="Mid-term" value={p.assignment_midterm_ok ? 'Yes' : 'No'} />
             </div>
           </section>
 
-          <section className="portal-panel" aria-labelledby="attendance-title">
-            <div className="flex items-center justify-between gap-4 border-b border-[var(--portal-border)] px-4 py-3">
-              <h2 id="attendance-title" className="text-lg font-semibold">
-                Attendance
+          <section className="portal-panel p-5" role="region" aria-labelledby="assignment-title">
+            <div className="border-b border-[var(--portal-border)] pb-4">
+              <p className={portalClassNames.kicker}>Assignment record</p>
+              <h2 id="assignment-title" className="mt-2 text-xl font-semibold">
+                Assignment record
               </h2>
-              <div className="text-sm text-[var(--portal-text-muted)]">
-                Total present:{' '}
-                <span className="font-semibold text-[var(--portal-text)]">{total}</span>
-              </div>
             </div>
-            <div className="p-4">
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <DataItem label="Task checked" value={p.assignment_task_checked ? 'Yes' : 'No'} />
+              <DataItem label="Mid-term" value={p.assignment_midterm_ok ? 'Yes' : 'No'} />
+              <DataItem label="Partner" value={p.assignment_partner || '—'} />
+              <DataItem label="Final points" value={p.assignment_final_points ?? '—'} />
+            </div>
+          </section>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+          <section className="portal-panel" role="region" aria-labelledby="evaluations-title">
+            <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-[var(--portal-border)] px-5 py-4">
+              <div>
+                <p className={portalClassNames.kicker}>Feedback</p>
+                <h2 id="evaluations-title" className="mt-2 text-xl font-semibold">
+                  Evaluations
+                </h2>
+              </div>
+              <span className="text-sm text-[var(--portal-text-muted)]">
+                {formatCount(evaluationCount, 'evaluation', 'evaluations')}
+              </span>
+            </div>
+            <div className="space-y-4 p-5">
+              {evaluationEntries.length === 0 ? (
+                <p className="text-sm leading-6 text-[var(--portal-text-muted)]">
+                  No evaluations are available yet.
+                </p>
+              ) : (
+                evaluationEntries.map(([testNumber, evaluation]) => (
+                  <article
+                    key={testNumber}
+                    className="rounded border border-[var(--portal-border)] p-4"
+                  >
+                    <h3 className="text-base font-semibold">
+                      Evaluation – Test {evaluation.test_number ?? testNumber}
+                    </h3>
+                    <div className="mt-2 text-sm">
+                      <span className="font-medium">Points:</span> {evaluation.points ?? '—'}
+                    </div>
+                    {evaluation.reasoning ? (
+                      <div className="mt-4">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-[var(--portal-text-muted)]">
+                          AI reasoning
+                        </div>
+                        <div className="prose prose-sm dark:prose-invert mt-1 max-w-none">
+                          <ReactMarkdown>{evaluation.reasoning}</ReactMarkdown>
+                        </div>
+                      </div>
+                    ) : null}
+                    {evaluation.teacher_comment ? (
+                      <div className="mt-4">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-[var(--portal-text-muted)]">
+                          Teacher comment
+                        </div>
+                        <div className="mt-1 whitespace-pre-wrap text-sm text-[var(--portal-text)]">
+                          {evaluation.teacher_comment}
+                        </div>
+                      </div>
+                    ) : null}
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="portal-panel" role="region" aria-labelledby="attendance-title">
+            <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-[var(--portal-border)] px-5 py-4">
+              <div>
+                <p className={portalClassNames.kicker}>Attendance</p>
+                <h2 id="attendance-title" className="mt-2 text-xl font-semibold">
+                  Attendance record
+                </h2>
+              </div>
+              <span className="text-sm text-[var(--portal-text-muted)]">
+                {formatCount(presentCount, 'present day', 'present days')}
+              </span>
+            </div>
+            <div className="p-5">
               {dates.length === 0 ? (
-                <div className="text-sm text-[var(--portal-text-muted)]">
+                <p className="text-sm leading-6 text-[var(--portal-text-muted)]">
                   No attendance recorded yet.
-                </div>
+                </p>
               ) : (
                 <ul className="divide-y divide-[var(--portal-border)] overflow-hidden rounded border border-[var(--portal-border)]">
-                  {dates.map((d) => {
-                    const present = !!attendance[d];
+                  {dates.map((date) => {
+                    const present = Boolean(attendance[date]);
                     return (
-                      <li key={d} className="flex items-center justify-between gap-4 px-3 py-2.5">
-                        <span className="text-sm">{d}</span>
+                      <li key={date} className="flex items-center justify-between gap-4 px-3 py-3">
+                        <span className="text-sm">{date}</span>
                         <span
                           className={
                             present
@@ -211,6 +256,10 @@ export default function StudentProgress() {
       </main>
     </PortalFrame>
   );
+}
+
+function formatCount(count, singular, plural) {
+  return `${count} ${count === 1 ? singular : plural}`;
 }
 
 function DataItem({ label, value, className }) {

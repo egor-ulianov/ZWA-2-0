@@ -73,7 +73,11 @@ test('student login reaches progress and renders only least-privilege grade fiel
   await page.getByRole('button', { name: 'Sign in' }).click();
 
   await expect(page).toHaveURL(/\/student\/progress\/?$/);
-  await expect(page.getByRole('heading', { name: 'Your Progress' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your study record' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'At a glance' })).toContainText(
+    '1 attendance record',
+  );
+  await expect(page.getByRole('region', { name: 'Evaluations' })).toContainText('Test 1');
   await expect(page.getByText('alice', { exact: true })).toBeVisible();
   await expect(page.getByText('Evaluation – Test 1')).toBeVisible();
   await expect(page.getByText('Points:').locator('..')).toContainText('10');
@@ -97,7 +101,7 @@ test('student can use the real login and progress flow against the test provider
   await page.getByRole('button', { name: 'Sign in' }).click();
 
   await expect(page).toHaveURL(/\/student\/progress\/?$/);
-  await expect(page.getByRole('heading', { name: 'Your Progress' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your study record' })).toBeVisible();
   await expect(page.getByText('e2e_student', { exact: true })).toBeVisible();
   await expect(page.getByText('e2e_partner', { exact: true })).toBeVisible();
   await expect(page.getByText('Evaluation – Test 1')).toBeVisible();

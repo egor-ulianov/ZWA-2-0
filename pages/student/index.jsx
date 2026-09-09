@@ -47,7 +47,7 @@ export default function StudentLogin() {
           <p className={portalClassNames.kicker}>Student access</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">Student Portal</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--portal-text-muted)]">
-            Sign in to view your progress.
+            Sign in to view your evaluations, assignment record, and attendance.
           </p>
         </div>
 
@@ -56,6 +56,9 @@ export default function StudentLogin() {
             <h2 id="student-login-title" className="text-lg font-semibold">
               Student Login
             </h2>
+            <p className="mt-2 text-sm leading-6 text-[var(--portal-text-muted)]">
+              Use the access code from your instructor to open your read-only study record.
+            </p>
           </div>
           <form onSubmit={submit} className="space-y-5 p-5">
             <div>
