@@ -33,11 +33,10 @@ test.describe('lesson projector and presenter modes', () => {
     await page.goto('/interactive-zwa-5-js?mode=projector&slide=tasks');
     await expect(page.getByRole('heading', { name: 'Úlohy – JavaScript' }).first()).toBeVisible();
     await expect(page.getByText(/Vytvořte proměnnou greeting/)).toBeVisible();
-    await expect(page.locator('textarea, iframe')).toHaveCount(0);
-    await expect(page.getByText('V tomto okně prohlížeče', { exact: true })).toHaveCount(0);
-    await expect(page.getByText('Soubory', { exact: true })).toHaveCount(0);
-    await expect(page.getByText('Náhled', { exact: true })).toHaveCount(0);
-    await expect(page.getByText('Konzole', { exact: true })).toHaveCount(0);
+    await expect(page.locator('[data-projector-private]')).toHaveCount(0);
+    await expect(
+      page.locator('textarea, iframe, [role="tablist"], [contenteditable="true"]'),
+    ).toHaveCount(0);
   });
 
   test('projector keeps CSS teaching text without editor mirrors or controls', async ({ page }) => {
@@ -45,9 +44,12 @@ test.describe('lesson projector and presenter modes', () => {
 
     await page.goto('/interactive-zwa-2?mode=projector&slide=linking');
     await expect(page.getByText(/Vytvořte link na stylopis/)).toBeVisible();
-    await expect(page.locator('textarea, iframe, pre[aria-hidden="true"]')).toHaveCount(0);
-    await expect(page.getByText('Editor', { exact: true })).toHaveCount(0);
-    await expect(page.getByText('Náhled', { exact: true })).toHaveCount(0);
+    await expect(page.locator('[data-projector-private]')).toHaveCount(0);
+    await expect(
+      page.locator(
+        'textarea, iframe, pre[aria-hidden="true"], [role="tablist"], [contenteditable="true"]',
+      ),
+    ).toHaveCount(0);
   });
 
   test('arrow keys in editable fields do not change the active slide', async ({ page }) => {
@@ -68,6 +70,8 @@ test.describe('lesson projector and presenter modes', () => {
     await page.goto('/interactive-zwa-1-html5?mode=presenter&slide=intro');
     await expect(page.getByRole('navigation', { name: /Osnova prezentujícího/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Otevřít projektor/i })).toBeVisible();
+    await expect(page.getByRole('tablist')).toBeVisible();
+    await expect(page.getByRole('tabpanel')).toHaveCount(1);
   });
 
   test('successful projector popup does not show the blocked-popup fallback', async ({ page }) => {

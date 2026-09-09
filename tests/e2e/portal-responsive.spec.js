@@ -25,7 +25,7 @@ test.describe('responsive portal and projector views', () => {
     await page.goto('/interactive-zwa-1-html5?mode=projector&slide=intro');
 
     await expect(page.getByRole('main')).toHaveCount(1);
-    const next = page.getByRole('button', { name: 'Next slide' });
+    const next = page.getByRole('button', { name: 'Následující snímek' });
     await expect(next).toBeVisible();
     await expect(next).toBeEnabled();
 
@@ -39,12 +39,12 @@ test.describe('responsive portal and projector views', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-1-html5?mode=projector&slide=intro');
-    const next = page.getByRole('button', { name: 'Next slide' });
+    const next = page.getByRole('button', { name: 'Následující snímek' });
     await next.focus();
     await expect(next).toBeFocused();
     await next.press('Enter');
 
     await expect(page).toHaveURL(/mode=projector.*slide=sections/);
-    await expect(page.getByRole('button', { name: 'Next slide' })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Následující snímek' })).toBeFocused();
   });
 });

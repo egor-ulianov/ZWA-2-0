@@ -3,16 +3,22 @@ import { createRequire } from 'node:module';
 const { expect, test } = createRequire(import.meta.url)('@playwright/test');
 import { installDeterministicNetwork } from './helpers/browser.js';
 
+async function expectSelectedOutlineSlide(page, name) {
+  const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
+  await expect(outline).toBeVisible();
+  await expect(outline.getByRole('button', { name, exact: true })).toHaveAttribute(
+    'aria-current',
+    'step',
+  );
+}
+
 test.describe('F1 lesson composition and deep links', () => {
   test('HTML5 lesson keeps its task deep link and learning objective', async ({ page }) => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-1-html5?slide=tasks');
 
-    await expect(page.getByRole('tab', { name: 'Úkoly', exact: true })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    await expectSelectedOutlineSlide(page, 'Úkoly');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(
@@ -29,10 +35,7 @@ test.describe('F1 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-2-forms?slide=tasks');
 
-    await expect(page.getByRole('tab', { name: 'Úkoly', exact: true })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    await expectSelectedOutlineSlide(page, 'Úkoly');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(
@@ -47,9 +50,7 @@ test.describe('F1 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-1/?slide=tasks-net');
 
-    await expect(
-      page.getByRole('tab', { name: 'Úlohy – síť (v terminálu vpravo)', exact: true }),
-    ).toHaveAttribute('aria-selected', 'true');
+    await expectSelectedOutlineSlide(page, 'Úlohy – síť (v terminálu vpravo)');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks-net');
     await expect(
       page.getByText(
@@ -64,10 +65,7 @@ test.describe('F1 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-2?slide=tasks');
 
-    await expect(page.getByRole('tab', { name: 'Úlohy – CSS', exact: true })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    await expectSelectedOutlineSlide(page, 'Úlohy – CSS');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(
@@ -84,10 +82,7 @@ test.describe('F2 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-5-css-ii?slide=tasks');
 
-    await expect(page.getByRole('tab', { name: 'Úlohy – CSS II', exact: true })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    await expectSelectedOutlineSlide(page, 'Úlohy – CSS II');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(
@@ -102,9 +97,7 @@ test.describe('F2 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-5-js?slide=tasks');
 
-    await expect(
-      page.getByRole('tab', { name: 'Úlohy – JavaScript', exact: true }),
-    ).toHaveAttribute('aria-selected', 'true');
+    await expectSelectedOutlineSlide(page, 'Úlohy – JavaScript');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(
@@ -149,10 +142,7 @@ test.describe('F2 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-7?slide=task1');
 
-    await expect(page.getByRole('tab', { name: 'Úkol 1: Třídy', exact: true })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    await expectSelectedOutlineSlide(page, 'Úkol 1: Třídy');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('task1');
     await expect(
       page.getByText(
@@ -167,9 +157,7 @@ test.describe('F2 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-8-php?slide=t1');
 
-    await expect(
-      page.getByRole('tab', { name: 'Úkol 1: Výpis aktuálního data', exact: true }),
-    ).toHaveAttribute('aria-selected', 'true');
+    await expectSelectedOutlineSlide(page, 'Úkol 1: Výpis aktuálního data');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('t1');
     await expect(
       page.getByText(
@@ -188,9 +176,7 @@ test.describe('F3 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-9?slide=tasks');
 
-    await expect(
-      page.getByRole('tab', { name: 'Úkoly dle tutoriálu', exact: true }),
-    ).toHaveAttribute('aria-selected', 'true');
+    await expectSelectedOutlineSlide(page, 'Úkoly dle tutoriálu');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(
@@ -207,10 +193,7 @@ test.describe('F3 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-10-sessions-cookies?slide=tasks');
 
-    await expect(page.getByRole('tab', { name: 'Úkoly', exact: true })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    await expectSelectedOutlineSlide(page, 'Úkoly');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(
@@ -227,10 +210,7 @@ test.describe('F3 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-11-files-json?slide=tasks');
 
-    await expect(page.getByRole('tab', { name: 'Úkoly', exact: true })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    await expectSelectedOutlineSlide(page, 'Úkoly');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(
@@ -247,10 +227,7 @@ test.describe('F3 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-12-auth?slide=tasks');
 
-    await expect(page.getByRole('tab', { name: 'Úkoly', exact: true })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    await expectSelectedOutlineSlide(page, 'Úkoly');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(

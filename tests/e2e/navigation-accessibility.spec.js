@@ -83,6 +83,7 @@ test.describe('public catalog and lesson navigation', () => {
     const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
     await expect(outline).toBeVisible();
     await expect(page.getByRole('tablist')).toHaveCount(0);
+    await expect(page.getByRole('tabpanel')).toHaveCount(0);
     const slides = outline.getByRole('button');
     await expect(slides).toHaveCount(4);
 

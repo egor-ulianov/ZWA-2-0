@@ -44,3 +44,24 @@ All required focused checks pass after implementation:
 ## Concerns
 
 No known concerns within Task 1 scope. The broader lesson workspace remains for the subsequent tasks in the plan.
+
+## Review-fix follow-up
+
+Addressed the three review findings:
+
+- `SlideCard` now reads the lesson mode from context. Presenter mode retains `role="tabpanel"` and its tab relationship; student and standalone projector rendering use a heading-labelled `role="region"`, so no student element references a removed top tab.
+- Projector E2E coverage now asserts the absence of every `[data-projector-private]` subtree plus interactive workspace primitives (`textarea`, `iframe`, tablists, and contenteditable controls), independent of English/Czech workspace copy.
+- `lesson-redesign.spec.js` now verifies selected left-outline buttons and deep-link URLs. `portal-responsive.spec.js` now uses the Czech projector control names.
+
+Review-fix TDD evidence:
+
+- Before the `SlideCard` production edit, the new unit test failed because the component had no mode-aware context/region semantics.
+- After the edit, all focused unit and E2E checks passed.
+
+Review-fix verification:
+
+- `node --test tests/unit/lesson-shell.test.js tests/unit/projector-content.test.js tests/unit/presenter-channel.test.js` — 13 passed.
+- `npm run test:e2e -- tests/e2e/navigation-accessibility.spec.js tests/e2e/presenter-mode.spec.js tests/e2e/lesson-redesign.spec.js tests/e2e/portal-responsive.spec.js` — 42 passed.
+- `npm run lint` — passed with `--max-warnings=0`.
+- `npm run format:check` — passed.
+- `git diff --check` — passed.

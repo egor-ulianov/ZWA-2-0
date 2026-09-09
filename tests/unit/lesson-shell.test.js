@@ -68,3 +68,11 @@ test('slide cards use solid portal panels without glass effects', async () => {
   assert.match(source, /portal-panel/);
   assert.doesNotMatch(source, /backdrop-blur|bg-gradient/);
 });
+
+test('slide cards keep tab semantics only for presenter mode', async () => {
+  const source = await readFile(path.join(root, 'src/components/lesson/SlideCard.jsx'), 'utf8');
+  assert.match(source, /useContext/);
+  assert.match(source, /isPresenter/);
+  assert.match(source, /role=\{isPresenter \? 'tabpanel' : 'region'\}/);
+  assert.match(source, /aria-labelledby=\{isPresenter \? tabId : headingId\}/);
+});
