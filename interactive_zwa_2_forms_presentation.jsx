@@ -14,8 +14,8 @@ import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonS
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
-import { scrollToId } from './src/components/lesson/navigation.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import LessonTaskTabs from './src/components/exercises/LessonTaskTabs.jsx';
 
 function SectionCard({ title, children, footer }) {
   return (
@@ -508,10 +508,16 @@ const FormTaskProvider = forwardRef(function FormTaskProvider({ initialHtml, chi
   );
 });
 
-function FormTaskEditor() {
+function FormTaskEditor({ tasks, activeTaskId, onTaskChange }) {
   const { html, setHtml, checking, validateOnline, local } = useContext(FormTaskContext);
   return (
     <div className="space-y-2">
+      <LessonTaskTabs
+        tasks={tasks}
+        activeTaskId={activeTaskId}
+        onChange={onTaskChange}
+        label="Kroky úlohy formulářů"
+      />
       <label className="block text-sm font-medium" htmlFor="forms-task-editor">
         Editor HTML formuláře
       </label>
@@ -1286,17 +1292,45 @@ const slides = [
   { id: 'tasks', title: 'Úkoly', activityType: 'apply' },
 ];
 
+const FORM_TASKS = [
+  {
+    id: 'standard',
+    label: 'Standardní prvky',
+    description: 'Vytvořte formulář s label, textovým vstupem, textarea, select a tlačítkem.',
+  },
+  {
+    id: 'grouping',
+    label: 'Seskupení polí',
+    description: 'Seskupte související ovládací prvky do fieldset a pojmenujte je pomocí legend.',
+  },
+  {
+    id: 'attributes',
+    label: 'Atributy',
+    description: 'Vyzkoušejte readonly, disabled, autocomplete, autofocus a přístupové klávesy.',
+  },
+  {
+    id: 'inputs',
+    label: 'HTML5 inputy',
+    description: 'Použijte vhodné typy inputů, například email, date, color, range nebo url.',
+  },
+  {
+    id: 'meter',
+    label: 'Meter a progress',
+    description: 'Doplňte meter a progress s hodnotami, které dávají čtenáři smysl.',
+  },
+  {
+    id: 'datalist',
+    label: 'Datalist',
+    description: 'Propojte input s datalist přes atribut list a unikátní id.',
+  },
+];
+
 export default function AppFormsLesson2() {
   const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
   const formsTaskRef = useRef(null);
+  const [activeTaskId, setActiveTaskId] = useState(FORM_TASKS[0].id);
   const currentSlide = slides.find((slide) => slide.id === activeSlide) || slides[0];
-
-  function gotoSection(sectionId) {
-    setActiveSlide('playground');
-    setTimeout(() => {
-      scrollToId(sectionId);
-    }, 50);
-  }
+  const activeTask = FORM_TASKS.find((task) => task.id === activeTaskId) || FORM_TASKS[0];
 
   return (
     <LessonShell
@@ -1393,27 +1427,6 @@ export default function AppFormsLesson2() {
 
         {activeSlide === 'tasks' && (
           <div className="space-y-3">
-            <SectionCard title="Vyberte úkol">
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { id: 'standard', label: 'Standardní prvky' },
-                  { id: 'grouping', label: 'Seskupení' },
-                  { id: 'attributes', label: 'Atributy' },
-                  { id: 'inputs', label: 'HTML5 inputy' },
-                  { id: 'meter', label: 'Meter/Progress' },
-                  { id: 'datalist', label: 'Datalist' },
-                ].map((l) => (
-                  <button
-                    key={l.id}
-                    type="button"
-                    className="px-3 py-1.5 rounded-full border text-sm bg-white/70 dark:bg-zinc-900/60 hover:bg-white border-zinc-200 dark:border-zinc-800"
-                    onClick={() => gotoSection(l.id)}
-                  >
-                    {l.label}
-                  </button>
-                ))}
-              </div>
-            </SectionCard>
             <FormTaskProvider
               ref={formsTaskRef}
               initialHtml={[
@@ -1437,15 +1450,18 @@ export default function AppFormsLesson2() {
                 privateMarker="forms-exercise"
                 task={
                   <>
-                    <p>Vytvořte přístupný HTML formulář s popisky a nativní validací.</p>
-                    <p>
-                      Zachovejte ukázku standardních prvků, typů HTML5 vstupů a atributů{' '}
-                      <Code>required</Code>/<Code>pattern</Code>.
-                    </p>
+                    <p className="font-medium">{activeTask.label}</p>
+                    <p>{activeTask.description}</p>
                   </>
                 }
                 onRunTests={() => formsTaskRef.current?.runValidation()}
-                editor={<FormTaskEditor />}
+                editor={
+                  <FormTaskEditor
+                    tasks={FORM_TASKS}
+                    activeTaskId={activeTaskId}
+                    onTaskChange={setActiveTaskId}
+                  />
+                }
                 preview={<FormTaskPreview />}
               />
             </FormTaskProvider>

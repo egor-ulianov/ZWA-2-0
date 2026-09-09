@@ -124,6 +124,39 @@ test.describe('runtime lesson task workspaces', () => {
     await expect(assignment).toContainText('Georgia');
   });
 
+  test('HTML and form task selectors keep students in the unified workspace', async ({ page }) => {
+    const cases = [
+      {
+        route: '/interactive-zwa-1-html5?slide=tasks',
+        tablist: 'Kroky úlohy HTML',
+        tab: 'Sémantická struktura',
+        assignment: 'sémantickou strukturu',
+      },
+      {
+        route: '/interactive-zwa-2-forms?slide=tasks',
+        tablist: 'Kroky úlohy formulářů',
+        tab: 'Seskupení polí',
+        assignment: 'fieldset',
+      },
+    ];
+
+    for (const testCase of cases) {
+      await installDeterministicNetwork(page);
+      await page.goto(testCase.route);
+
+      const assignment = page.getByRole('region', { name: 'Zadání' });
+      const taskTabs = page
+        .getByRole('region', { name: 'IDE' })
+        .getByRole('tablist', { name: testCase.tablist });
+
+      await taskTabs.getByRole('tab', { name: testCase.tab, exact: true }).click();
+      await expect(page).toHaveURL(new RegExp(`${testCase.route.replace('?', '\\?')}$`));
+      await expect(assignment).toContainText(testCase.assignment);
+      await expect(page.getByRole('region', { name: 'IDE' })).toBeVisible();
+      await expect(page.getByRole('region', { name: 'Náhled a testy' })).toBeVisible();
+    }
+  });
+
   test.describe('the unified action invokes the existing runtime checker', () => {
     const checkerCases = [
       {

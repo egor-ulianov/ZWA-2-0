@@ -14,8 +14,8 @@ import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonS
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
-import { scrollToId } from './src/components/lesson/navigation.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import LessonTaskTabs from './src/components/exercises/LessonTaskTabs.jsx';
 
 function HtmlPreview({ html, title = 'Náhled HTML playgroundu' }) {
   return (
@@ -145,10 +145,16 @@ const HtmlTaskProvider = forwardRef(function HtmlTaskProvider({ children }, ref)
   );
 });
 
-function HtmlTaskEditor() {
+function HtmlTaskEditor({ tasks, activeTaskId, onTaskChange }) {
   const { html, setHtml, checking, validateOnline, local } = useContext(HtmlTaskContext);
   return (
     <div className="space-y-2">
+      <LessonTaskTabs
+        tasks={tasks}
+        activeTaskId={activeTaskId}
+        onChange={onTaskChange}
+        label="Kroky úlohy HTML"
+      />
       <label className="block text-sm font-medium" htmlFor="html-task-editor">
         Editor HTML pro úkol
       </label>
@@ -676,17 +682,31 @@ const slides = [
   { id: 'tasks', title: 'Úkoly', activityType: 'apply' },
 ];
 
+const HTML_TASKS = [
+  {
+    id: 'skeleton',
+    label: 'Kostra dokumentu',
+    description: 'Doplňte doctype, element html, head s metadaty a přehledné tělo dokumentu.',
+  },
+  {
+    id: 'semantic',
+    label: 'Sémantická struktura',
+    description:
+      'Doplňte sémantickou strukturu pomocí header, nav, main, section, article, aside a footer.',
+  },
+  {
+    id: 'media',
+    label: 'Média a tabulka',
+    description: 'Přidejte obrázek s alt a tabulku s hlavičkami th, buňkami td, colspan a rowspan.',
+  },
+];
+
 export default function AppHtml5() {
   const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
   const htmlTaskRef = useRef(null);
+  const [activeTaskId, setActiveTaskId] = useState(HTML_TASKS[0].id);
   const currentSlide = slides.find((slide) => slide.id === activeSlide) || slides[0];
-
-  function gotoSection(sectionId) {
-    setActiveSlide('sections');
-    setTimeout(() => {
-      scrollToId(sectionId);
-    }, 50);
-  }
+  const activeTask = HTML_TASKS.find((task) => task.id === activeTaskId) || HTML_TASKS[0];
 
   return (
     <LessonShell
@@ -769,39 +789,23 @@ export default function AppHtml5() {
 
         {activeSlide === 'tasks' && (
           <div className="space-y-3">
-            <div className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-4">
-              <div className="font-semibold mb-2">Vyberte úkol</div>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { id: 'skeleton', label: 'Skeleton' },
-                  { id: 'semantic', label: 'Sémantika' },
-                  { id: 'media', label: 'Média + Tabulka' },
-                ].map((l) => (
-                  <button
-                    key={l.id}
-                    type="button"
-                    className="px-3 py-1.5 rounded-full border text-sm bg-white/70 dark:bg-zinc-900/60 hover:bg-white border-zinc-200 dark:border-zinc-800"
-                    onClick={() => gotoSection(l.id)}
-                  >
-                    {l.label}
-                  </button>
-                ))}
-              </div>
-            </div>
             <HtmlTaskProvider ref={htmlTaskRef}>
               <LessonTaskWorkspace
                 privateMarker="html-exercise"
                 task={
                   <>
-                    <p>Vytvořte validní HTML5 dokument se sémantickou strukturou.</p>
-                    <p>
-                      Doplňte do editoru doctype, metadata, sémantické prvky, obrázek s{' '}
-                      <Code>alt</Code> a tabulku s hlavičkou i buňkami.
-                    </p>
+                    <p className="font-medium">{activeTask.label}</p>
+                    <p>{activeTask.description}</p>
                   </>
                 }
                 onRunTests={() => htmlTaskRef.current?.runValidation()}
-                editor={<HtmlTaskEditor />}
+                editor={
+                  <HtmlTaskEditor
+                    tasks={HTML_TASKS}
+                    activeTaskId={activeTaskId}
+                    onTaskChange={setActiveTaskId}
+                  />
+                }
                 preview={<HtmlTaskPreview />}
               />
             </HtmlTaskProvider>
