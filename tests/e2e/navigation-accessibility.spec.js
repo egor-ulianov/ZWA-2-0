@@ -23,6 +23,34 @@ test.describe('public catalog and lesson navigation', () => {
     await expect(page.locator('h1').first()).toBeVisible();
   });
 
+  test('student login controls follow a keyboard path', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/student');
+    const username = page.getByLabel('Username');
+    const code = page.getByLabel('Auth code');
+    const signIn = page.getByRole('button', { name: 'Sign in' });
+
+    await username.focus();
+    await username.press('Tab');
+    await expect(code).toBeFocused();
+    await code.press('Tab');
+    await expect(signIn).toBeFocused();
+  });
+
+  test('course links can be reached and activated from the keyboard', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/');
+    const firstLesson = page.getByRole('link', { name: /Open lesson 1:/ }).first();
+    await firstLesson.focus();
+    await expect(firstLesson).toBeFocused();
+    await firstLesson.press('Enter');
+
+    await expect(page).toHaveURL(/\/interactive-zwa-1-html5\/?(?:\?slide=title)?$/);
+    await expect(page.locator('h1').first()).toBeVisible();
+  });
+
   test('valid lesson deep links select the requested slide and invalid ones fall back safely', async ({
     page,
   }) => {
@@ -31,7 +59,7 @@ test.describe('public catalog and lesson navigation', () => {
     await page.goto('/interactive-zwa-1-html5?slide=tasks#stale');
     await expect(page.getByRole('tab', { name: 'Úkoly' })).toHaveAttribute('aria-selected', 'true');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
-    expect(new URL(page.url()).hash).toBe('');
+    await expect.poll(() => new URL(page.url()).hash).toBe('');
 
     await page.goto('/interactive-zwa-1-html5?slide=missing');
     await expect(page.getByRole('tab', { name: 'Úvod' })).toHaveAttribute('aria-selected', 'true');
@@ -75,6 +103,28 @@ test.describe('public catalog and lesson navigation', () => {
     await tabs.nth(3).press('Home');
     await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
     await expect(tabs.nth(0)).toBeFocused();
+  });
+
+  test('presenter controls are keyboard reachable', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-1-html5?mode=presenter&slide=intro');
+    const startTimer = page.getByRole('button', { name: 'Start timer' });
+    const openProjector = page.getByRole('button', { name: 'Open projector' });
+
+    await startTimer.focus();
+    await expect(startTimer).toBeFocused();
+    await startTimer.press('Enter');
+    await expect(page.getByRole('button', { name: 'Pause timer' })).toBeFocused();
+
+    await openProjector.focus();
+    await expect(openProjector).toBeFocused();
+    const popupPromise = page.waitForEvent('popup');
+    await openProjector.press('Enter');
+    const popup = await popupPromise;
+    await expect(popup).toHaveURL(/mode=projector.*slide=intro/);
+    await popup.close();
+    await expect(page).toHaveURL(/mode=presenter.*slide=intro/);
   });
 
   for (const lesson of lessons) {

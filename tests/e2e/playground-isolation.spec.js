@@ -107,7 +107,31 @@ test('JavaScript exercise workspace runs tests in the isolated preview', async (
   await installDeterministicNetwork(page);
 
   await page.goto('/interactive-zwa-5-js?slide=tasks');
-  await page.getByRole('button', { name: 'Run tests' }).click();
-  await expect(page.getByRole('region', { name: 'Test results' })).toContainText('Code executed');
+  const runTests = page.getByRole('button', { name: 'Run tests' });
+  await runTests.focus();
+  await expect(runTests).toBeFocused();
+  await runTests.press('Enter');
+  const results = page.getByRole('region', { name: 'Test results' });
+  await expect(results).toContainText('Code executed');
+  await expect(runTests).toBeFocused();
   await expect(page.locator('iframe[title="JavaScript DOM sandbox"]')).toBeVisible();
+});
+
+test('projector output has one main landmark and no private playground or presenter UI', async ({
+  page,
+}) => {
+  await installDeterministicNetwork(page);
+
+  await page.goto('/interactive-zwa-5-js?mode=projector&slide=tasks');
+
+  await expect(page.getByRole('main')).toHaveCount(1);
+  await expect(page.getByRole('tablist')).toHaveCount(0);
+  await expect(page.getByText('Presenter notes', { exact: true })).toHaveCount(0);
+  await expect(page.locator('[data-projector-private]')).toHaveCount(0);
+  await expect(
+    page.getByText('Před spuštěním testů požádejte o předpověď výsledku pro jeden vstup.', {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect(page.locator('textarea, iframe')).toHaveCount(0);
 });
