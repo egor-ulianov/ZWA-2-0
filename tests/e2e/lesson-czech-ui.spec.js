@@ -49,7 +49,11 @@ test.describe('Czech unified lesson task workspace integration', () => {
     test(`${route} strips the complete task workspace in projector mode`, async ({ page }) => {
       await installDeterministicNetwork(page);
 
-      await page.goto(route.replace('?', '?mode=projector&'));
+      const response = await page.goto(route.replace('?', '?mode=projector&'));
+      expect(response).not.toBeNull();
+      expect(response.ok()).toBe(true);
+      await expect(page.getByRole('main')).toHaveCount(1);
+      await expect(page.getByRole('main')).toBeVisible();
 
       await expect(page.getByRole('navigation', { name: 'Osnova kurzu' })).toHaveCount(0);
       await expect(page.getByRole('tablist')).toHaveCount(0);
