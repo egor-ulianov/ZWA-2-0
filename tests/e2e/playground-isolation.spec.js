@@ -8,7 +8,7 @@ const playgroundLessons = [
     name: 'HTML5 static preview',
     href: '/interactive-zwa-1-html5?slide=tasks',
     verify: async (page) => {
-      await expect(page.getByText('Vyberte úkol', { exact: true })).toBeVisible();
+      await expect(page.getByRole('tablist', { name: 'Kroky úlohy HTML' })).toBeVisible();
     },
   },
   {
@@ -67,7 +67,7 @@ test('hostile student JavaScript cannot mutate the parent or block later sandbox
   await page.evaluate(() => {
     document.documentElement.dataset.playgroundHostMutation = 'clean';
   });
-  const editor = page.locator('textarea').first();
+  const editor = page.getByRole('textbox', { name: 'main.js — Editor' });
   await expect(editor).toBeVisible();
 
   await editor.fill(`
@@ -148,9 +148,9 @@ test('JavaScript exercise workspace exposes exactly three Czech task regions', a
   await expect(workspace.getByRole('region')).toHaveCount(3);
   await expect(page.getByRole('button', { name: 'Spustit testy' })).toBeVisible();
   await expect(page.getByText('Plocha úkolu', { exact: true })).toBeVisible();
-  await expect(page.getByText('V tomto okně prohlížeče', { exact: true })).toBeVisible();
-  await expect(page.getByText('Soubory', { exact: true })).toBeVisible();
-  await expect(page.getByText('Editor', { exact: true })).toBeVisible();
+  await expect(page.getByText('JavaScript v tomto okně prohlížeče', { exact: true })).toBeVisible();
+  await expect(workspace.getByRole('tablist', { name: 'Kroky úlohy JavaScript' })).toBeVisible();
+  await expect(workspace.getByRole('textbox', { name: 'main.js — Editor' })).toBeVisible();
   await expect(page.getByText('Náhled', { exact: true })).toBeVisible();
   await expect(page.getByText('Výsledky testů', { exact: true })).toBeVisible();
 });

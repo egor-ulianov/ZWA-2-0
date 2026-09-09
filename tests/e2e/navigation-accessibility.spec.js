@@ -61,7 +61,7 @@ test.describe('public catalog and lesson navigation', () => {
 
     await page.goto('/interactive-zwa-1-html5?slide=tasks#stale');
     await expect(page.getByRole('navigation', { name: 'Osnova kurzu' })).toBeVisible();
-    await expect(page.getByRole('tablist')).toHaveCount(0);
+    await expect(page.getByRole('navigation', { name: 'Navigace mezi snímky' })).toHaveCount(0);
     await expect(page.getByText('Lekce 1', { exact: true }).first()).toBeVisible();
     await expect(
       page.getByRole('navigation', { name: 'Osnova kurzu' }).getByRole('button', { name: 'Úkoly' }),

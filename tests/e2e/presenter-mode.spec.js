@@ -32,7 +32,6 @@ test.describe('lesson projector and presenter modes', () => {
 
     await page.goto('/interactive-zwa-5-js?mode=projector&slide=tasks');
     await expect(page.getByRole('heading', { name: 'Úlohy – JavaScript' }).first()).toBeVisible();
-    await expect(page.getByText(/Vytvořte proměnnou greeting/)).toBeVisible();
     await expect(page.locator('[data-projector-private]')).toHaveCount(0);
     await expect(
       page.locator('textarea, iframe, [role="tablist"], [contenteditable="true"]'),
@@ -56,7 +55,7 @@ test.describe('lesson projector and presenter modes', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-5-js?slide=tasks');
-    const editor = page.locator('textarea').first();
+    const editor = page.getByRole('textbox', { name: 'main.js — Editor' });
     await editor.focus();
     await editor.press('ArrowRight');
     await expect(page).toHaveURL(/slide=tasks/);

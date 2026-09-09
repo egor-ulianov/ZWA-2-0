@@ -195,7 +195,7 @@ function JsTaskWorkspace({ steps, stepIndex, onStepIndexChange }) {
 
   return (
     <div
-      data-projector-private="javascript-exercise"
+      data-projector-private="exercise-workspace"
       className="overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
     >
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200/70 px-4 py-3 dark:border-zinc-800">
