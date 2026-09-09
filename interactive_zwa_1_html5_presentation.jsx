@@ -1,4 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, {
+  forwardRef,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+  useImperativeHandle,
+} from 'react';
 import SandboxedPreview from './src/components/playground/SandboxedPreview';
 import { getLessonByNumber } from './src/config/lessons.js';
 import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
@@ -140,7 +147,7 @@ function Task({ title, children, example }) {
   );
 }
 
-function TaskEditorHtml() {
+const TaskEditorHtml = forwardRef(function TaskEditorHtml(_, ref) {
   const [html, setHtml] = useState(MinimalTaskTemplate());
   const [checking, setChecking] = useState(false);
   const [results, setResults] = useState(null);
@@ -175,7 +182,7 @@ function TaskEditorHtml() {
     return { issues, passed: issues.length === 0 };
   }
 
-  async function validateOnline() {
+  const validateOnline = useCallback(async () => {
     setChecking(true);
     try {
       const res = await fetch('/api/validate-html', {
@@ -190,7 +197,9 @@ function TaskEditorHtml() {
     } finally {
       setChecking(false);
     }
-  }
+  }, [html]);
+
+  useImperativeHandle(ref, () => ({ runValidation: validateOnline }), [validateOnline]);
 
   const local = runLocalChecks(html);
 
@@ -252,7 +261,7 @@ function TaskEditorHtml() {
       </div>
     </div>
   );
-}
+});
 
 function SectionTabs({ theory, example, Try, validate, id, taskText }) {
   const [tab, setTab] = useState('theory');
@@ -529,6 +538,7 @@ const slides = [
 
 export default function AppHtml5() {
   const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const htmlTaskRef = useRef(null);
   const currentSlide = slides.find((slide) => slide.id === activeSlide) || slides[0];
 
   function gotoSection(sectionId) {
@@ -649,7 +659,8 @@ export default function AppHtml5() {
                   </p>
                 </>
               }
-              editor={<TaskEditorHtml />}
+              onRunTests={() => htmlTaskRef.current?.runValidation()}
+              editor={<TaskEditorHtml ref={htmlTaskRef} />}
               preview={
                 <p className="text-sm text-zinc-600 dark:text-zinc-300">
                   Náhled dokumentu a lokální/W3C kontroly jsou zachované uvnitř HTML editoru.

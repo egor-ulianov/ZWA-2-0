@@ -1,4 +1,12 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import heroImg from './src/interactive-zwa-1/assets/semestral-meme.png';
 import memeImg from './src/interactive-zwa-2/assets/image.png';
 import SandboxedPreview from './src/components/playground/SandboxedPreview';
@@ -145,7 +153,7 @@ function getTaskTemplates(slideId, stepIndex) {
   return { html: baseHtml, css: cssPlaceholders[idx] };
 }
 
-function VsPlayground({ slideId, stepIndex }) {
+const VsPlayground = forwardRef(function VsPlayground({ slideId, stepIndex }, ref) {
   const [activeTab, setActiveTab] = useState('css');
   const [autoApply, setAutoApply] = useState(true);
   const [applyVersion, setApplyVersion] = useState(0);
@@ -197,10 +205,12 @@ function VsPlayground({ slideId, stepIndex }) {
     if (autoApply) setApplyVersion((x) => x + 1);
   }
 
-  function validate() {
+  const validate = useCallback(() => {
     setResults([]);
     setValidationVersion((version) => version + 1);
-  }
+  }, []);
+
+  useImperativeHandle(ref, () => ({ runValidation: validate }), [validate]);
 
   function handleInspection(message) {
     if (message.type === 'result') {
@@ -346,7 +356,7 @@ function VsPlayground({ slideId, stepIndex }) {
       </div>
     </div>
   );
-}
+});
 
 // (old linking playground replaced by VsPlayground)
 
@@ -673,6 +683,7 @@ function CssSlideContent({ slide, stepIndex: controlledIndex, onStepIndexChange 
 // (old CSS and linking playgrounds consolidated into VsPlayground)
 export default function App() {
   const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const cssTaskRef = useRef(null);
   const [stepIndex, setStepIndex] = useState(0);
   const current = slides.find((s) => s.id === activeSlide) || slides[0];
   const hasSteps = Array.isArray(current.steps) && current.steps.length > 0;
@@ -709,13 +720,16 @@ export default function App() {
             {current.id === 'tasks' ? (
               <LessonTaskWorkspace
                 privateMarker="css-exercise"
+                onRunTests={() => cssTaskRef.current?.runValidation()}
                 task={
                   <>
                     <p>{current.steps?.[stepIndex]?.title}</p>
                     <p>{current.steps?.[stepIndex]?.desc}</p>
                   </>
                 }
-                editor={<VsPlayground slideId={activeSlide} stepIndex={stepIndex} />}
+                editor={
+                  <VsPlayground ref={cssTaskRef} slideId={activeSlide} stepIndex={stepIndex} />
+                }
                 preview={
                   <p className="text-sm text-zinc-600 dark:text-zinc-300">
                     Náhled HTML/CSS a kontrola computed stylů jsou zachované uvnitř editoru.

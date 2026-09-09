@@ -1,4 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import SandboxedPreview from './src/components/playground/SandboxedPreview';
 import { getLessonByNumber } from './src/config/lessons.js';
 import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
@@ -140,7 +148,7 @@ function getTaskTemplates(stepIndex) {
   return { step: steps[idx], all: steps };
 }
 
-function VsPlayground({ stepIndex }) {
+const VsPlayground = forwardRef(function VsPlayground({ stepIndex }, ref) {
   const [htmlCode, setHtmlCode] = useState('');
   const [cssCode, setCssCode] = useState('');
   const [applyVersion, setApplyVersion] = useState(0);
@@ -161,10 +169,12 @@ function VsPlayground({ stepIndex }) {
   function applyOnce() {
     setApplyVersion((v) => v + 1);
   }
-  function validate() {
+  const validate = useCallback(() => {
     setResults([]);
     setValidationVersion((version) => version + 1);
-  }
+  }, []);
+
+  useImperativeHandle(ref, () => ({ runValidation: validate }), [validate]);
   function handleInspection(message) {
     if (message.type === 'result') {
       setResults(
@@ -265,7 +275,7 @@ function VsPlayground({ stepIndex }) {
       </div>
     </div>
   );
-}
+});
 
 const slides = [
   {
@@ -676,6 +686,7 @@ function QuizCssBasics() {
 
 export default function AppCss2Lesson() {
   const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const cssTaskRef = useRef(null);
   const [stepIndex, setStepIndex] = useState(0);
   const current = slides.find((s) => s.id === activeSlide) || slides[0];
   const hasTasks = current.id === 'tasks';
@@ -723,13 +734,14 @@ export default function AppCss2Lesson() {
             <div className="lg:sticky lg:top-8">
               <LessonTaskWorkspace
                 privateMarker="css-exercise"
+                onRunTests={() => cssTaskRef.current?.runValidation()}
                 task={
                   <>
                     <p>{getTaskTemplates(stepIndex).step.title}</p>
                     <p>{getTaskTemplates(stepIndex).step.desc}</p>
                   </>
                 }
-                editor={<VsPlayground stepIndex={stepIndex} />}
+                editor={<VsPlayground ref={cssTaskRef} stepIndex={stepIndex} />}
                 preview={
                   <p className="text-sm text-zinc-600 dark:text-zinc-300">
                     Náhled layoutu a kontrola computed stylů jsou zachované uvnitř editoru.

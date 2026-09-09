@@ -65,6 +65,7 @@ export function LessonTaskWorkspace({
   testDefinition,
   staticCheck,
   privateMarker,
+  onRunTests,
 }) {
   const editorConfig = useMemo(() => normalizeEditor(editor), [editor]);
   const [source, setSource] = useState(editorConfig.source);
@@ -76,6 +77,10 @@ export function LessonTaskWorkspace({
   }, []);
 
   const handleRunTests = useCallback(() => {
+    if (typeof onRunTests === 'function') {
+      onRunTests();
+      return;
+    }
     if (typeof staticCheck !== 'function') {
       setResults([]);
       return;
@@ -92,7 +97,7 @@ export function LessonTaskWorkspace({
         },
       ]);
     }
-  }, [source, staticCheck]);
+  }, [onRunTests, source, staticCheck]);
 
   return (
     <div

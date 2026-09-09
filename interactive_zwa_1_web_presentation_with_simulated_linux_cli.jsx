@@ -959,7 +959,7 @@ function SectionTabs({ theory, examples, tryContent, task }) {
   );
 }
 
-function TaskChecklist({ commandLog }) {
+function TaskChecklist({ commandLog, checked = false }) {
   const reqs = [
     {
       id: 'dns',
@@ -986,6 +986,7 @@ function TaskChecklist({ commandLog }) {
   return (
     <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4 text-sm">
       <div className="font-semibold mb-2">Kontrolní seznam</div>
+      {checked && <div className="mb-2 text-emerald-700">Kontrolní seznam ověřen</div>}
       <ul className="space-y-1">
         {reqs.map((r) => {
           const ok = commandLog.some((c) => r.test(c));
@@ -1039,6 +1040,7 @@ export default function App() {
   const { run } = useInterpreter();
   const [clearKey, setClearKey] = useState(0);
   const [commandLog, setCommandLog] = useState([]);
+  const [checklistChecked, setChecklistChecked] = useState(false);
 
   async function handleCommand(cmd) {
     const out = await run(cmd);
@@ -1046,9 +1048,11 @@ export default function App() {
       // trigger terminal remount to clear history
       setClearKey((k) => k + 1);
       setCommandLog([]);
+      setChecklistChecked(false);
       return '';
     }
     setCommandLog((logs) => [...logs, cmd].slice(-50));
+    setChecklistChecked(false);
     return out;
   }
 
@@ -1077,6 +1081,7 @@ export default function App() {
           {current.id === 'tasks-net' ? (
             <LessonTaskWorkspace
               privateMarker="network-exercise"
+              onRunTests={() => setChecklistChecked(true)}
               task={
                 <>
                   <p>V terminálu proveďte DNS, síťové, směrovací a TCP/HTTP příkazy.</p>
@@ -1084,7 +1089,7 @@ export default function App() {
                 </>
               }
               editor={<TerminalPanel clearKey={clearKey} onCommand={handleCommand} />}
-              preview={<TaskChecklist commandLog={commandLog} />}
+              preview={<TaskChecklist commandLog={commandLog} checked={checklistChecked} />}
             />
           ) : (
             <TerminalPanel clearKey={clearKey} onCommand={handleCommand} />

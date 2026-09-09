@@ -29,3 +29,19 @@ The new E2E file was written before source edits. The required RED run failed si
 
 - The networking E2E ignores pre-command analytics requests from the existing app instrumentation and asserts that entering a simulated command adds no external request.
 - The pre-existing untracked `.env.local` was not staged.
+
+## P2 follow-up
+
+- Added an optional `onRunTests` bridge to `LessonTaskWorkspace`; the unified Czech action now invokes the existing W3C validation, network checklist evaluation, or CSS/CSS II hidden inspection action instead of being inert.
+- Added E2E coverage that clicks the outer action and observes a W3C error result, checklist state, or validation iframe for every non-JavaScript runtime route.
+- Added representative non-task deep-link assertions proving the unified task regions are absent outside task slides.
+
+## P2 verification
+
+- `npm run test:e2e -- tests/e2e/lesson-workspace-runtime.spec.js` — 18 passed.
+- `npm run test:e2e -- tests/e2e/lesson-workspace-runtime.spec.js tests/e2e/playground-isolation.spec.js` — 27 passed.
+- `npm run lint` — passed with `--max-warnings=0`.
+- `npm run format:check` — passed.
+- `npm run typecheck` — passed.
+- `npm run build` — passed with Next.js 16.3.4.
+- `git diff --check` — passed.

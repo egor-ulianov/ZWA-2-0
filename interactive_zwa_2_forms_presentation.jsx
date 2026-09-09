@@ -1,4 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import SandboxedPreview from './src/components/playground/SandboxedPreview';
 import { getLessonByNumber } from './src/config/lessons.js';
 import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
@@ -450,7 +457,10 @@ function FormsPlayground() {
   );
 }
 
-function FormValidationEditor({ initialHtml, localCheck, showPreview = false }) {
+const FormValidationEditor = forwardRef(function FormValidationEditor(
+  { initialHtml, localCheck, showPreview = false },
+  ref,
+) {
   const [html, setHtml] = useState(
     () =>
       initialHtml ||
@@ -490,7 +500,7 @@ function FormValidationEditor({ initialHtml, localCheck, showPreview = false }) 
     return { issues, passed: issues.length === 0 };
   }
 
-  async function validateOnline() {
+  const validateOnline = useCallback(async () => {
     setChecking(true);
     try {
       const res = await fetch('/api/validate-html', {
@@ -505,7 +515,9 @@ function FormValidationEditor({ initialHtml, localCheck, showPreview = false }) 
     } finally {
       setChecking(false);
     }
-  }
+  }, [html]);
+
+  useImperativeHandle(ref, () => ({ runValidation: validateOnline }), [validateOnline]);
 
   const lc = (localCheck || defaultLocalChecks)(html);
 
@@ -581,7 +593,7 @@ function FormValidationEditor({ initialHtml, localCheck, showPreview = false }) 
       </div>
     </div>
   );
-}
+});
 
 function Block({ id, title, theory, example, Try, validate }) {
   const [subTab, setSubTab] = useState('theory');
@@ -1142,6 +1154,7 @@ const slides = [
 
 export default function AppFormsLesson2() {
   const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const formsTaskRef = useRef(null);
   const currentSlide = slides.find((slide) => slide.id === activeSlide) || slides[0];
 
   function gotoSection(sectionId) {
@@ -1278,8 +1291,10 @@ export default function AppFormsLesson2() {
                   </p>
                 </>
               }
+              onRunTests={() => formsTaskRef.current?.runValidation()}
               editor={
                 <FormValidationEditor
+                  ref={formsTaskRef}
                   initialHtml={[
                     '<!doctype html>',
                     '<html lang="cs">',
