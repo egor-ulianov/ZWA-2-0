@@ -87,12 +87,18 @@ test('teacher can sign in, edit roster data, and retry a conflicted attendance s
   await login.getByLabel('Password').fill('correct horse battery staple');
   await login.getByRole('button', { name: 'Login' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Attendance' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Attendance & student records' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toContainText(
+    'Present: 1 of 2',
+  );
+  await expect(page.getByRole('button', { name: 'Mark visible students present' })).toBeVisible();
   await expect(page.getByRole('list').getByText('alice', { exact: true })).toBeVisible();
   await expect(page.getByRole('list').getByText('bob', { exact: true })).toBeVisible();
-  await expect(page.getByText('Total: 2 · Present: 1')).toBeVisible();
+  await expect(page.getByText('Present: 1 of 2')).toBeVisible();
 
-  const aliceRow = page.locator('li').filter({ hasText: /^alice/ });
+  const aliceRow = page.getByRole('listitem').filter({
+    has: page.getByRole('heading', { name: 'alice', exact: true }),
+  });
   const aliceAttendance = aliceRow.getByRole('checkbox');
   await expect(aliceAttendance).not.toBeChecked();
   await aliceAttendance.check();

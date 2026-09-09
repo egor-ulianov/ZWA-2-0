@@ -12,6 +12,7 @@ import {
   serializeAttendanceCsv,
 } from '../../lib/csv.js';
 import StudentRow from './StudentRow.jsx';
+import TeacherWorkspaceShell from './TeacherWorkspaceShell.jsx';
 
 function today() { return new Date().toISOString().slice(0, 10); }
 
@@ -30,12 +31,39 @@ function TeacherLogin({ onSuccess }) {
     } catch (cause) { setError(cause.message || 'Login failed'); }
     finally { setSaving(false); }
   }
-  return <form onSubmit={submit} className="flex flex-wrap items-end gap-2" aria-label="Teacher login">
-    <label className="text-sm">Username<input className="ml-2 border rounded px-2 py-1" value={username} autoComplete="username" onChange={(event) => setUsername(event.target.value)} required /></label>
-    <label className="text-sm">Password<input className="ml-2 border rounded px-2 py-1" type="password" value={password} autoComplete="current-password" onChange={(event) => setPassword(event.target.value)} required /></label>
-    <button className="px-3 py-1 rounded bg-sky-600 text-white disabled:opacity-50" type="submit" disabled={saving}>{saving ? 'Signing in…' : 'Login'}</button>
-    {error ? <p className="w-full text-sm text-red-600" role="alert">{error}</p> : null}
-  </form>;
+  return (
+    <form onSubmit={submit} className="grid max-w-xl grid-cols-1 gap-4 md:grid-cols-2" aria-label="Teacher login">
+      <label className="text-sm font-semibold text-[var(--portal-text)]" htmlFor="teacher-username">
+        Username
+        <input
+          id="teacher-username"
+          className="mt-2 block min-h-11 w-full rounded border border-[var(--portal-border)] bg-[var(--portal-panel)] px-3 py-2 font-normal text-[var(--portal-text)]"
+          value={username}
+          autoComplete="username"
+          onChange={(event) => setUsername(event.target.value)}
+          required
+        />
+      </label>
+      <label className="text-sm font-semibold text-[var(--portal-text)]" htmlFor="teacher-password">
+        Password
+        <input
+          id="teacher-password"
+          className="mt-2 block min-h-11 w-full rounded border border-[var(--portal-border)] bg-[var(--portal-panel)] px-3 py-2 font-normal text-[var(--portal-text)]"
+          type="password"
+          value={password}
+          autoComplete="current-password"
+          onChange={(event) => setPassword(event.target.value)}
+          required
+        />
+      </label>
+      <div className="md:col-span-2">
+        <button className="portal-action disabled:cursor-not-allowed disabled:opacity-50" type="submit" disabled={saving}>
+          {saving ? 'Signing in…' : 'Login'}
+        </button>
+      </div>
+      {error ? <p className="text-sm text-[var(--portal-coral)] md:col-span-2" role="alert">{error}</p> : null}
+    </form>
+  );
 }
 
 export default function AttendancePage() {
@@ -300,19 +328,273 @@ export default function AttendancePage() {
   const presentCount = students.filter((student) => attendance[student.username]).length;
   const attendanceSaving = Boolean(queuesRef.current.get(date)?.pendingCount);
 
-  return <main className="max-w-5xl mx-auto p-6">
-    <header className="mb-6 flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-3xl font-extrabold">Attendance</h1><p className="text-zinc-600">Teacher workspace</p></div>{teacher ? <button type="button" className="px-3 py-1 rounded bg-zinc-200" onClick={logout}>Logout</button> : null}</header>
-    {teacher === undefined ? <p aria-live="polite">Checking teacher session…</p> : null}
-    {teacher === null ? <TeacherLogin onSuccess={() => loadTeacherData()} /> : null}
-    {teacher ? <>
-      <section className="mb-4 flex flex-wrap items-end gap-2"><label className="text-sm">Attendance date<input className="ml-2 border rounded px-2 py-1" type="date" value={date} disabled={attendanceSaving} onChange={(event) => setDate(event.target.value)} /></label><label className="flex-1 text-sm">Search username<input className="ml-2 border rounded px-2 py-1 w-full" value={query} onChange={(event) => setQuery(event.target.value)} /></label><button type="button" className="px-3 py-2 rounded bg-zinc-200 disabled:opacity-50" disabled={attendanceSaving} onClick={() => updateAttendance({ ...attendanceRef.current, ...Object.fromEntries(filtered.map((student) => [student.username, true])) })}>All</button><button type="button" className="px-3 py-2 rounded bg-zinc-200 disabled:opacity-50" disabled={attendanceSaving} onClick={() => updateAttendance({ ...attendanceRef.current, ...Object.fromEntries(filtered.map((student) => [student.username, false])) })}>None</button></section>
-      <p className="mb-3 text-sm" aria-live="polite">Total: {students.length} · Present: {presentCount}</p>
-      {error ? <p className="text-red-600" role="alert">{error}</p> : null}
-      {saveError ? <p className="mb-3 text-red-600" role="alert">{saveError.message}{saveError.action ? <button type="button" className="ml-2 underline" onClick={retrySave}>{saveError.action === 'reload' ? 'Reload latest' : 'Retry'}</button> : null}</p> : null}
-      <ul className="divide-y rounded-xl bg-white shadow">{filtered.map((student) => <StudentRow key={student.username} student={student} present={Boolean(attendance[student.username])} saving={attendanceSaving} progress={progress[student.username]} onToggle={(username, present) => updateAttendance({ ...attendanceRef.current, [username]: present })} onSaveProgress={saveProgressPatch} />)}</ul>
-      <section className="mt-4 flex flex-wrap items-center gap-2"><button type="button" className="px-4 py-2 rounded bg-sky-600 text-white" onClick={() => { const blob = new Blob([serializeAttendanceCsv(students.map((student) => ({ username: student.username, present: Boolean(attendance[student.username]), date })))], { type: 'text/csv;charset=utf-8' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `attendance_${date}.csv`; link.click(); URL.revokeObjectURL(url); }}>Export CSV</button><label className="px-4 py-2 rounded bg-zinc-800 text-white cursor-pointer">Import CSV<input type="file" accept=".csv,text/csv" className="sr-only" onChange={handleFile} /></label></section>
-      {importDraft ? <section className="mt-4 rounded border p-3" aria-live="polite"><p>Import for {importDraft.date || 'an invalid date'}: {importDraft.entries.length} valid rows, {importDraft.rejected.length} rejected rows.</p>{importDraft.rejected.length ? <ul className="mt-2 text-sm text-red-600">{importDraft.rejected.map((item) => <li key={`${item.row}-${item.username}`}>Row {item.row} ({item.username || 'blank'}): {item.reason}</li>)}</ul> : null}<div className="mt-3 flex gap-2"><button type="button" className="px-3 py-1 rounded bg-sky-600 text-white disabled:opacity-50" disabled={!importDraft.date || !importDraft.entries.length} onClick={confirmImport}>Confirm and persist import</button><button type="button" className="px-3 py-1 rounded bg-zinc-200" onClick={() => setImportDraft(null)}>Cancel</button></div></section> : null}
-      <section className="mt-8"><h2 className="text-xl font-bold mb-3">Overall attendance</h2><div className="overflow-x-auto"><table className="min-w-full text-sm bg-white rounded-xl shadow"><thead className="bg-zinc-100"><tr><th scope="col" className="text-left px-3 py-2">Username</th>{dates.map((item) => <th scope="col" key={item} className="text-center px-2 py-2">{item}</th>)}<th scope="col" className="px-3 py-2">Total</th></tr></thead><tbody>{students.map((student) => { const total = dates.filter((item) => overview[item]?.[student.username]).length; return <tr key={student.username} className="border-t"><th scope="row" className="text-left px-3 py-2">{student.username}</th>{dates.map((item) => <td key={item} className="text-center px-2 py-2">{overview[item]?.[student.username] ? '✓' : '–'}</td>)}<td className="text-center px-3 py-2 font-semibold">{total}</td></tr>; })}</tbody></table></div></section>
-    </> : null}
-  </main>;
+  if (teacher === undefined) {
+    return (
+      <TeacherWorkspaceShell
+        title="Attendance & student records"
+        description="Review attendance and maintain the assignment record for each student."
+        activeSection="attendance"
+      >
+        <section className="portal-panel p-6" role="status" aria-live="polite">
+          {error ? (
+            <div role="alert">
+              <p className="text-sm text-[var(--portal-coral)]">{error}</p>
+              <button
+                type="button"
+                className="portal-action portal-secondary-action mt-4"
+                onClick={() => {
+                  setError('');
+                  loadTeacherData();
+                }}
+              >
+                Retry loading workspace
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--portal-text-muted)]">Checking teacher session…</p>
+          )}
+        </section>
+      </TeacherWorkspaceShell>
+    );
+  }
+
+  if (teacher === null) {
+    return (
+      <TeacherWorkspaceShell
+        title="Attendance & student records"
+        description="Review attendance and maintain the assignment record for each student."
+        activeSection="attendance"
+      >
+        <section className="portal-panel max-w-2xl p-6" aria-labelledby="teacher-login-title">
+          <p className="portal-kicker">Secure access</p>
+          <h2 id="teacher-login-title" className="mt-2 text-xl font-semibold">
+            Teacher login
+          </h2>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--portal-text-muted)]">
+            Sign in to view attendance and update student assignment records.
+          </p>
+          <div className="mt-6">
+            <TeacherLogin onSuccess={() => loadTeacherData()} />
+          </div>
+        </section>
+      </TeacherWorkspaceShell>
+    );
+  }
+
+  return (
+    <TeacherWorkspaceShell
+      title="Attendance & student records"
+      description="Review attendance and maintain the assignment record for each student."
+      username={teacher}
+      activeSection="attendance"
+      actions={
+        <button type="button" className="portal-action" onClick={logout}>
+          Logout
+        </button>
+      }
+    >
+      {error ? (
+        <p className="mb-6 text-sm text-[var(--portal-coral)]" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      <section className="portal-panel p-5 md:p-6" aria-labelledby="active-attendance-day-title">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="portal-kicker">Operational view</p>
+            <h2 id="active-attendance-day-title" className="mt-2 text-xl font-semibold">
+              Active attendance day
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--portal-text-muted)]">
+              Choose a date, narrow the visible roster, and apply attendance changes to the filtered students.
+            </p>
+          </div>
+          <p className="text-sm font-semibold" aria-live="polite">
+            Present: {presentCount} of {students.length}
+          </p>
+        </div>
+        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-[minmax(12rem,0.65fr)_minmax(16rem,1fr)_auto] md:items-end">
+          <label className="text-sm font-semibold text-[var(--portal-text)]" htmlFor="attendance-date">
+            Attendance date
+            <input
+              id="attendance-date"
+              className="mt-2 block min-h-11 w-full rounded border border-[var(--portal-border)] bg-[var(--portal-panel)] px-3 py-2 font-normal text-[var(--portal-text)]"
+              type="date"
+              value={date}
+              disabled={attendanceSaving}
+              onChange={(event) => setDate(event.target.value)}
+            />
+          </label>
+          <label className="text-sm font-semibold text-[var(--portal-text)]" htmlFor="attendance-search">
+            Search username
+            <input
+              id="attendance-search"
+              className="mt-2 block min-h-11 w-full rounded border border-[var(--portal-border)] bg-[var(--portal-panel)] px-3 py-2 font-normal text-[var(--portal-text)]"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="portal-action portal-secondary-action disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={attendanceSaving}
+              onClick={() => updateAttendance({ ...attendanceRef.current, ...Object.fromEntries(filtered.map((student) => [student.username, true])) })}
+            >
+              Mark visible students present
+            </button>
+            <button
+              type="button"
+              className="portal-action portal-secondary-action disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={attendanceSaving}
+              onClick={() => updateAttendance({ ...attendanceRef.current, ...Object.fromEntries(filtered.map((student) => [student.username, false])) })}
+            >
+              Mark visible students absent
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {saveError ? (
+        <p className="mt-6 text-sm text-[var(--portal-coral)]" role="alert">
+          {saveError.message}
+          {saveError.action ? (
+            <button type="button" className="ml-3 font-semibold underline" onClick={retrySave}>
+              {saveError.action === 'reload' ? 'Reload latest' : 'Retry'}
+            </button>
+          ) : null}
+        </p>
+      ) : null}
+
+      <section className="mt-6" aria-labelledby="visible-roster-title">
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="portal-kicker">Student roster</p>
+            <h2 id="visible-roster-title" className="mt-2 text-xl font-semibold">
+              Visible students
+            </h2>
+          </div>
+          <p className="text-sm text-[var(--portal-text-muted)]">
+            {filtered.length} of {students.length} students shown
+          </p>
+        </div>
+        <ul className="grid grid-cols-1 gap-3" aria-label="Visible students">
+          {filtered.map((student) => (
+            <StudentRow
+              key={student.username}
+              student={student}
+              present={Boolean(attendance[student.username])}
+              saving={attendanceSaving}
+              progress={progress[student.username]}
+              onToggle={(username, present) => updateAttendance({ ...attendanceRef.current, [username]: present })}
+              onSaveProgress={saveProgressPatch}
+            />
+          ))}
+        </ul>
+      </section>
+
+      <section className="portal-panel mt-6 p-5" aria-labelledby="attendance-actions-title">
+        <div>
+          <p className="portal-kicker">Data exchange</p>
+          <h2 id="attendance-actions-title" className="mt-2 text-xl font-semibold">
+            Attendance CSV
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--portal-text-muted)]">
+            Export the current date or import a reviewed CSV before confirming persistence.
+          </p>
+        </div>
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="portal-action"
+            onClick={() => {
+              const blob = new Blob([serializeAttendanceCsv(students.map((student) => ({ username: student.username, present: Boolean(attendance[student.username]), date })))], { type: 'text/csv;charset=utf-8' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = `attendance_${date}.csv`;
+              link.click();
+              URL.revokeObjectURL(url);
+            }}
+          >
+            Export CSV
+          </button>
+          <label className="portal-action portal-secondary-action cursor-pointer">
+            Import CSV
+            <input type="file" accept=".csv,text/csv" className="sr-only" onChange={handleFile} />
+          </label>
+        </div>
+      </section>
+
+      {importDraft ? (
+        <section className="portal-panel mt-4 p-4" aria-live="polite" aria-labelledby="import-preview-title">
+          <h2 id="import-preview-title" className="text-lg font-semibold">
+            Import preview
+          </h2>
+          <p className="mt-2 text-sm">
+            Import for {importDraft.date || 'an invalid date'}: {importDraft.entries.length} valid rows, {importDraft.rejected.length} rejected rows.
+          </p>
+          {importDraft.rejected.length ? (
+            <ul className="mt-2 text-sm text-[var(--portal-coral)]">
+              {importDraft.rejected.map((item) => (
+                <li key={`${item.row}-${item.username}`}>
+                  Row {item.row} ({item.username || 'blank'}): {item.reason}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="portal-action disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!importDraft.date || !importDraft.entries.length}
+              onClick={confirmImport}
+            >
+              Confirm and persist import
+            </button>
+            <button type="button" className="portal-action portal-secondary-action" onClick={() => setImportDraft(null)}>
+              Cancel
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      <section className="mt-8" aria-labelledby="overall-attendance-title">
+        <div className="mb-3">
+          <p className="portal-kicker">Historical view</p>
+          <h2 id="overall-attendance-title" className="mt-2 text-xl font-semibold">
+            Overall attendance
+          </h2>
+        </div>
+        <div className="portal-panel overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-[var(--portal-surface-muted)]">
+              <tr>
+                <th scope="col" className="whitespace-nowrap px-3 py-3 text-left">Username</th>
+                {dates.map((item) => (
+                  <th scope="col" key={item} className="whitespace-nowrap px-3 py-3 text-center">{item}</th>
+                ))}
+                <th scope="col" className="whitespace-nowrap px-3 py-3 text-center">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((student) => {
+                const total = dates.filter((item) => overview[item]?.[student.username]).length;
+                return (
+                  <tr key={student.username} className="border-t border-[var(--portal-border)]">
+                    <th scope="row" className="whitespace-nowrap px-3 py-3 text-left font-semibold">{student.username}</th>
+                    {dates.map((item) => (
+                      <td key={item} className="whitespace-nowrap px-3 py-3 text-center">{overview[item]?.[student.username] ? '✓' : '–'}</td>
+                    ))}
+                    <td className="whitespace-nowrap px-3 py-3 text-center font-semibold">{total}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </TeacherWorkspaceShell>
+  );
 }
