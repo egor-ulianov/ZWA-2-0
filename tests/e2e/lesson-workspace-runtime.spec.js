@@ -138,6 +138,41 @@ test.describe('runtime lesson task workspaces', () => {
     }
   });
 
+  test('CSS II keeps task choice in the IDE and consumes boundary task keys', async ({ page }) => {
+    await installDeterministicNetwork(page);
+    await page.goto('/interactive-zwa-5-css-ii?slide=tasks');
+
+    const assignment = page.getByRole('region', { name: 'Zadání' });
+    const ide = page.getByRole('region', { name: 'IDE' });
+    const taskTabs = ide.getByRole('tablist', { name: 'Kroky úlohy CSS II' });
+
+    await expect(taskTabs).toBeVisible();
+    await expect(assignment.getByText('Úloha 1 / 7', { exact: true })).toBeVisible();
+    await expect(taskTabs.getByRole('tab', { name: 'Box model', exact: true })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect(page.getByRole('button', { name: 'Předchozí', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Další', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Přejít na úlohu/ })).toHaveCount(0);
+
+    const firstTab = taskTabs.getByRole('tab').first();
+    await firstTab.focus();
+    await firstTab.press('Home');
+    await expect(page).toHaveURL(/slide=tasks/);
+
+    const lastTab = taskTabs.getByRole('tab').last();
+    await lastTab.focus();
+    await lastTab.press('End');
+    await expect(page).toHaveURL(/slide=tasks/);
+
+    await taskTabs.getByRole('tab', { name: 'Float/Clear', exact: true }).click();
+    await expect(assignment.getByText('Úloha 2 / 7', { exact: true })).toBeVisible();
+    await expect(assignment).toContainText('Vložte obrázek do textu');
+    await expect(ide).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Náhled a testy' })).toBeVisible();
+  });
+
   test('task choice arrow keys stay on the task slide', async ({ page }) => {
     for (const route of [
       '/interactive-zwa-5-css-ii?slide=tasks',
@@ -150,7 +185,7 @@ test.describe('runtime lesson task workspaces', () => {
         ? page.getByRole('tab').nth(1)
         : route.includes('/interactive-zwa-2?')
           ? page.getByRole('tab').first()
-          : page.getByRole('button', { name: 'Přejít na úlohu 2' }).first();
+          : page.getByRole('region', { name: 'IDE' }).getByRole('tab').nth(1);
       await taskChoice.focus();
       await taskChoice.press('ArrowLeft');
       await expect(page).toHaveURL(/slide=tasks/);

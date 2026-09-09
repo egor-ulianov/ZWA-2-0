@@ -15,6 +15,7 @@ import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonS
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import LessonTaskTabs from './src/components/exercises/LessonTaskTabs.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
 
 import {
@@ -208,10 +209,24 @@ const Css2TaskProvider = forwardRef(function Css2TaskProvider({ stepIndex, child
   );
 });
 
-function Css2TaskEditor() {
+function Css2TaskEditor({ steps, stepIndex, onStepIndexChange }) {
   const { htmlCode, cssCode, setHtmlCode, setCssCode, applyOnce } = useContext(Css2TaskContext);
+  const tasks = steps.map((step) => ({ id: step.id, label: step.title }));
+  const activeTaskId = tasks[stepIndex]?.id;
+
+  function handleTaskChange(taskId) {
+    const nextIndex = tasks.findIndex((task) => task.id === taskId);
+    if (nextIndex >= 0) onStepIndexChange(nextIndex);
+  }
+
   return (
     <div className="space-y-3">
+      <LessonTaskTabs
+        tasks={tasks}
+        activeTaskId={activeTaskId}
+        onChange={handleTaskChange}
+        label="Kroky úlohy CSS II"
+      />
       <p className="text-sm font-semibold">IDE — HTML a CSS II</p>
       <label className="block text-sm font-semibold" htmlFor="css2-html-task-editor">
         Editor HTML a CSS II — HTML
@@ -564,36 +579,8 @@ const slides = [
   },
 ];
 
-function Css2SlideContent({ slide, stepIndex, onStepIndexChange }) {
-  const hasSteps = slide.id === 'tasks';
+function Css2SlideContent({ slide }) {
   const hasSections = Array.isArray(slide.sections) && slide.sections.length > 0;
-  const internal = useMemo(() => getTaskTemplates(0).all, []);
-  const total = internal.length;
-  const cur = internal[stepIndex];
-
-  function stopLessonNavigation(event) {
-    if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  }
-
-  function chooseTaskWithKeyboard(event, index) {
-    if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-    const nextIndex =
-      event.key === 'Home'
-        ? 0
-        : event.key === 'End'
-          ? total - 1
-          : event.key === 'ArrowRight' || event.key === 'ArrowDown'
-            ? Math.min(total - 1, index + 1)
-            : Math.max(0, index - 1);
-    onStepIndexChange(nextIndex);
-  }
 
   return (
     <SharedSlideCard slide={slide} idPrefix="lesson-css-ii">
@@ -612,65 +599,6 @@ function Css2SlideContent({ slide, stepIndex, onStepIndexChange }) {
       {slide.id === 'quiz-css' && (
         <div className="mt-2">
           <QuizCssBasics />
-        </div>
-      )}
-      {hasSteps && (
-        <div className="mt-2">
-          <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
-                Úloha {stepIndex + 1} / {total}
-              </span>
-            </div>
-            <div className="font-semibold mb-1">{cur.title}</div>
-            <p className="text-sm text-zinc-600 dark:text-zinc-300 mb-2">{cur.desc}</p>
-            <div className="text-xs text-zinc-500">
-              Odkaz:{' '}
-              <a
-                className="underline"
-                href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/05/start"
-                target="_blank"
-                rel="noreferrer noopener"
-              >
-                Cvičení 5 – CSS II
-              </a>
-            </div>
-          </div>
-          <div className="mt-3 flex items-center justify-between">
-            <button
-              type="button"
-              className="px-3 py-1.5 text-sm rounded-lg border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 disabled:opacity-50"
-              onClick={() => onStepIndexChange(Math.max(0, stepIndex - 1))}
-              onKeyDown={stopLessonNavigation}
-              disabled={stepIndex === 0}
-            >
-              Předchozí
-            </button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: total }).map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className={clsx(
-                    'h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700',
-                    i === stepIndex ? 'bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800',
-                  )}
-                  onClick={() => onStepIndexChange(i)}
-                  onKeyDown={(event) => chooseTaskWithKeyboard(event, i)}
-                  aria-label={`Přejít na úlohu ${i + 1}`}
-                />
-              ))}
-            </div>
-            <button
-              type="button"
-              className="px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white disabled:opacity-50"
-              onClick={() => onStepIndexChange(Math.min(total - 1, stepIndex + 1))}
-              onKeyDown={stopLessonNavigation}
-              disabled={stepIndex === total - 1}
-            >
-              Další
-            </button>
-          </div>
         </div>
       )}
     </SharedSlideCard>
@@ -884,6 +812,7 @@ export default function AppCss2Lesson() {
   const [stepIndex, setStepIndex] = useState(0);
   const current = slides.find((s) => s.id === activeSlide) || slides[0];
   const hasTasks = current.id === 'tasks';
+  const taskTemplates = getTaskTemplates(stepIndex);
   // A new slide starts at its first task.
   /* eslint-disable react-hooks/set-state-in-effect -- reset is the slide transition boundary. */
   useEffect(() => {
@@ -915,38 +844,49 @@ export default function AppCss2Lesson() {
       footerText="© 2025 ZWA – Interaktivní lekce CSS II"
       maxWidthClass="max-w-7xl"
     >
-      <div className={hasTasks ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : ''}>
-        <div className={hasTasks ? '' : 'max-w-4xl'}>
-          <Css2SlideContent
-            slide={current}
-            stepIndex={stepIndex}
-            onStepIndexChange={setStepIndex}
+      {hasTasks ? (
+        <Css2TaskProvider ref={cssTaskRef} stepIndex={stepIndex}>
+          <LessonTaskWorkspace
+            privateMarker="css-exercise"
+            onRunTests={() => cssTaskRef.current?.runValidation()}
+            task={
+              <>
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                  Úloha {stepIndex + 1} / {taskTemplates.all.length}
+                </p>
+                <p className="font-medium">{taskTemplates.step.title}</p>
+                <p>{taskTemplates.step.desc}</p>
+                <p>
+                  Odkaz:{' '}
+                  <a
+                    className="underline"
+                    href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/05/start"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    Cvičení 5 – CSS II
+                  </a>
+                </p>
+              </>
+            }
+            editor={
+              <Css2TaskEditor
+                steps={taskTemplates.all}
+                stepIndex={stepIndex}
+                onStepIndexChange={setStepIndex}
+              />
+            }
+            preview={<Css2TaskPreview />}
           />
-        </div>
-        {hasTasks && (
-          <div>
-            <div className="lg:sticky lg:top-8">
-              <Css2TaskProvider ref={cssTaskRef} stepIndex={stepIndex}>
-                <LessonTaskWorkspace
-                  privateMarker="css-exercise"
-                  onRunTests={() => cssTaskRef.current?.runValidation()}
-                  task={
-                    <>
-                      <p>{getTaskTemplates(stepIndex).step.title}</p>
-                      <p>{getTaskTemplates(stepIndex).step.desc}</p>
-                    </>
-                  }
-                  editor={<Css2TaskEditor />}
-                  preview={<Css2TaskPreview />}
-                />
-              </Css2TaskProvider>
-              <div className="mt-3 text-xs text-zinc-500">
-                Pozn.: Validace je zjednodušená (heuristiky pomocí computed styles a regex).
-              </div>
-            </div>
+          <div className="mt-3 text-xs text-zinc-500">
+            Pozn.: Validace je zjednodušená (heuristiky pomocí computed styles a regex).
           </div>
-        )}
-      </div>
+        </Css2TaskProvider>
+      ) : (
+        <div className="max-w-4xl">
+          <Css2SlideContent slide={current} />
+        </div>
+      )}
     </LessonShell>
   );
 }
