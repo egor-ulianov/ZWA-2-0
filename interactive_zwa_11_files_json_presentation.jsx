@@ -491,7 +491,7 @@ file_put_contents(__DIR__ . '/users.json', json_encode($users, JSON_UNESCAPED_UN
 ];
 
 function FileTaskSlide({ task }) {
-  return <StaticLessonTask {...task} />;
+  return <StaticLessonTask key={task.id} {...task} />;
 }
 
 function SummarySlide() {

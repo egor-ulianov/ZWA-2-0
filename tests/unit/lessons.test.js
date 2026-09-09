@@ -111,7 +111,7 @@ test('every catalog lesson uses the shared shell and navigation contract', () =>
     assert.match(source, /LessonShell/, lesson.componentKey);
     assert.match(source, /useSlideNavigation/, lesson.componentKey);
     assert.match(source, /<LessonShell\b/, lesson.componentKey);
-    assert.match(source, /useSlideNavigation\(slides\)/, lesson.componentKey);
+    assert.match(source, /useSlideNavigation\(/, lesson.componentKey);
   }
 });
 

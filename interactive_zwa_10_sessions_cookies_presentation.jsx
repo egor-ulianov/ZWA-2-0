@@ -614,7 +614,7 @@ setcookie('__Host-remember', $token, [
 ];
 
 function SessionTaskSlide({ task }) {
-  return <StaticLessonTask {...task} />;
+  return <StaticLessonTask key={task.id} {...task} />;
 }
 
 function SummarySlide() {

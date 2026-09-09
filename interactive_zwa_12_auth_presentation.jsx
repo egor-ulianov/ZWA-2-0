@@ -468,7 +468,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' &&
 ];
 
 function AuthTaskSlide({ task }) {
-  return <StaticLessonTask {...task} />;
+  return <StaticLessonTask key={task.id} {...task} />;
 }
 
 function SummarySlide() {

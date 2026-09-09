@@ -163,11 +163,16 @@ test.describe('runtime lesson task workspaces', () => {
       await installDeterministicNetwork(page);
       await page.goto(route);
 
-      const taskChoice = route.includes('1-html5') || route.includes('2-forms')
-        ? page.getByRole('region', { name: 'IDE' }).getByRole('tablist', { name: 'Soubory IDE' }).getByRole('tab').last()
-        : route.includes('5-js')
-          ? page.getByRole('tab').nth(1)
-          : page.getByRole('tablist').first().getByRole('tab').first();
+      const taskChoice =
+        route.includes('1-html5') || route.includes('2-forms')
+          ? page
+              .getByRole('region', { name: 'IDE' })
+              .getByRole('tablist', { name: 'Soubory IDE' })
+              .getByRole('tab')
+              .last()
+          : route.includes('5-js')
+            ? page.getByRole('tab').nth(1)
+            : page.getByRole('tablist').first().getByRole('tab').first();
       await taskChoice.focus();
       await taskChoice.press('ArrowLeft');
       await expect(page).toHaveURL(/slide=tasks/);
@@ -271,9 +276,7 @@ test.describe('runtime lesson task workspaces', () => {
     });
   }
 
-  test('network task checkers stay scoped to their individual outline task', async ({
-    page,
-  }) => {
+  test('network task checkers stay scoped to their individual outline task', async ({ page }) => {
     await installDeterministicNetwork(page);
     await page.goto('/interactive-zwa-1?slide=tasks-net');
 

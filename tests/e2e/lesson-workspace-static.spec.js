@@ -89,6 +89,26 @@ test.describe('static lesson task workspaces', () => {
     }
   });
 
+  test('switching a static outline task restores that task’s own source draft', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+    await page.goto('/interactive-zwa-9?slide=task1');
+
+    const editor = page.getByRole('textbox', { name: 'Editor – zdrojový kód' });
+    await editor.fill('CHANGED TASK 1');
+    await page
+      .getByRole('navigation', { name: 'Osnova kurzu' })
+      .getByRole('button', {
+        name: 'Úkol 2: Spam – pouze jedna možnost (radio) + rekurze pro pole',
+        exact: true,
+      })
+      .click();
+
+    await expect(editor).not.toContainText('CHANGED TASK 1');
+    await expect(editor).toContainText('name="spam"');
+  });
+
   test('ZWA-7 task 1 exposes the expected HTML source in a local syntax editor', async ({
     page,
   }) => {

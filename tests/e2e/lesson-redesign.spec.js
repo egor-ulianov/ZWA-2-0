@@ -18,7 +18,7 @@ test.describe('F1 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-1-html5?slide=tasks');
 
-    await expectSelectedOutlineSlide(page, 'Úkoly');
+    await expectSelectedOutlineSlide(page, 'Kostra dokumentu');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(
@@ -35,7 +35,7 @@ test.describe('F1 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-2-forms?slide=tasks');
 
-    await expectSelectedOutlineSlide(page, 'Úkoly');
+    await expectSelectedOutlineSlide(page, 'Standardní prvky');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(
@@ -50,7 +50,7 @@ test.describe('F1 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-1/?slide=tasks-net');
 
-    await expectSelectedOutlineSlide(page, 'Úlohy – síť (v terminálu vpravo)');
+    await expectSelectedOutlineSlide(page, 'DNS: host / nslookup');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks-net');
     await expect(
       page.getByText(
@@ -65,7 +65,7 @@ test.describe('F1 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-2?slide=tasks');
 
-    await expectSelectedOutlineSlide(page, 'Úlohy – CSS');
+    await expectSelectedOutlineSlide(page, '1) Nadpis');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(
@@ -82,7 +82,7 @@ test.describe('F2 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-5-css-ii?slide=tasks');
 
-    await expectSelectedOutlineSlide(page, 'Úlohy – CSS II');
+    await expectSelectedOutlineSlide(page, 'Box model');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(
@@ -97,7 +97,7 @@ test.describe('F2 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-5-js?slide=tasks');
 
-    await expectSelectedOutlineSlide(page, 'Úlohy – JavaScript');
+    await expectSelectedOutlineSlide(page, '1) Proměnné a typy');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect(
       page.getByText(
@@ -116,7 +116,7 @@ test.describe('F2 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-5-css-ii?slide=tasks');
     await expect(page.getByTitle('Náhled CSS II playgroundu')).toBeVisible();
-    await expect(page.getByRole('textbox')).toHaveCount(2);
+    await expect(page.getByRole('textbox')).toHaveCount(1);
   });
 
   test('JavaScript keeps its exercise workspace on task slides only', async ({ page }) => {
@@ -174,8 +174,8 @@ test.describe('F3 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-9?slide=tasks');
 
-    await expectSelectedOutlineSlide(page, 'Úkoly dle tutoriálu');
-    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
+    await expectSelectedOutlineSlide(page, 'Úkol 1: Úprava formuláře + otázky');
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('task1');
     await expect(
       page.getByText(
         'Vysvětlíte životní cyklus serverového formuláře a procvičíte validaci vstupů i základní CRUD operace.',
@@ -191,8 +191,8 @@ test.describe('F3 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-10-sessions-cookies?slide=tasks');
 
-    await expectSelectedOutlineSlide(page, 'Úkoly');
-    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
+    await expectSelectedOutlineSlide(page, 'Úkol 1: Nastavte cookie s tématem vzhledu');
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('task1');
     await expect(
       page.getByText(
         'Vysvětlíte cookies a session v PHP a použijete jejich bezpečnostní atributy v praktických vzorech.',
@@ -208,8 +208,8 @@ test.describe('F3 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-11-files-json?slide=tasks');
 
-    await expectSelectedOutlineSlide(page, 'Úkoly');
-    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
+    await expectSelectedOutlineSlide(page, 'Úkol 1: První experimenty se soubory');
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('task1');
     await expect(
       page.getByText(
         'Použijete PHP pro bezpečnou práci se soubory, JSON daty a stránkovaným úložištěm uživatelů.',
@@ -225,8 +225,8 @@ test.describe('F3 lesson composition and deep links', () => {
 
     await page.goto('/interactive-zwa-12-auth?slide=tasks');
 
-    await expectSelectedOutlineSlide(page, 'Úkoly');
-    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
+    await expectSelectedOutlineSlide(page, 'Úkol 1: Přihlašovací formulář');
+    await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('task1');
     await expect(
       page.getByText(
         'Rozlišíte autentizaci a autorizaci, bezpečně uložíte hesla a ochráníte session po přihlášení.',

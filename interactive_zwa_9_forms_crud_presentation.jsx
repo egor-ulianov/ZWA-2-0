@@ -914,7 +914,7 @@ $_SESSION['last_action'] = 'delete';
 ];
 
 function TutorialTaskSlide({ task }) {
-  return <StaticLessonTask {...task} />;
+  return <StaticLessonTask key={task.id} {...task} />;
 }
 
 function SummarySlide() {
