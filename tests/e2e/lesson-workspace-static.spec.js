@@ -48,6 +48,34 @@ test.describe('static lesson task workspaces', () => {
     }
   });
 
+  test('lessons 7 and 8 expose read-only solution tabs inside the IDE', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    for (const route of ['/interactive-zwa-7?slide=task1', '/interactive-zwa-8-php?slide=t1']) {
+      await page.goto(route);
+
+      const ide = page.getByRole('region', { name: 'IDE' });
+      const tabs = ide.getByRole('tablist', { name: 'Soubory IDE' });
+      const solutionTab = tabs.getByRole('tab', { name: 'Řešení', exact: true });
+
+      await expect(tabs).toBeVisible();
+      await expect(solutionTab).toBeVisible();
+      await expect(page.getByText('Řešení je zamčené', { exact: true })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: /Klikněte zde/ })).toHaveCount(0);
+
+      await solutionTab.click();
+      const solutionPanel = ide.getByRole('tabpanel');
+      await expect(solutionPanel.locator('[data-solution-panel="true"]')).toHaveAttribute(
+        'aria-readonly',
+        'true',
+      );
+      await expect(solutionPanel.locator('.cm-content')).toHaveAttribute(
+        'contenteditable',
+        'false',
+      );
+    }
+  });
+
   for (const route of taskRoutes) {
     test(`${route} exposes the Czech static task workspace zones`, async ({ page }) => {
       await installDeterministicNetwork(page);
@@ -103,27 +131,25 @@ test.describe('static lesson task workspaces', () => {
     });
   }
 
-  test('preserves the lesson 7 challenge and PHP solution reveal for students', async ({
-    page,
-  }) => {
+  test('shows the completed reference source in each lesson solution tab', async ({ page }) => {
     await installDeterministicNetwork(page);
 
-    await page.goto('/interactive-zwa-7?slide=task1');
-    await expect(page.getByText('Řešení je zamčené', { exact: true })).toBeVisible();
-    const challenge = page.getByRole('button', { name: /Klikněte zde/ });
-    await expect(challenge).toBeVisible();
-    for (let click = 0; click < 20; click += 1) await challenge.click();
-    await expect(page.getByText('✅ Řešení odhaleno', { exact: true })).toBeVisible();
+    const cases = [
+      {
+        route: '/interactive-zwa-7?slide=task1',
+        source: 'class FacultyProgram',
+      },
+      {
+        route: '/interactive-zwa-8-php?slide=t1',
+        source: "date('j.n.Y')",
+      },
+    ];
 
-    await page.goto('/interactive-zwa-8-php?slide=t1');
-    const reveal = page.getByRole('button', { name: 'Zobrazit řešení', exact: true });
-    await expect(reveal).toBeVisible();
-    await reveal.click();
-    await expect(
-      page
-        .getByRole('region', { name: 'Náhled a testy' })
-        .locator('code.language-php')
-        .filter({ hasText: 'Dnešní datum je:' }),
-    ).toBeVisible();
+    for (const testCase of cases) {
+      await page.goto(testCase.route);
+      const ide = page.getByRole('region', { name: 'IDE' });
+      await ide.getByRole('tab', { name: 'Řešení', exact: true }).click();
+      await expect(ide.getByRole('tabpanel').locator('.cm-content')).toContainText(testCase.source);
+    }
   });
 });

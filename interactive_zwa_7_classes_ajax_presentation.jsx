@@ -9,6 +9,8 @@ import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 
 function QuizSection() {
@@ -264,7 +266,24 @@ function StaticLessonTask({
   children,
   language = 'js',
   fileName = 'script.js',
+  solution = draft,
 }) {
+  const [source, setSource] = useState(draft);
+  const studentPanel = (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        Soubor: {fileName}
+      </p>
+      <SyntaxCodeEditor
+        value={source}
+        onChange={setSource}
+        language={language}
+        label="Editor – zdrojový kód"
+        minHeight="320px"
+      />
+    </div>
+  );
+
   return (
     <LessonTaskWorkspace
       privateMarker={`static-${id}`}
@@ -275,7 +294,25 @@ function StaticLessonTask({
         language,
         fileName,
       }}
-      staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
+      ideTabs={
+        <WorkspaceIdeTabs
+          files={[{ id: 'student-file', label: fileName, panel: studentPanel }]}
+          solution={{
+            label: 'Řešení',
+            panel: (
+              <SyntaxCodeEditor
+                value={solution}
+                language={language}
+                label={`Řešení — ${fileName}`}
+                editable={false}
+                readOnly
+                minHeight="320px"
+              />
+            ),
+          }}
+        />
+      }
+      staticCheck={() => runStaticTaskChecks({ id, required }, source)}
       preview={
         <div className="space-y-4">
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
@@ -285,7 +322,6 @@ function StaticLessonTask({
             Náhled je pouze statické vysvětlení; JavaScript ani serverový kód se v tomto prohlížeči
             nespouští.
           </p>
-          {children}
         </div>
       }
     />
@@ -881,6 +917,55 @@ function AjaxPracticeSlide() {
 }
 
 function Task1Slide() {
+  const solution = `<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <title>Registrace studenta ČVUT</title>
+</head>
+<body>
+  <form id="registration-form">
+    <label>Jméno <input id="name" required></label>
+    <label>Příjmení <input id="surname" required></label>
+    <label>Heslo <input id="password" type="password" required></label>
+    <label>Číslo osoby ČVUT <input id="person-id" required></label>
+    <label>Fakulta <select id="faculty" required><option>FIT</option><option>FEL</option></select></label>
+    <label>Studijní program <input id="program" required></label>
+    <button type="submit">Registrovat</button>
+  </form>
+  <script>
+class FacultyProgram {
+  constructor(faculty, program) { this.faculty = faculty; this.program = program; }
+}
+
+class CvutStudent {
+  constructor(name, surname, password, personId, facultyProgram) {
+    this.name = name;
+    this.surname = surname;
+    this.password = password;
+    this.personId = personId;
+    this.facultyProgram = facultyProgram;
+  }
+}
+
+document.getElementById('registration-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const student = new CvutStudent(
+    document.getElementById('name').value,
+    document.getElementById('surname').value,
+    document.getElementById('password').value,
+    document.getElementById('person-id').value,
+    new FacultyProgram(
+      document.getElementById('faculty').value,
+      document.getElementById('program').value,
+    ),
+  );
+  console.log(student);
+});
+  </script>
+</body>
+</html>`;
+
   return (
     <StaticLessonTask
       id="zwa7-task1"
@@ -942,6 +1027,7 @@ document.getElementById('registration-form').addEventListener('submit', (event) 
 </html>`}
       required={['class FacultyProgram', 'class CvutStudent', 'addEventListener']}
       expected="Po odeslání vznikne objekt studenta s vnořeným oborem fakulty a programu."
+      solution={solution}
     >
       <div>
         <h3 className="text-lg font-semibold mb-3">Zadání</h3>
@@ -1119,6 +1205,17 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 function Task2Slide({ password, setPassword, isWeakPassword }) {
+  const solution = `const demoWeakPasswords = new Set(["password", "123456", "qwerty"]);
+const passwordInput = document.getElementById('password');
+const warning = document.getElementById('password-warning');
+
+passwordInput.addEventListener('input', () => {
+  const isWeak = demoWeakPasswords.has(passwordInput.value);
+  warning.hidden = !isWeak;
+});
+
+// Toto je pouze klientská nápověda; skutečnou politiku musí vynucovat server.`;
+
   return (
     <StaticLessonTask
       id="zwa7-task2"
@@ -1135,6 +1232,7 @@ passwordInput.addEventListener('input', () => {
 // Skutečnou politiku hesel musí ověřit server.`}
       required={['demoWeakPasswords', 'addEventListener', 'server']}
       expected="Při zadání známého slabého hesla se zobrazí pouze orientační upozornění."
+      solution={solution}
     >
       <div>
         <h3 className="text-lg font-semibold mb-3">Zadání</h3>

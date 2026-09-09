@@ -4,9 +4,10 @@ import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonS
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
-import ClickToRevealSolution from './src/components/lesson/ClickToRevealSolution.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 
 function LessonSlideContent({ slide }) {
@@ -82,7 +83,24 @@ function StaticLessonTask({
   expected,
   children,
   fileName = 'cviceni.php',
+  solution = draft,
 }) {
+  const [source, setSource] = useState(draft);
+  const studentPanel = (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        Soubor: {fileName}
+      </p>
+      <SyntaxCodeEditor
+        value={source}
+        onChange={setSource}
+        language="php"
+        label="Editor – zdrojový kód"
+        minHeight="320px"
+      />
+    </div>
+  );
+
   return (
     <LessonTaskWorkspace
       privateMarker={`static-${id}`}
@@ -93,7 +111,25 @@ function StaticLessonTask({
         language: 'php',
         fileName,
       }}
-      staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
+      ideTabs={
+        <WorkspaceIdeTabs
+          files={[{ id: 'student-file', label: fileName, panel: studentPanel }]}
+          solution={{
+            label: 'Řešení',
+            panel: (
+              <SyntaxCodeEditor
+                value={solution}
+                language="php"
+                label={`Řešení — ${fileName}`}
+                editable={false}
+                readOnly
+                minHeight="320px"
+              />
+            ),
+          }}
+        />
+      }
+      staticCheck={() => runStaticTaskChecks({ id, required }, source)}
       preview={
         <div className="space-y-4">
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
@@ -103,12 +139,96 @@ function StaticLessonTask({
             Náhled je pouze statické vysvětlení; PHP ani jiný serverový kód se v tomto prohlížeči
             nespouští.
           </p>
-          {children}
         </div>
       }
     />
   );
 }
+
+function TaskReferenceSource() {
+  return null;
+}
+
+const PHP_TASK_SOLUTIONS = {
+  t1: `<!DOCTYPE html>
+<html lang="cs">
+<head><meta charset="UTF-8"><title>Dnešní datum</title></head>
+<body><p>Dnešní datum je: <?php echo date('j.n.Y'); ?></p></body>
+</html>`,
+  t2: `<?php
+$datum = "12.6.2008";
+list($den, $mesic, $rok) = explode('.', $datum);
+$timestamp = mktime(0, 0, 0, (int)$mesic, (int)$den, (int)$rok);
+$dny = [1 => "pondělí", "úterý", "středa", "čtvrtek", "pátek", "sobota", "neděle"];
+echo "$den.$mesic.$rok je " . $dny[(int)date('N', $timestamp)];`,
+  t3: `<?php
+function formatCzechDate(string $dateStr): string {
+  list($den, $mesic, $rok) = explode('.', $dateStr);
+  $timestamp = mktime(0, 0, 0, (int)$mesic, (int)$den, (int)$rok);
+  $dny = [1 => "pondělí", "úterý", "středa", "čtvrtek", "pátek", "sobota", "neděle"];
+  return "$den.$mesic.$rok je " . $dny[(int)date('N', $timestamp)];
+}
+
+echo formatCzechDate("12.6.2008");`,
+  t4: `<?php
+function formatCzechDate(string $dateStr): string {
+  list($d, $m, $y) = explode('.', $dateStr);
+  $timestamp = mktime(0, 0, 0, (int)$m, (int)$d, (int)$y);
+  $dny = [1 => "pondělí", "úterý", "středa", "čtvrtek", "pátek", "sobota", "neděle"];
+  return "$d.$m.$y je " . $dny[(int)date('N', $timestamp)];
+}
+
+$data = ["12.6.2008", "5.1.2020", "1.12.2024"];
+foreach ($data as $i => $date) echo ($i + 1) . ". " . formatCzechDate($date) . "<br>";`,
+  t5: `<?php
+function extractMonths(array $dates): array {
+  return array_map(function ($str) {
+    $parts = explode('.', $str);
+    return (int)($parts[1] ?? 0);
+  }, $dates);
+}
+
+$data = ["12.6.2008", "5.1.2020", "1.12.2024"];
+print_r(extractMonths($data));`,
+  t6: `<?php
+function extractUniqueMonths(array $dates): array {
+  $months = array_map(function ($str) {
+    $parts = explode('.', $str);
+    return (int)($parts[1] ?? 0);
+  }, $dates);
+  $unique = array_values(array_unique($months));
+  sort($unique);
+  return $unique;
+}
+
+$data = ["12.6.2008", "5.1.2020", "1.12.2024", "20.1.2021"];
+print_r(extractUniqueMonths($data));`,
+  t7: `<?php
+function isPositiveInt(string $s): bool {
+  return $s !== '' && ctype_digit($s) && (int)$s > 0;
+}
+
+var_dump(isPositiveInt("123"));
+var_dump(isPositiveInt("0"));
+var_dump(isPositiveInt("-1"));`,
+  t8: `<?php
+function isPositiveInt(string $s, ?int $min = null, ?int $max = null): bool {
+  if ($s === '' || !ctype_digit($s)) return false;
+  $val = (int)$s;
+  if ($val <= 0) return false;
+  if ($min !== null && $val >= $min) {
+    // Dolní mez je splněna.
+  } elseif ($min !== null) {
+    return false;
+  }
+  if ($max !== null && $max > $min && $val > $max) return false;
+  return true;
+}
+
+var_dump(isPositiveInt("10"));
+var_dump(isPositiveInt("10", 5));
+var_dump(isPositiveInt("7", 5, 10));`,
+};
 
 function Task1() {
   return (
@@ -120,6 +240,7 @@ function Task1() {
 <p>Dnešní datum je: <?php echo date('j.n.Y'); ?></p>`}
       required={['<?php', "date('j.n.Y')", 'Dnešní datum']}
       expected="HTML stránka vypíše dnešní datum ve formátu den.měsíc.rok."
+      solution={PHP_TASK_SOLUTIONS.t1}
     >
       <h3 className="text-xl font-semibold mb-3">1 – Výpis aktuálního data</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-4">
@@ -163,7 +284,7 @@ function Task1() {
           </li>
         </ul>
       </InfoBox>
-      <ClickToRevealSolution hint="Nápověda: funkce date('j.n.Y')">
+      <TaskReferenceSource>
         <div className="space-y-3">
           <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
             <code className="language-php">{`<!DOCTYPE html>
@@ -178,7 +299,7 @@ function Task1() {
 </html>`}</code>
           </pre>
         </div>
-      </ClickToRevealSolution>
+      </TaskReferenceSource>
     </StaticLessonTask>
   );
 }
@@ -194,6 +315,7 @@ $timestamp = mktime(0, 0, 0, (int)$mesic, (int)$den, (int)$rok);
 $cisloDne = (int)date('N', $timestamp);`}
       required={['explode', 'mktime', "date('N'"]}
       expected="Z řetězce den.měsíc.rok vznikne timestamp a český název dne."
+      solution={PHP_TASK_SOLUTIONS.t2}
     >
       <h3 className="text-xl font-semibold mb-3">2 – Práce s datem</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
@@ -250,7 +372,7 @@ $cisloDne = (int)date('N', $timestamp);`}
           </li>
         </ul>
       </InfoBox>
-      <ClickToRevealSolution hint="explode('.', $datum) + mktime(0,0,0,$mesic,$den,$rok) + date()">
+      <TaskReferenceSource>
         <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
           <code className="language-php">{`<?php
 $datum = "12.6.2008";
@@ -262,7 +384,7 @@ $dny = [1=>"pondělí","úterý","středa","čtvrtek","pátek","sobota","neděle
 $cisloDne = (int)date('N', $timestamp);
 echo "$den.$mesic.$rok je " . $dny[$cisloDne];`}</code>
         </pre>
-      </ClickToRevealSolution>
+      </TaskReferenceSource>
     </StaticLessonTask>
   );
 }
@@ -278,6 +400,7 @@ function Task3() {
 }`}
       required={['function formatCzechDate', 'return', 'explode']}
       expected="Funkce přijme řetězec data a vrátí čitelný text s českým dnem."
+      solution={PHP_TASK_SOLUTIONS.t3}
     >
       <h3 className="text-xl font-semibold mb-3">3 – Funkce</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
@@ -326,7 +449,7 @@ function Task3() {
           </li>
         </ul>
       </InfoBox>
-      <ClickToRevealSolution hint="function formatCzechDate($str) { ... return '12.6.2008 je čtvrtek'; }">
+      <TaskReferenceSource>
         <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
           <code className="language-php">{`<?php
 function formatCzechDate(string $dateStr): string {
@@ -339,7 +462,7 @@ function formatCzechDate(string $dateStr): string {
 
 echo formatCzechDate("12.6.2008");`}</code>
         </pre>
-      </ClickToRevealSolution>
+      </TaskReferenceSource>
     </StaticLessonTask>
   );
 }
@@ -355,6 +478,7 @@ foreach ($data as $i => $d) {
 }`}
       required={['foreach', '$i + 1', 'formatCzechDate']}
       expected="Každé datum se vypíše s pořadím od jedné a formátovaným dnem."
+      solution={PHP_TASK_SOLUTIONS.t4}
     >
       <h3 className="text-xl font-semibold mb-3">4 – Průchod pole</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
@@ -403,7 +527,7 @@ foreach ($data as $i => $d) {
           </li>
         </ul>
       </InfoBox>
-      <ClickToRevealSolution hint="foreach ($data as $i => $d) { echo ($i+1).'. '.formatCzechDate($d); }">
+      <TaskReferenceSource>
         <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
           <code className="language-php">{`<?php
 $data = ["12.6.2008", "5.1.2020", "1.12.2024"];
@@ -419,7 +543,7 @@ foreach ($data as $i => $d) {
   echo ($i + 1) . ". " . formatCzechDate($d) . "<br>";
 }`}</code>
         </pre>
-      </ClickToRevealSolution>
+      </TaskReferenceSource>
     </StaticLessonTask>
   );
 }
@@ -437,6 +561,7 @@ function Task5() {
 }`}
       required={['function extractMonths', 'array_map', 'explode']}
       expected="Z každého řetězce se vybere měsíc a zachová se pořadí vstupního pole."
+      solution={PHP_TASK_SOLUTIONS.t5}
     >
       <h3 className="text-xl font-semibold mb-3">5 – Vytváření pole</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
@@ -480,7 +605,7 @@ function Task5() {
           </li>
         </ul>
       </InfoBox>
-      <ClickToRevealSolution hint="array_map + explode">
+      <TaskReferenceSource>
         <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
           <code className="language-php">{`<?php
 function extractMonths(array $dates): array {
@@ -494,7 +619,7 @@ function extractMonths(array $dates): array {
 $data = ["12.6.2008", "5.1.2020", "1.12.2024", "20.1.2021"];
 print_r(extractMonths($data)); // např. [6,1,12,1]`}</code>
         </pre>
-      </ClickToRevealSolution>
+      </TaskReferenceSource>
     </StaticLessonTask>
   );
 }
@@ -509,6 +634,7 @@ sort($unique);
 return $unique;`}
       required={['array_unique', 'array_values', 'sort']}
       expected="Výsledné měsíce jsou jedinečné, seřazené a znovu indexované."
+      solution={PHP_TASK_SOLUTIONS.t6}
     >
       <h3 className="text-xl font-semibold mb-3">6 – Různé měsíce</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
@@ -552,7 +678,7 @@ return $unique;`}
           </li>
         </ul>
       </InfoBox>
-      <ClickToRevealSolution hint="array_unique + sort">
+      <TaskReferenceSource>
         <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
           <code className="language-php">{`<?php
 function extractUniqueMonths(array $dates): array {
@@ -568,7 +694,7 @@ function extractUniqueMonths(array $dates): array {
 $data = ["12.6.2008", "5.1.2020", "1.12.2024", "20.1.2021"];
 print_r(extractUniqueMonths($data)); // např. [1,6,12]`}</code>
         </pre>
-      </ClickToRevealSolution>
+      </TaskReferenceSource>
     </StaticLessonTask>
   );
 }
@@ -583,6 +709,7 @@ function Task7() {
 }`}
       required={['function isPositiveInt', 'ctype_digit', '(int)$s > 0']}
       expected="Kontrola přijme jen neprázdné číselné řetězce s hodnotou větší než nula."
+      solution={PHP_TASK_SOLUTIONS.t7}
     >
       <h3 className="text-xl font-semibold mb-3">7 – Zjištění typu proměnné</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
@@ -626,7 +753,7 @@ function Task7() {
           </li>
         </ul>
       </InfoBox>
-      <ClickToRevealSolution hint="ctype_digit a hodnota > 0">
+      <TaskReferenceSource>
         <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
           <code className="language-php">{`<?php
 function isPositiveInt(string $s): bool {
@@ -641,7 +768,7 @@ var_dump(isPositiveInt("0"));   // false
 var_dump(isPositiveInt("-1"));  // false
 var_dump(isPositiveInt("12a")); // false`}</code>
         </pre>
-      </ClickToRevealSolution>
+      </TaskReferenceSource>
     </StaticLessonTask>
   );
 }
@@ -658,6 +785,7 @@ function Task8() {
 }`}
       required={['?int $min = null', '?int $max = null', '$val >= $min']}
       expected="Funkce respektuje volitelné dolní a horní meze při zachování kontroly kladného čísla."
+      solution={PHP_TASK_SOLUTIONS.t8}
     >
       <h3 className="text-xl font-semibold mb-3">8 – Nepovinné parametry funkcí</h3>
       <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
@@ -693,7 +821,7 @@ function Task8() {
           </li>
         </ul>
       </InfoBox>
-      <ClickToRevealSolution hint="function isPositiveInt($s, $min = null, $max = null)">
+      <TaskReferenceSource>
         <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
           <code className="language-php">{`<?php
 function isPositiveInt(string $s, ?int $min = null, ?int $max = null): bool {
@@ -720,7 +848,7 @@ var_dump(isPositiveInt("3", 5));          // false
 var_dump(isPositiveInt("12", 5, 10));     // false (12 > 10)
 var_dump(isPositiveInt("7", 5, 10));      // true`}</code>
         </pre>
-      </ClickToRevealSolution>
+      </TaskReferenceSource>
     </StaticLessonTask>
   );
 }
