@@ -13,7 +13,7 @@ function sectionClassName(isActive) {
     'min-h-0 px-3 py-2 text-sm',
     isActive
       ? 'ring-2 ring-[var(--portal-focus)] ring-offset-2 ring-offset-[var(--portal-surface)]'
-      : 'border-[var(--portal-border)] bg-[var(--portal-panel)] text-[var(--portal-text)] hover:bg-[var(--portal-surface-muted)]',
+      : 'portal-secondary-action',
   ].join(' ');
 }
 

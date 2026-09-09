@@ -100,6 +100,18 @@
     background-color: var(--portal-indigo-hover);
   }
 
+  .portal-action.portal-secondary-action {
+    border-color: var(--portal-border);
+    background-color: var(--portal-panel);
+    color: var(--portal-text);
+  }
+
+  .portal-action.portal-secondary-action:hover {
+    border-color: var(--portal-indigo);
+    background-color: var(--portal-surface-muted);
+    color: var(--portal-text);
+  }
+
   .portal-action:focus-visible,
   .portal-panel:focus-visible,
   .portal-page :where(a, button, input, select, textarea):focus-visible {
