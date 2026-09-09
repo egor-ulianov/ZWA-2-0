@@ -153,7 +153,8 @@ test.describe('runtime lesson task workspaces', () => {
     await page.goto('/interactive-zwa-1?slide=tasks-net');
 
     const workspace = page.getByRole('region', { name: 'Náhled a testy' }).first();
-    const commandInput = page.getByPlaceholder(/zadejte příkaz a stiskněte Enter/i);
+    const commandInput = page.getByRole('textbox', { name: 'Příkaz terminálu' });
+    await expect(commandInput).toBeVisible();
     const runTests = workspace.getByRole('button', { name: 'Spustit testy', exact: true });
 
     await commandInput.fill('host cvut.cz');

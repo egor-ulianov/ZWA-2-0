@@ -522,7 +522,8 @@ function FormTaskEditor() {
         onChange={(e) => setHtml(e.target.value)}
         className="min-h-[280px] w-full rounded border p-2 font-mono text-sm bg-white dark:bg-zinc-900"
       />
-      <div className="text-xs">
+      <div className="text-xs" aria-label="Průběžná nápověda editoru">
+        <p className="font-medium text-zinc-700 dark:text-zinc-200">Průběžná nápověda editoru</p>
         <div className={local.passed ? 'text-emerald-600' : 'text-amber-600'}>
           {local.passed
             ? 'Lokální kontroly: vše v pořádku.'
