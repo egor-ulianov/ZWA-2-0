@@ -18,6 +18,7 @@ import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 
 import {
   CSS_BASICS_INSPECTION,
@@ -156,10 +157,48 @@ function getTaskTemplates(slideId, stepIndex) {
   return { html: baseHtml, css: cssPlaceholders[idx] };
 }
 
+function getTaskSolution(slideId, stepIndex) {
+  if (slideId === 'linking') {
+    const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Link CSS</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <h1 id="title">Hello CSS</h1>
+    <p>Link your stylesheet to change the title color.</p>
+  </body>
+</html>`;
+    return {
+      html,
+      css:
+        stepIndex === 0
+          ? '/* styles.css is linked in index.html. */'
+          : 'h1#title {\n  color: #16a34a;\n}',
+    };
+  }
+
+  const solutions = [
+    'h1#title {\n  color: #1d4ed8;\n  font-size: 36px;\n}',
+    'footer a {\n  font-family: Georgia, serif;\n  color: #2563eb;\n}\n\nfooter a:visited {\n  color: #2563eb;\n}',
+    'p.excerpt::first-letter {\n  font-size: 200%;\n  background: #fef08a;\n}',
+    'ol.submenu {\n  list-style-type: lower-alpha;\n}',
+    '.hero img {\n  transition: transform 200ms ease;\n}\n\n.hero img:hover {\n  transform: scale(1.05);\n}',
+  ];
+  return {
+    html: getTaskTemplates('tasks', stepIndex).html.replace(/^<!-- CSS úlohy:[^\n]*\n/, ''),
+    css: solutions[stepIndex] || solutions[0],
+  };
+}
+
 const CssTaskContext = createContext(null);
 
 const CssTaskProvider = forwardRef(function CssTaskProvider({ slideId, stepIndex, children }, ref) {
-  const [activeTab, setActiveTab] = useState('css');
+  const [activeFileId, setActiveFileId] = useState(
+    slideId === 'linking' ? 'styles.css' : 'style.css',
+  );
   const [autoApply, setAutoApply] = useState(true);
   const [applyVersion, setApplyVersion] = useState(0);
   const [validationVersion, setValidationVersion] = useState(0);
@@ -172,8 +211,9 @@ const CssTaskProvider = forwardRef(function CssTaskProvider({ slideId, stepIndex
   useEffect(() => {
     setHtmlCode(templates.html);
     setCssCode(templates.css);
+    setActiveFileId(slideId === 'linking' ? 'styles.css' : 'style.css');
     setResults([]);
-  }, [templates]);
+  }, [slideId, templates]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const previewCss = useMemo(() => {
@@ -221,8 +261,8 @@ const CssTaskProvider = forwardRef(function CssTaskProvider({ slideId, stepIndex
   return (
     <CssTaskContext.Provider
       value={{
-        activeTab,
-        setActiveTab,
+        activeFileId,
+        setActiveFileId,
         autoApply,
         setAutoApply,
         applyVersion,
@@ -242,144 +282,77 @@ const CssTaskProvider = forwardRef(function CssTaskProvider({ slideId, stepIndex
     </CssTaskContext.Provider>
   );
 });
-
-function CssTaskStepTabs({ steps, activeIndex, onChange }) {
-  const tabRefs = useRef([]);
-
-  const focusStep = useCallback(
-    (nextIndex) => {
-      const boundedIndex = Math.min(Math.max(nextIndex, 0), steps.length - 1);
-      onChange(boundedIndex);
-      requestAnimationFrame(() => tabRefs.current[boundedIndex]?.focus());
-    },
-    [onChange, steps.length],
-  );
-
-  const handleKeyDown = (event, index) => {
-    const isTaskNavigationKey = [
-      'ArrowRight',
-      'ArrowDown',
-      'ArrowLeft',
-      'ArrowUp',
-      'Home',
-      'End',
-    ].includes(event.key);
-    if (isTaskNavigationKey) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    const nextIndex =
-      event.key === 'ArrowRight' || event.key === 'ArrowDown'
-        ? Math.min(index + 1, steps.length - 1)
-        : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
-          ? Math.max(index - 1, 0)
-          : event.key === 'Home'
-            ? 0
-            : event.key === 'End'
-              ? steps.length - 1
-              : index;
-    if (nextIndex === index) return;
-    focusStep(nextIndex);
-  };
-
+function CssReferencePanel({ solution }) {
   return (
-    <div className="mb-4" role="tablist" aria-label="Kroky úlohy CSS">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-        Vyberte úlohu
-      </p>
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {steps.map((step, index) => {
-          const isActive = index === activeIndex;
-          return (
-            <button
-              key={step.title}
-              ref={(element) => {
-                tabRefs.current[index] = element;
-              }}
-              id={`css-task-tab-${index}`}
-              type="button"
-              role="tab"
-              aria-controls="css-task-panel"
-              aria-selected={isActive}
-              tabIndex={isActive ? 0 : -1}
-              className={clsx(
-                'shrink-0 rounded-lg border px-3 py-2 text-left text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500',
-                isActive
-                  ? 'border-indigo-600 bg-indigo-700 text-white'
-                  : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800',
-              )}
-              onClick={() => onChange(index)}
-              onKeyDown={(event) => handleKeyDown(event, index)}
-            >
-              {step.title}
-            </button>
-          );
-        })}
+    <div className="space-y-3" data-reference-solution="true">
+      <p className="text-xs text-zinc-500">Kompletní referenční řešení pouze pro čtení.</p>
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          index.html
+        </p>
+        <SyntaxCodeEditor
+          value={solution.html}
+          language="html"
+          label="Řešení index.html"
+          readOnly
+          editable={false}
+          minHeight="220px"
+        />
+      </div>
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          style.css
+        </p>
+        <SyntaxCodeEditor
+          value={solution.css}
+          language="css"
+          label="Řešení style.css"
+          readOnly
+          editable={false}
+          minHeight="180px"
+        />
       </div>
     </div>
   );
 }
 
-function CssTaskEditor({ steps, stepIndex, onStepIndexChange }) {
-  const {
-    activeTab,
-    setActiveTab,
-    autoApply,
-    setAutoApply,
-    htmlCode,
-    cssCode,
-    onHtmlChange,
-    onCssChange,
-    applyOnce,
-  } = useContext(CssTaskContext);
+function CssTaskIde({ slideId, stepIndex }) {
+  const { activeFileId, setActiveFileId, htmlCode, cssCode, onHtmlChange, onCssChange } =
+    useContext(CssTaskContext);
+  const solution = getTaskSolution(slideId, stepIndex);
+  const cssFileId = slideId === 'linking' ? 'styles.css' : 'style.css';
   return (
-    <div>
-      <CssTaskStepTabs steps={steps} activeIndex={stepIndex} onChange={onStepIndexChange} />
-      <div className="flex items-center justify-between mb-2">
-        <div className="font-semibold text-sm">Editor HTML a CSS</div>
-        <label className="text-xs flex items-center gap-1">
-          <input
-            type="checkbox"
-            checked={autoApply}
-            onChange={(event) => setAutoApply(event.target.checked)}
-          />
-          Použít automaticky
-        </label>
-      </div>
-      <div className="flex items-center gap-1 mb-2">
-        {[
-          ['html', 'HTML'],
-          ['css', 'CSS'],
-        ].map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            className={clsx(
-              'px-3 py-1.5 text-xs rounded-t-lg border',
-              activeTab === id
-                ? 'bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700'
-                : 'bg-zinc-100/70 dark:bg-zinc-800/60 border-transparent',
-            )}
-            onClick={() => setActiveTab(id)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      <SyntaxCodeEditor
-        value={activeTab === 'css' ? cssCode : htmlCode}
-        onChange={(value) => (activeTab === 'css' ? onCssChange(value) : onHtmlChange(value))}
-        language={activeTab}
-        label="Editor HTML a CSS"
-      />
-      <button
-        type="button"
-        className="mt-2 px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white"
-        onClick={applyOnce}
-      >
-        Spustit náhled
-      </button>
-    </div>
+    <WorkspaceIdeTabs
+      activeFileId={activeFileId}
+      onActiveFileChange={setActiveFileId}
+      files={[
+        {
+          id: 'index.html',
+          label: 'index.html',
+          panel: (
+            <SyntaxCodeEditor
+              value={htmlCode}
+              onChange={onHtmlChange}
+              language="html"
+              label="index.html"
+            />
+          ),
+        },
+        {
+          id: cssFileId,
+          label: cssFileId,
+          panel: (
+            <SyntaxCodeEditor
+              value={cssCode}
+              onChange={onCssChange}
+              language="css"
+              label={cssFileId}
+            />
+          ),
+        },
+      ]}
+      solution={{ label: 'Řešení', panel: <CssReferencePanel solution={solution} /> }}
+    />
   );
 }
 
@@ -388,10 +361,10 @@ function CssTaskInstructions({ steps, stepIndex }) {
   if (!step) return null;
 
   return (
-    <div id="css-task-panel" role="tabpanel" aria-labelledby={`css-task-tab-${stepIndex}`}>
+    <div>
       <div className="flex items-center justify-between gap-3">
         <span className="rounded-full border border-sky-200/60 bg-sky-100 px-2 py-0.5 text-[11px] text-sky-800 dark:border-sky-800 dark:bg-sky-900/40 dark:text-sky-300">
-          Úloha {stepIndex + 1} / {steps.length}
+          Úloha
         </span>
       </div>
       <p className="mt-2 font-semibold">{step.title}</p>
@@ -673,7 +646,9 @@ const VsPlayground = forwardRef(function VsPlayground({ slideId, stepIndex }, re
 
 // (old linking playground replaced by VsPlayground)
 
-const slides = [
+void VsPlayground;
+
+const slideDefinitions = [
   {
     id: 'title',
     title: 'Základy CSS – interaktivní cvičení',
@@ -826,6 +801,18 @@ const slides = [
     ],
   },
 ];
+
+const slides = slideDefinitions.flatMap((slide) => {
+  if (!['linking', 'tasks'].includes(slide.id) || !Array.isArray(slide.steps)) return [slide];
+  return slide.steps.map((step, index) => ({
+    ...slide,
+    id: index === 0 ? slide.id : `${slide.id}-${index + 1}`,
+    title: step.title,
+    steps: [step],
+    taskGroup: slide.id,
+    taskIndex: index,
+  }));
+});
 
 function CssSlideContent({ slide, stepIndex: controlledIndex, onStepIndexChange }) {
   const hasSteps = Array.isArray(slide.steps) && slide.steps.length > 0;
@@ -999,7 +986,6 @@ export default function App() {
   const cssTaskRef = useRef(null);
   const [stepIndex, setStepIndex] = useState(0);
   const current = slides.find((s) => s.id === activeSlide) || slides[0];
-  const hasSteps = Array.isArray(current.steps) && current.steps.length > 0;
 
   // A new slide starts at its first task.
   /* eslint-disable react-hooks/set-state-in-effect -- reset is the slide transition boundary. */
@@ -1020,37 +1006,22 @@ export default function App() {
       footerText="© 2025 ZWA – CSS interaktivní výuková ukázka"
       maxWidthClass="max-w-7xl"
     >
-      {current.id === 'tasks' ? (
-        <CssTaskProvider ref={cssTaskRef} slideId={activeSlide} stepIndex={stepIndex}>
+      {current.taskGroup ? (
+        <CssTaskProvider ref={cssTaskRef} slideId={current.taskGroup} stepIndex={current.taskIndex}>
           <LessonTaskWorkspace
             privateMarker="css-exercise"
             onRunTests={() => cssTaskRef.current?.runValidation()}
-            task={<CssTaskInstructions steps={current.steps} stepIndex={stepIndex} />}
-            editor={
-              <CssTaskEditor
-                steps={current.steps}
-                stepIndex={stepIndex}
-                onStepIndexChange={setStepIndex}
-              />
-            }
+            task={<CssTaskInstructions steps={current.steps} stepIndex={0} />}
+            ideTabs={<CssTaskIde slideId={current.taskGroup} stepIndex={current.taskIndex} />}
             preview={<CssTaskPreview />}
           />
         </CssTaskProvider>
       ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div>
-            <CssSlideContent
-              slide={current}
-              stepIndex={hasSteps ? stepIndex : undefined}
-              onStepIndexChange={setStepIndex}
-            />
-          </div>
-          <div>
-            <div className="lg:sticky lg:top-8">
-              <VsPlayground slideId={activeSlide} stepIndex={hasSteps ? stepIndex : 0} />
-            </div>
-          </div>
-        </div>
+        <CssSlideContent
+          slide={current}
+          stepIndex={Array.isArray(current.sections) ? stepIndex : undefined}
+          onStepIndexChange={setStepIndex}
+        />
       )}
       <div className="mt-3 text-xs text-zinc-500">
         Pozn.: Toto je výuková simulace pro procvičení CSS. Výsledky jsou zjednodušené kvůli

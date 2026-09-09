@@ -15,8 +15,8 @@ import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonS
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
-import LessonTaskTabs from './src/components/exercises/LessonTaskTabs.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 
 import {
   CSS_LAYOUT_INSPECTION,
@@ -152,11 +152,61 @@ function getTaskTemplates(stepIndex) {
   return { step: steps[idx], all: steps };
 }
 
+function getTaskSolution(stepIndex) {
+  const solutions = [
+    `#site-header, #menu, #article, #footer {
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+}
+#site-header, #menu, #article { margin-bottom: 8px; }
+#footer { margin-top: 8px; }`,
+    `#pic {
+  float: right;
+  margin: 0 0 8px 8px;
+}
+#article::after {
+  content: "";
+  display: block;
+  clear: both;
+}`,
+    `#article { position: relative; }
+#pic { position: absolute; top: 0; right: 0; }`,
+    `.hl {
+  display: inline-block;
+  background: #fef08a;
+  padding: 2px 4px;
+}`,
+    `#site-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#site-header button { margin-left: auto; }`,
+    `.container { display: block; }
+#menu { margin-bottom: 8px; }
+@media (min-width: 800px) {
+  .container { display: grid; grid-template-columns: 240px 1fr; gap: 12px; }
+  #menu { margin-bottom: 0; }
+}`,
+    '/* index.html contains the complete print stylesheet link. */',
+  ];
+  const template = getTaskTemplates(stepIndex).step;
+  const html =
+    stepIndex === 6
+      ? template.html.replace(
+          '    <!-- TODO: Přidejte <link rel="stylesheet" href="print.css" media="print"> -->',
+          '    <link rel="stylesheet" href="print.css" media="print">',
+        )
+      : template.html;
+  return { html, css: solutions[stepIndex] || solutions[0] };
+}
+
 const Css2TaskContext = createContext(null);
 
 const Css2TaskProvider = forwardRef(function Css2TaskProvider({ stepIndex, children }, ref) {
   const [htmlCode, setHtmlCode] = useState('');
   const [cssCode, setCssCode] = useState('');
+  const [activeFileId, setActiveFileId] = useState('style.css');
   const [applyVersion, setApplyVersion] = useState(0);
   const [validationVersion, setValidationVersion] = useState(0);
   const [results, setResults] = useState([]);
@@ -166,6 +216,7 @@ const Css2TaskProvider = forwardRef(function Css2TaskProvider({ stepIndex, child
   useEffect(() => {
     setHtmlCode(templates.step.html);
     setCssCode(templates.step.css);
+    setActiveFileId('style.css');
     setResults([]);
     setApplyVersion((version) => version + 1);
   }, [templates]);
@@ -194,6 +245,8 @@ const Css2TaskProvider = forwardRef(function Css2TaskProvider({ stepIndex, child
       value={{
         htmlCode,
         cssCode,
+        activeFileId,
+        setActiveFileId,
         setHtmlCode,
         setCssCode,
         applyVersion,
@@ -209,55 +262,76 @@ const Css2TaskProvider = forwardRef(function Css2TaskProvider({ stepIndex, child
   );
 });
 
-function Css2TaskEditor({ steps, stepIndex, onStepIndexChange }) {
-  const { htmlCode, cssCode, setHtmlCode, setCssCode, applyOnce } = useContext(Css2TaskContext);
-  const tasks = steps.map((step) => ({ id: step.id, label: step.title }));
-  const activeTaskId = tasks[stepIndex]?.id;
-
-  function handleTaskChange(taskId) {
-    const nextIndex = tasks.findIndex((task) => task.id === taskId);
-    if (nextIndex >= 0) onStepIndexChange(nextIndex);
-  }
-
+function Css2ReferencePanel({ solution }) {
   return (
-    <div className="space-y-3">
-      <LessonTaskTabs
-        tasks={tasks}
-        activeTaskId={activeTaskId}
-        onChange={handleTaskChange}
-        label="Kroky úlohy CSS II"
-      />
-      <p className="text-sm font-semibold">IDE — HTML a CSS II</p>
-      <label className="block text-sm font-semibold" htmlFor="css2-html-task-editor">
-        Editor HTML a CSS II — HTML
-      </label>
-      <SyntaxCodeEditor
-        id="css2-html-task-editor"
-        value={htmlCode}
-        onChange={setHtmlCode}
-        language="html"
-        label="Editor HTML CSS II"
-        minHeight="220px"
-      />
-      <label className="block text-sm font-semibold" htmlFor="css2-css-task-editor">
-        Editor CSS II — CSS
-      </label>
-      <SyntaxCodeEditor
-        id="css2-css-task-editor"
-        value={cssCode}
-        onChange={setCssCode}
-        language="css"
-        label="Editor CSS II"
-        minHeight="220px"
-      />
-      <button
-        type="button"
-        className="px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white"
-        onClick={applyOnce}
-      >
-        Spustit náhled
-      </button>
+    <div className="space-y-3" data-reference-solution="true">
+      <p className="text-xs text-zinc-500">Kompletní referenční řešení pouze pro čtení.</p>
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          index.html
+        </p>
+        <SyntaxCodeEditor
+          value={solution.html}
+          language="html"
+          label="Řešení index.html"
+          readOnly
+          editable={false}
+          minHeight="220px"
+        />
+      </div>
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          style.css
+        </p>
+        <SyntaxCodeEditor
+          value={solution.css}
+          language="css"
+          label="Řešení style.css"
+          readOnly
+          editable={false}
+          minHeight="180px"
+        />
+      </div>
     </div>
+  );
+}
+
+function Css2TaskIde({ stepIndex }) {
+  const { htmlCode, cssCode, setHtmlCode, setCssCode, activeFileId, setActiveFileId } =
+    useContext(Css2TaskContext);
+  const solution = getTaskSolution(stepIndex);
+  return (
+    <WorkspaceIdeTabs
+      activeFileId={activeFileId}
+      onActiveFileChange={setActiveFileId}
+      files={[
+        {
+          id: 'index.html',
+          label: 'index.html',
+          panel: (
+            <SyntaxCodeEditor
+              value={htmlCode}
+              onChange={setHtmlCode}
+              language="html"
+              label="index.html"
+            />
+          ),
+        },
+        {
+          id: 'style.css',
+          label: 'style.css',
+          panel: (
+            <SyntaxCodeEditor
+              value={cssCode}
+              onChange={setCssCode}
+              language="css"
+              label="style.css"
+            />
+          ),
+        },
+      ]}
+      solution={{ label: 'Řešení', panel: <Css2ReferencePanel solution={solution} /> }}
+    />
   );
 }
 
@@ -455,7 +529,9 @@ const VsPlayground = forwardRef(function VsPlayground({ stepIndex }, ref) {
   );
 });
 
-const slides = [
+void VsPlayground;
+
+const slideDefinitions = [
   {
     id: 'title',
     title: 'CSS II – layout a responzivita',
@@ -578,6 +654,18 @@ const slides = [
     steps: [],
   },
 ];
+
+const slides = slideDefinitions.flatMap((slide) => {
+  if (slide.id !== 'tasks') return [slide];
+  const steps = getTaskTemplates(0).all;
+  return steps.map((step, index) => ({
+    ...slide,
+    id: index === 0 ? 'tasks' : `css2-task-${step.id}`,
+    title: step.title,
+    steps: [step],
+    taskIndex: index,
+  }));
+});
 
 function Css2SlideContent({ slide }) {
   const hasSections = Array.isArray(slide.sections) && slide.sections.length > 0;
@@ -809,16 +897,9 @@ function QuizCssBasics() {
 export default function AppCss2Lesson() {
   const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
   const cssTaskRef = useRef(null);
-  const [stepIndex, setStepIndex] = useState(0);
   const current = slides.find((s) => s.id === activeSlide) || slides[0];
-  const hasTasks = current.id === 'tasks';
-  const taskTemplates = getTaskTemplates(stepIndex);
-  // A new slide starts at its first task.
-  /* eslint-disable react-hooks/set-state-in-effect -- reset is the slide transition boundary. */
-  useEffect(() => {
-    setStepIndex(0);
-  }, [activeSlide]);
-  /* eslint-enable react-hooks/set-state-in-effect */
+  const hasTasks = typeof current.taskIndex === 'number';
+  const taskTemplates = getTaskTemplates(current.taskIndex || 0);
   return (
     <LessonShell
       lesson={getLessonByNumber(5)}
@@ -845,15 +926,13 @@ export default function AppCss2Lesson() {
       maxWidthClass="max-w-7xl"
     >
       {hasTasks ? (
-        <Css2TaskProvider ref={cssTaskRef} stepIndex={stepIndex}>
+        <Css2TaskProvider ref={cssTaskRef} stepIndex={current.taskIndex}>
           <LessonTaskWorkspace
             privateMarker="css-exercise"
             onRunTests={() => cssTaskRef.current?.runValidation()}
             task={
               <>
-                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  Úloha {stepIndex + 1} / {taskTemplates.all.length}
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Úloha</p>
                 <p className="font-medium">{taskTemplates.step.title}</p>
                 <p>{taskTemplates.step.desc}</p>
                 <p>
@@ -869,13 +948,7 @@ export default function AppCss2Lesson() {
                 </p>
               </>
             }
-            editor={
-              <Css2TaskEditor
-                steps={taskTemplates.all}
-                stepIndex={stepIndex}
-                onStepIndexChange={setStepIndex}
-              />
-            }
+            ideTabs={<Css2TaskIde stepIndex={current.taskIndex} />}
             preview={<Css2TaskPreview />}
           />
           <div className="mt-3 text-xs text-zinc-500">

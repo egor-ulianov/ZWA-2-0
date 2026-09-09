@@ -9,6 +9,7 @@ import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonS
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
+import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 
 function getJsTemplates(stepIndex) {
   const steps = [
@@ -22,6 +23,12 @@ function getJsTemplates(stepIndex) {
         '// Např.: exports.greeting = ...; exports.double = ...',
       ].join('\n'),
       dom: '<div class="text-xs text-zinc-500">(Tento krok DOM nevyužívá)</div>',
+      solution: [
+        "const greeting = 'Ahoj';",
+        'function double(n) { return n * 2; }',
+        'exports.greeting = greeting;',
+        'exports.double = double;',
+      ].join('\n'),
     },
     {
       title: '2) Funkce a podmínky',
@@ -33,6 +40,13 @@ function getJsTemplates(stepIndex) {
         '// TODO: implementujte a zveřejněte přes exports.classify',
       ].join('\n'),
       dom: '<div class="text-xs text-zinc-500">(Tento krok DOM nevyužívá)</div>',
+      solution: [
+        'function classify(n) {',
+        "  if (typeof n !== 'number' || Number.isNaN(n)) return 'n/a';",
+        "  return n % 2 === 0 ? 'even' : 'odd';",
+        '}',
+        'exports.classify = classify;',
+      ].join('\n'),
     },
     {
       title: '3) Cykly (for)',
@@ -44,6 +58,14 @@ function getJsTemplates(stepIndex) {
         '// TODO: implementujte a zveřejněte přes exports.sumTo',
       ].join('\n'),
       dom: '<div class="text-xs text-zinc-500">(Tento krok DOM nevyužívá)</div>',
+      solution: [
+        'function sumTo(n) {',
+        '  let total = 0;',
+        '  for (let i = 1; i <= n; i += 1) total += i;',
+        '  return total;',
+        '}',
+        'exports.sumTo = sumTo;',
+      ].join('\n'),
     },
     {
       title: '4) Pole a objekty',
@@ -55,6 +77,12 @@ function getJsTemplates(stepIndex) {
         '// TODO: implementujte a zveřejněte přes exports.total',
       ].join('\n'),
       dom: '<div class="text-xs text-zinc-500">(Tento krok DOM nevyužívá)</div>',
+      solution: [
+        'function total(xs) {',
+        '  return Array.isArray(xs) ? xs.reduce((sum, value) => sum + value, 0) : 0;',
+        '}',
+        'exports.total = total;',
+      ].join('\n'),
     },
     {
       title: '5) DOM selektory',
@@ -64,6 +92,10 @@ function getJsTemplates(stepIndex) {
         "// TODO: nastavte elementu textContent na 'Hello JS'",
       ].join('\n'),
       dom: '<div id="app" class="rounded border p-2 text-sm">(sem napište text)</div>',
+      solution: [
+        "const app = document.querySelector('#app');",
+        "if (app) app.textContent = 'Hello JS';",
+      ].join('\n'),
     },
     {
       title: '6) Události',
@@ -78,6 +110,13 @@ function getJsTemplates(stepIndex) {
         '  <span id="cnt">0</span>',
         '</div>',
       ].join('\n'),
+      solution: [
+        "const button = document.querySelector('#btn');",
+        "const counter = document.querySelector('#cnt');",
+        "button?.addEventListener('click', () => {",
+        '  counter.textContent = String(Number(counter.textContent) + 1);',
+        '});',
+      ].join('\n'),
     },
     {
       title: '7) alert/confirm (wrapper)',
@@ -89,64 +128,16 @@ function getJsTemplates(stepIndex) {
         '// TODO: implementujte a zveřejněte přes exports.notify',
       ].join('\n'),
       dom: '<div class="text-xs text-zinc-500">(Tento krok DOM nevyužívá)</div>',
+      solution: [
+        'function notify(decision) {',
+        "  alert(decision ? 'OK' : 'Cancelled');",
+        '}',
+        'exports.notify = notify;',
+      ].join('\n'),
     },
   ];
   const idx = Math.max(0, Math.min(stepIndex || 0, steps.length - 1));
   return { step: steps[idx], all: steps };
-}
-
-function JsTaskTabs({ steps, activeIndex, onChange }) {
-  function handleKeyDown(event, index) {
-    const direction =
-      event.key === 'ArrowRight' || event.key === 'ArrowDown'
-        ? 1
-        : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
-          ? -1
-          : event.key === 'Home'
-            ? 'first'
-            : event.key === 'End'
-              ? 'last'
-              : null;
-    if (!direction) return;
-    event.preventDefault();
-    event.stopPropagation();
-    const nextIndex =
-      direction === 'first'
-        ? 0
-        : direction === 'last'
-          ? steps.length - 1
-          : Math.min(Math.max(index + direction, 0), steps.length - 1);
-    onChange(nextIndex);
-  }
-
-  return (
-    <div className="mb-3" role="tablist" aria-label="Kroky úlohy JavaScript">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-        Vyberte úlohu
-      </p>
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {steps.map((step, index) => (
-          <button
-            key={step.title}
-            type="button"
-            role="tab"
-            aria-selected={activeIndex === index}
-            tabIndex={activeIndex === index ? 0 : -1}
-            onClick={() => onChange(index)}
-            onKeyDown={(event) => handleKeyDown(event, index)}
-            className={clsx(
-              'shrink-0 rounded-lg border px-3 py-2 text-left text-sm font-medium',
-              activeIndex === index
-                ? 'border-indigo-600 bg-indigo-700 text-white'
-                : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200',
-            )}
-          >
-            {step.title}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 function JsCodeEditor({ source, onChange }) {
@@ -161,9 +152,34 @@ function JsCodeEditor({ source, onChange }) {
   );
 }
 
-function JsTaskWorkspace({ steps, stepIndex, onStepIndexChange }) {
+function JsReferencePanel({ source, dom }) {
+  return (
+    <div className="space-y-3" data-reference-solution="true">
+      <p className="text-xs text-zinc-500">Kompletní referenční řešení pouze pro čtení.</p>
+      <SyntaxCodeEditor
+        value={source}
+        language="javascript"
+        label="Řešení main.js"
+        readOnly
+        editable={false}
+        minHeight="320px"
+      />
+      {dom && !String(dom).includes('Tento krok DOM nevyužívá') && (
+        <div className="rounded-lg border border-zinc-200/70 p-3 dark:border-zinc-800">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            DOM fixture
+          </p>
+          {dom}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function JsTaskWorkspace({ steps, stepIndex }) {
   const template = steps[stepIndex] || steps[0];
   const [source, setSource] = useState(template.js);
+  const [activeFileId, setActiveFileId] = useState('main.js');
   const [hasRun, setHasRun] = useState(false);
   const [runNumber, setRunNumber] = useState(0);
   const [results, setResults] = useState([]);
@@ -172,6 +188,7 @@ function JsTaskWorkspace({ steps, stepIndex, onStepIndexChange }) {
   /* eslint-disable react-hooks/set-state-in-effect -- each task starts a fresh student draft. */
   useEffect(() => {
     setSource(template.js);
+    setActiveFileId('main.js');
     setHasRun(false);
     setResults([]);
   }, [template]);
@@ -217,7 +234,6 @@ function JsTaskWorkspace({ steps, stepIndex, onStepIndexChange }) {
       >
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Zadání</h2>
         <div className="mt-2 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <JsTaskTabs steps={steps} activeIndex={stepIndex} onChange={onStepIndexChange} />
           <p className="font-semibold">{template.title}</p>
           <p>{template.desc}</p>
         </div>
@@ -229,9 +245,38 @@ function JsTaskWorkspace({ steps, stepIndex, onStepIndexChange }) {
         className="border-b border-zinc-200/70 px-4 py-4 dark:border-zinc-800"
       >
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">IDE — JavaScript</h2>
-        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Soubor: main.js</p>
         <div className="mt-3">
-          <JsCodeEditor source={source} onChange={handleSourceChange} />
+          <WorkspaceIdeTabs
+            activeFileId={activeFileId}
+            onActiveFileChange={setActiveFileId}
+            files={[
+              {
+                id: 'main.js',
+                label: 'main.js',
+                panel: <JsCodeEditor source={source} onChange={handleSourceChange} />,
+              },
+              ...(template.dom && !String(template.dom).includes('Tento krok DOM nevyužívá')
+                ? [
+                    {
+                      id: 'dom.html',
+                      label: 'dom.html',
+                      panel: (
+                        <div className="rounded-lg border border-zinc-200/70 p-3 dark:border-zinc-800">
+                          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                            DOM fixture (pouze pro čtení)
+                          </p>
+                          {template.dom}
+                        </div>
+                      ),
+                    },
+                  ]
+                : []),
+            ]}
+            solution={{
+              label: 'Řešení',
+              panel: <JsReferencePanel source={template.solution} dom={template.dom} />,
+            }}
+          />
         </div>
       </section>
 
@@ -294,7 +339,7 @@ function JsTaskWorkspace({ steps, stepIndex, onStepIndexChange }) {
   );
 }
 
-const slides = [
+const slideDefinitions = [
   {
     id: 'title',
     title: 'Základy JavaScriptu – interaktivní cvičení',
@@ -403,6 +448,17 @@ const slides = [
     steps: [],
   },
 ];
+
+const slides = slideDefinitions.flatMap((slide) => {
+  if (slide.id !== 'tasks') return [slide];
+  return getJsTemplates(0).all.map((step, index) => ({
+    ...slide,
+    id: index === 0 ? 'tasks' : `js-task-${index + 1}`,
+    title: step.title,
+    taskIndex: index,
+    task: step,
+  }));
+});
 
 function JsSlideContent({ slide, stepIndex, onStepIndexChange }) {
   const hasSections = Array.isArray(slide.sections) && slide.sections.length > 0;
@@ -683,7 +739,7 @@ export default function AppJsLesson5() {
   const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
   const [stepIndex, setStepIndex] = useState(0);
   const current = slides.find((s) => s.id === activeSlide) || slides[0];
-  const hasTasks = current.id === 'tasks';
+  const hasTasks = typeof current.taskIndex === 'number';
 
   // A new slide starts at its first task.
   /* eslint-disable react-hooks/set-state-in-effect -- reset is the slide transition boundary. */
@@ -711,11 +767,7 @@ export default function AppJsLesson5() {
       <div className={hasTasks ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : ''}>
         {hasTasks && (
           <div className="lg:col-span-2">
-            <JsTaskWorkspace
-              steps={getJsTemplates(0).all}
-              stepIndex={stepIndex}
-              onStepIndexChange={setStepIndex}
-            />
+            <JsTaskWorkspace steps={getJsTemplates(0).all} stepIndex={current.taskIndex} />
           </div>
         )}
         {!hasTasks && (

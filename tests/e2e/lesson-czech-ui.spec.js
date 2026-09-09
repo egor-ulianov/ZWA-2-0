@@ -113,4 +113,80 @@ test.describe('Czech unified lesson task workspace integration', () => {
 
     await expect(page.getByRole('link', { name: '← Zpět na přehled lekcí' })).toHaveCount(0);
   });
+
+  test('CSS, CSS II and JavaScript expose each exercise in the course outline and IDE tabs', async ({
+    page,
+  }) => {
+    const cases = [
+      {
+        route: '/interactive-zwa-2?slide=tasks',
+        tasks: [
+          '1) Vytvořte link na stylopis',
+          '2) Změňte barvu nadpisu v CSS',
+          '1) Nadpis',
+          '2) Odkazy ve footeru',
+          '3) První písmeno',
+          '4) Submenu jako písmena',
+          '5) Hover efekt na obrázku',
+        ],
+        files: ['index.html', 'style.css'],
+        legacyTablist: 'Kroky úlohy CSS',
+      },
+      {
+        route: '/interactive-zwa-5-css-ii?slide=tasks',
+        tasks: [
+          'Box model',
+          'Float/Clear',
+          'Position',
+          'Display',
+          'Flexbox',
+          'Responzivita (@media)',
+          'Print stylesheet',
+        ],
+        files: ['index.html', 'style.css'],
+        legacyTablist: 'Kroky úlohy CSS II',
+      },
+      {
+        route: '/interactive-zwa-5-js?slide=tasks',
+        tasks: [
+          '1) Proměnné a typy',
+          '2) Funkce a podmínky',
+          '3) Cykly (for)',
+          '4) Pole a objekty',
+          '5) DOM selektory',
+          '6) Události',
+          '7) alert/confirm (wrapper)',
+        ],
+        files: ['main.js'],
+        legacyTablist: 'Kroky úlohy JavaScript',
+      },
+    ];
+
+    for (const testCase of cases) {
+      await installDeterministicNetwork(page);
+      await page.goto(testCase.route);
+
+      const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
+      const ide = page.getByRole('region', { name: 'IDE' });
+      await expect(ide.getByRole('tablist', { name: 'Soubory IDE' })).toBeVisible();
+      await expect(ide.getByRole('tab', { name: 'Řešení', exact: true })).toBeVisible();
+      await expect(ide.getByRole('tab', { name: 'Řešení', exact: true })).toHaveAttribute(
+        'data-solution-tab',
+        'true',
+      );
+      await ide.getByRole('tab', { name: 'Řešení', exact: true }).click();
+      await expect(ide.locator('[data-solution-panel="true"]')).toBeVisible();
+      await expect(ide.locator('[data-solution-panel="true"] .cm-content').first()).toHaveAttribute(
+        'contenteditable',
+        'false',
+      );
+      for (const file of testCase.files) {
+        await expect(ide.getByRole('tab', { name: file, exact: true })).toBeVisible();
+      }
+      await expect(page.getByRole('tablist', { name: testCase.legacyTablist })).toHaveCount(0);
+      for (const task of testCase.tasks) {
+        await expect(outline.getByRole('button', { name: task, exact: true })).toBeVisible();
+      }
+    }
+  });
 });
