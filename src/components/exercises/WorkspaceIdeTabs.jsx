@@ -1,12 +1,4 @@
-import React, {
-  cloneElement,
-  isValidElement,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { cloneElement, isValidElement, useId, useMemo, useRef, useState } from 'react';
 
 function normalizeStudentFiles(files) {
   if (!Array.isArray(files)) return [];
@@ -37,34 +29,8 @@ function solutionPanel(panel) {
 }
 
 function ReadOnlySolutionPanel({ panel }) {
-  const panelRef = useRef(null);
-
-  useEffect(() => {
-    const root = panelRef.current;
-    if (!root) return undefined;
-
-    const markCodeMirrorContentReadOnly = () => {
-      root.querySelectorAll('.cm-content').forEach((content) => {
-        content.setAttribute('contenteditable', 'false');
-        content.setAttribute('aria-readonly', 'true');
-      });
-    };
-
-    markCodeMirrorContentReadOnly();
-    const observer = new MutationObserver(markCodeMirrorContentReadOnly);
-    observer.observe(root, { attributes: true, childList: true, subtree: true });
-    return () => observer.disconnect();
-  }, [panel]);
-
   return (
-    <div
-      ref={panelRef}
-      data-solution-panel="true"
-      aria-readonly="true"
-      contentEditable={false}
-      onBeforeInput={(event) => event.preventDefault()}
-      className="min-w-0"
-    >
+    <div data-solution-panel="true" aria-readonly="true" className="min-w-0">
       {solutionPanel(panel)}
     </div>
   );

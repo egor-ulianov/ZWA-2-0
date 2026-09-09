@@ -67,6 +67,8 @@ export default function SyntaxCodeEditor({
   language = 'css',
   label,
   minHeight = '450px',
+  editable = true,
+  readOnly = false,
 }) {
   const extensions = useMemo(() => {
     const languageExtension = LANGUAGE_EXTENSIONS[language] || css;
@@ -94,6 +96,8 @@ export default function SyntaxCodeEditor({
           foldGutter: false,
         }}
         indentWithTab
+        editable={editable}
+        readOnly={readOnly}
         className="overflow-hidden rounded-xl border border-zinc-200/60 text-xs leading-5 dark:border-zinc-700"
       />
     </div>
