@@ -16,6 +16,7 @@ import Code from './src/components/lesson/Code.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 import LessonTaskTabs from './src/components/exercises/LessonTaskTabs.jsx';
+import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
 
 function SectionCard({ title, children, footer }) {
   return (
@@ -518,15 +519,13 @@ function FormTaskEditor({ tasks, activeTaskId, onTaskChange }) {
         onChange={onTaskChange}
         label="Kroky úlohy formulářů"
       />
-      <label className="block text-sm font-medium" htmlFor="forms-task-editor">
-        Editor HTML formuláře
-      </label>
-      <textarea
-        id="forms-task-editor"
-        aria-label="Editor HTML formuláře"
+      <label className="block text-sm font-medium">Editor HTML formuláře</label>
+      <SyntaxCodeEditor
         value={html}
-        onChange={(e) => setHtml(e.target.value)}
-        className="min-h-[280px] w-full rounded border p-2 font-mono text-sm bg-white dark:bg-zinc-900"
+        onChange={setHtml}
+        language="html"
+        label="Editor HTML formuláře"
+        minHeight="280px"
       />
       <div className="text-xs" aria-label="Průběžná nápověda editoru">
         <p className="font-medium text-zinc-700 dark:text-zinc-200">Průběžná nápověda editoru</p>

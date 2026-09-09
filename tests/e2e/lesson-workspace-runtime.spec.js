@@ -190,6 +190,22 @@ test.describe('runtime lesson task workspaces', () => {
     }
   });
 
+  test('HTML and form task editors use the local HTML syntax editor', async ({ page }) => {
+    for (const route of [
+      '/interactive-zwa-1-html5?slide=tasks',
+      '/interactive-zwa-2-forms?slide=tasks',
+    ]) {
+      await installDeterministicNetwork(page);
+      await page.goto(route);
+
+      const ide = page.getByRole('region', { name: 'IDE' });
+      await expect(ide.locator('[data-code-editor="syntax"][data-language="html"]')).toHaveCount(1);
+      await expect(ide.locator('.cm-editor')).toHaveCount(1);
+      await expect(ide.locator('.cm-content')).toHaveCount(1);
+      await expect(ide.locator('.cm-gutters')).toHaveCount(1);
+    }
+  });
+
   test.describe('the unified action invokes the existing runtime checker', () => {
     const checkerCases = [
       {

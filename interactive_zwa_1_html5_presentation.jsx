@@ -16,6 +16,7 @@ import Code from './src/components/lesson/Code.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 import LessonTaskTabs from './src/components/exercises/LessonTaskTabs.jsx';
+import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
 
 function HtmlPreview({ html, title = 'Náhled HTML playgroundu' }) {
   return (
@@ -155,15 +156,13 @@ function HtmlTaskEditor({ tasks, activeTaskId, onTaskChange }) {
         onChange={onTaskChange}
         label="Kroky úlohy HTML"
       />
-      <label className="block text-sm font-medium" htmlFor="html-task-editor">
-        Editor HTML pro úkol
-      </label>
-      <textarea
-        id="html-task-editor"
-        aria-label="Editor HTML pro úkol"
+      <label className="block text-sm font-medium">Editor HTML pro úkol</label>
+      <SyntaxCodeEditor
         value={html}
-        onChange={(e) => setHtml(e.target.value)}
-        className="min-h-[360px] w-full rounded-lg border p-3 font-mono text-sm bg-white dark:bg-zinc-900"
+        onChange={setHtml}
+        language="html"
+        label="Editor HTML pro úkol"
+        minHeight="360px"
       />
       <div className="text-xs" aria-label="Průběžná nápověda editoru">
         <p className="font-medium text-zinc-700 dark:text-zinc-200">Průběžná nápověda editoru</p>
