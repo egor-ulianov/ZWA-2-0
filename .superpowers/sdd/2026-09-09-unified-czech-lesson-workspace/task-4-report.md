@@ -37,3 +37,23 @@ Implemented Task 4 for lessons 7–12 in the shared checkout.
 - `feat: unify static lesson task workspaces`
 
 The pre-existing untracked `.env.local` was not staged.
+
+## Review correction
+
+- Strengthened the static E2E coverage to edit each seeded draft, run a failing static check with a
+  non-executable source payload, restore the draft, and verify all bounded markers pass.
+- Added request interception/assertions proving the static check causes no external request and a
+  browser-global assertion proving the edited source is not executed.
+- Added projector-mode coverage for all six routes, verifying the complete workspace and private
+  materials are omitted.
+- Added student-mode coverage for the lesson 7 click challenge and a PHP `ClickToRevealSolution`
+  reveal.
+
+Verification command:
+
+- `npm run test:e2e -- tests/e2e/lesson-workspace-static.spec.js` — 13 passed (6 interaction,
+  6 projector-boundary, 1 reveal-preservation test).
+- `node --test tests/unit/static-task-checks.test.js tests/unit/lessons.test.js` — 10 passed.
+- `git diff --check` — passed.
+
+Follow-up test commit: `eb35780 test: strengthen static lesson workspace coverage`.
