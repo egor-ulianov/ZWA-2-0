@@ -25,6 +25,22 @@ The new E2E file was written before source edits. The required RED run failed si
 - `npm run build` — passed with Next.js 16.3.4.
 - `git diff --check` — passed.
 
+## Final network P2 follow-up
+
+- Replaced the generic network “checked” marker with truthful evaluation of all four existing command-log predicates (DNS, local interface, routing, and TCP/HTTP).
+- Partial command logs show bounded Czech unmet-requirement results and never expose command strings or solution steps; the pass state appears only when all four requirements are satisfied.
+- The terminal remains the deterministic local interpreter and does not perform network or filesystem I/O.
+- Updated runtime E2E to verify failure after only the DNS command, then success after all four simulated commands.
+
+## Final network verification
+
+- `npm run test:e2e -- tests/e2e/lesson-workspace-runtime.spec.js --grep "network checker reports unmet requirements"` — 1 passed (RED before implementation, then GREEN).
+- `npm run test:e2e -- tests/e2e/lesson-workspace-runtime.spec.js tests/e2e/playground-isolation.spec.js` — 27 passed.
+- `npm run lint` — passed with `--max-warnings=0`.
+- `npm run format:check` — passed.
+- `npm run build` — passed with Next.js 16.3.4.
+- `git diff --check` — passed.
+
 ## Concerns
 
 - The networking E2E ignores pre-command analytics requests from the existing app instrumentation and asserts that entering a simulated command adds no external request.

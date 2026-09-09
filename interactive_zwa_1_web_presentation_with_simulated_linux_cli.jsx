@@ -963,47 +963,59 @@ function TaskChecklist({ commandLog, checked = false }) {
   const reqs = [
     {
       id: 'dns',
-      label: 'Proveďte DNS dotaz (host/nslookup) pro cvut.cz',
+      label: 'Požadavek: ověření DNS',
       test: (log) => /^(host|nslookup)\s+.*cvut\.cz/i.test(log),
     },
     {
       id: 'ifconfig',
-      label: 'Zobrazte konfiguraci rozhraní (ifconfig)',
+      label: 'Požadavek: ověření místní konfigurace',
       test: (log) => /^ifconfig/i.test(log) || /^ipconfig/i.test(log),
     },
     {
       id: 'traceroute',
-      label: 'Proveďte traceroute na fel.cvut.cz',
+      label: 'Požadavek: ověření směrování',
       test: (log) => /^traceroute\s+.*fel\.cvut\.cz/i.test(log),
     },
     {
       id: 'telnet',
-      label: 'Vyzkoušejte telnet na port 80 (GET /)',
+      label: 'Požadavek: ověření TCP/HTTP',
       test: (log) => /^telnet\s+.+\s+80/i.test(log),
     },
   ];
-  const last = commandLog[commandLog.length - 1] || '';
+  const checks = reqs.map((requirement) => ({
+    ...requirement,
+    ok: commandLog.some((command) => requirement.test(command)),
+  }));
+  const allSatisfied = checks.every((check) => check.ok);
   return (
     <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4 text-sm">
       <div className="font-semibold mb-2">Kontrolní seznam</div>
-      {checked && <div className="mb-2 text-emerald-700">Kontrolní seznam ověřen</div>}
+      {checked && (
+        <div className={clsx('mb-2', allSatisfied ? 'text-emerald-700' : 'text-rose-700')}>
+          {allSatisfied ? 'Kontrola úspěšná' : 'Kontrola neúspěšná'}
+        </div>
+      )}
       <ul className="space-y-1">
-        {reqs.map((r) => {
-          const ok = commandLog.some((c) => r.test(c));
+        {checks.map((check) => {
           return (
-            <li key={r.id} className="flex items-center gap-2">
+            <li key={check.id} className="flex items-center gap-2">
               <span
                 className={clsx(
                   'h-2.5 w-2.5 rounded-full border',
-                  ok ? 'bg-emerald-500 border-emerald-500' : 'bg-zinc-300 border-zinc-400',
+                  check.ok ? 'bg-emerald-500 border-emerald-500' : 'bg-zinc-300 border-zinc-400',
                 )}
               />
-              <span>{r.label}</span>
+              <span>
+                {check.label}
+                {checked && !check.ok ? ' — nesplněn' : ''}
+              </span>
             </li>
           );
         })}
       </ul>
-      <div className="mt-2 text-xs text-zinc-500">Poslední příkaz: {last || '(zatím nic)'}</div>
+      <div className="mt-2 text-xs text-zinc-500">
+        Zaznamenané vstupy: {Math.min(commandLog.length, 50)}
+      </div>
     </div>
   );
 }

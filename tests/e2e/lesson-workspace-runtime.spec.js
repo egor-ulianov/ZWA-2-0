@@ -59,16 +59,6 @@ test.describe('runtime lesson task workspaces', () => {
         result: /Chyba validace:/,
       },
       {
-        route: '/interactive-zwa-1?slide=tasks-net',
-        prepare: async (page) => {
-          const commandInput = page.getByPlaceholder(/type a command and press Enter/i);
-          await commandInput.fill('host cvut.cz');
-          await commandInput.press('Enter');
-          await expect(page.getByText(/cvut\.cz has address 147\.32\.0\.1/)).toBeVisible();
-        },
-        result: 'Kontrolní seznam ověřen',
-      },
-      {
         route: '/interactive-zwa-2?slide=tasks',
         state: async (page) => {
           await expect(page.locator('iframe[title="CSS validation sandbox"]')).toHaveCount(1);
@@ -88,7 +78,6 @@ test.describe('runtime lesson task workspaces', () => {
       test(`${checkerCase.route} runs its existing checker`, async ({ page }) => {
         await installDeterministicNetwork(page);
         await page.goto(checkerCase.route);
-        await checkerCase.prepare?.(page);
         await page
           .getByRole('region', { name: 'Náhled a testy' })
           .first()
@@ -112,6 +101,37 @@ test.describe('runtime lesson task workspaces', () => {
       await expect(page.getByRole('region', { name: 'Náhled a testy' })).toHaveCount(0);
     });
   }
+
+  test('network checker reports unmet requirements and passes after all simulated commands', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+    await page.goto('/interactive-zwa-1?slide=tasks-net');
+
+    const workspace = page.getByRole('region', { name: 'Náhled a testy' }).first();
+    const commandInput = page.getByPlaceholder(/type a command and press Enter/i);
+    const runTests = workspace.getByRole('button', { name: 'Spustit testy', exact: true });
+
+    await commandInput.fill('host cvut.cz');
+    await commandInput.press('Enter');
+    await expect(page.getByText(/cvut\.cz has address 147\.32\.0\.1/)).toBeVisible();
+    await runTests.click();
+
+    await expect(workspace.getByText('Kontrola neúspěšná')).toBeVisible();
+    await expect(
+      workspace.getByText('Požadavek: ověření místní konfigurace — nesplněn'),
+    ).toBeVisible();
+    await expect(workspace).not.toContainText(/ifconfig|traceroute|telnet|host cvut\.cz/i);
+
+    for (const command of ['ifconfig', 'traceroute fel.cvut.cz', 'telnet zwa.toad.cz 80']) {
+      await commandInput.fill(command);
+      await commandInput.press('Enter');
+    }
+    await runTests.click();
+
+    await expect(workspace.getByText('Kontrola úspěšná')).toBeVisible();
+    await expect(workspace.getByText(/nesplněn/)).toHaveCount(0);
+  });
 
   test('network task keeps terminal commands local and makes no external requests', async ({
     page,
