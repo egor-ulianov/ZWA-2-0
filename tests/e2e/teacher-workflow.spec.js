@@ -498,6 +498,69 @@ test('teacher scopes failed attendance retry and CSV import to the selected date
   await expect(page.getByRole('button', { name: 'Export CSV' })).toBeEnabled();
 });
 
+test('teacher completes an alternate-date CSV import without leaving attendance saving', async ({
+  page,
+}) => {
+  await installDeterministicNetwork(page);
+
+  const alternateDate = '2030-02-03';
+  let attendancePostCount = 0;
+  const attendanceMaps = {};
+  const postedBodies = [];
+  await page.route('**/api/teacher/me', (route) => fulfillJson(route, { username: 'teacher' }));
+  await page.route('**/api/students', (route) =>
+    fulfillJson(route, {
+      count: 2,
+      students: [{ username: 'alice' }, { username: 'bob' }],
+    }),
+  );
+  await page.route('**/api/attendance**', async (route) => {
+    if (route.request().method() === 'GET') {
+      const url = new URL(route.request().url());
+      if (!url.searchParams.has('date')) return fulfillJson(route, { overview: {} });
+      const requestedDate = url.searchParams.get('date');
+      return fulfillJson(route, {
+        date: requestedDate,
+        map: attendanceMaps[requestedDate] || { alice: false, bob: false },
+        revision: attendanceMaps[requestedDate] ? 2 : 1,
+      });
+    }
+    attendancePostCount += 1;
+    const body = JSON.parse(route.request().postData() || '{}');
+    postedBodies.push(body);
+    attendanceMaps[body.date] = body.map;
+    return fulfillJson(route, { ok: true, revision: 2 });
+  });
+  await page.route('**/api/progress', (route) => fulfillJson(route, { items: [] }));
+
+  await page.goto('/attendance');
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toContainText(
+    'Present: 0 of 2',
+  );
+
+  const dateInput = page.getByLabel('Attendance date');
+  await page.getByLabel('Import CSV').setInputFiles({
+    name: 'attendance-alternate.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(`username,present,date\r\nalice,1,${alternateDate}\r\n`),
+  });
+  await expect(page.getByRole('heading', { name: 'Import preview' })).toBeVisible();
+  await page.getByRole('button', { name: 'Confirm and persist import' }).click();
+
+  await expect.poll(() => attendancePostCount).toBe(1);
+  await expect(dateInput).toHaveValue(alternateDate);
+  await expect(dateInput).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Mark visible students present' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Export CSV' })).toBeEnabled();
+  await expect(page.getByRole('status').filter({ hasText: 'Attendance saved.' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Saving attendance…' })).toHaveCount(0);
+  expect(postedBodies[0]).toMatchObject({ date: alternateDate, map: { alice: true, bob: false } });
+  await expect(page.getByRole('region', { name: 'Active attendance day' })).toContainText(
+    'Present: 1 of 2',
+  );
+});
+
 test('teacher retry persists the recovered attendance map before the next edit', async ({
   page,
 }) => {

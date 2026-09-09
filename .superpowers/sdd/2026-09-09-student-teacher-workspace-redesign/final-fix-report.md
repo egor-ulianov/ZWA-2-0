@@ -51,3 +51,36 @@ Next.js production build completed successfully; all routes generated.
 ```
 
 The test suites emit expected error-path log lines while exercising safe failure handling; all associated tests passed. `.env.local` was pre-existing untracked workspace state and was not modified or staged.
+
+## Follow-up P1: alternate-date CSV import race
+
+Added a deterministic attendance regression for importing a CSV whose date differs from the selected date. Before the fix, the POST succeeded but the UI never reached `Attendance saved.` because persistence retained the old render closure/version.
+
+The follow-up fix introduces a selected-date generation separate from the request-load token. Programmatic date selection during import advances that generation; `confirmImport`, `persist`, and `refreshAttendanceDate` use the selected-date ref/generation for all post-await state checks. Conflict reloads now either complete for the selected date or safely become stale without leaving the loading barrier set.
+
+RED:
+
+```text
+CI=1 npm run test:e2e -- tests/e2e/teacher-workflow.spec.js -g "alternate-date CSV import"
+1 failed: expected Attendance saved. status was not visible after the successful alternate-date POST.
+```
+
+GREEN:
+
+```text
+npm run build
+CI=1 npm run test:e2e -- tests/e2e/teacher-workflow.spec.js -g "alternate-date CSV import"
+1 passed
+
+CI=1 npm run test:e2e -- tests/e2e/teacher-workflow.spec.js
+8 passed
+
+npm run test:unit
+113 passed
+
+npm run lint
+passed with zero errors/warnings.
+
+npm run format:check
+All matched files use Prettier code style!
+```

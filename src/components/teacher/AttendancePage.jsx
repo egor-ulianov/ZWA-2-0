@@ -93,6 +93,7 @@ export default function AttendancePage() {
   const dateLoadVersionRef = React.useRef(0);
   const verifiedAttendanceDateRef = React.useRef(null);
   const selectedDateRef = React.useRef(date);
+  const selectedDateVersionRef = React.useRef(0);
   selectedDateRef.current = date;
 
   React.useEffect(() => () => {
@@ -116,12 +117,12 @@ export default function AttendancePage() {
     }
     confirmedRef.current.set(targetDate, snapshot);
     setOverview((current) => ({ ...current, [targetDate]: snapshot }));
-    if (targetDate === date) {
+    if (targetDate === selectedDateRef.current) {
       verifiedAttendanceDateRef.current = targetDate;
       attendanceRef.current = snapshot;
       setAttendance(snapshot);
     }
-  }, [date]);
+  }, []);
 
   const readAttendanceDate = React.useCallback(async (targetDate, signal) => {
     const data = await client(`/api/attendance?date=${encodeURIComponent(targetDate)}`, { signal });
@@ -209,12 +210,13 @@ export default function AttendancePage() {
     setAttendanceDateError('');
     try {
       const { map, revision } = await reloadAttendance(targetDate);
-      if (dateLoadVersionRef.current !== requestVersion || targetDate !== date) return { stale: true };
+      if (dateLoadVersionRef.current !== requestVersion
+        || targetDate !== selectedDateRef.current) return { stale: true };
       applyAttendance(targetDate, map, revision);
       setError('');
       return { stale: false };
     } catch (cause) {
-      if (dateLoadVersionRef.current === requestVersion && targetDate === date
+      if (dateLoadVersionRef.current === requestVersion && targetDate === selectedDateRef.current
         && !isAbortError(cause) && !isUnauthorized(cause)) {
         const message = cause.message || 'Unable to reload attendance';
         confirmedRef.current.delete(targetDate);
@@ -227,7 +229,7 @@ export default function AttendancePage() {
       }
       throw cause;
     } finally {
-      if (dateLoadVersionRef.current === requestVersion && targetDate === date) {
+      if (dateLoadVersionRef.current === requestVersion && targetDate === selectedDateRef.current) {
         setAttendanceDateLoading(false);
       }
     }
@@ -253,7 +255,7 @@ export default function AttendancePage() {
   }
 
   function persist(targetDate, nextMap) {
-    const dateLoadVersion = dateLoadVersionRef.current;
+    const selectedDateVersion = selectedDateVersionRef.current;
     const version = (saveVersionsRef.current.get(targetDate) || 0) + 1;
     saveVersionsRef.current.set(targetDate, version);
     setSaveError(null);
@@ -264,7 +266,7 @@ export default function AttendancePage() {
       confirmedRef.current.set(targetDate, snapshot);
       setOverview((current) => ({ ...current, [targetDate]: snapshot }));
       const isCurrentDate = targetDate === selectedDateRef.current
-        && dateLoadVersionRef.current === dateLoadVersion;
+        && selectedDateVersionRef.current === selectedDateVersion;
       if (isCurrentDate) {
         verifiedAttendanceDateRef.current = targetDate;
         attendanceRef.current = snapshot;
@@ -279,7 +281,7 @@ export default function AttendancePage() {
       if (cause.status === 409) {
         queue.clearPending(cause);
         const isCurrentDate = targetDate === selectedDateRef.current
-          && dateLoadVersionRef.current === dateLoadVersion;
+          && selectedDateVersionRef.current === selectedDateVersion;
         if (isCurrentDate) {
           setAttendanceStatus({
             kind: 'conflict',
@@ -289,6 +291,7 @@ export default function AttendancePage() {
         try {
           const refresh = await refreshAttendanceDate(targetDate);
           if (!refresh.stale && targetDate === selectedDateRef.current
+            && selectedDateVersionRef.current === selectedDateVersion
             && saveVersionsRef.current.get(targetDate) === version) {
             setSaveError({
               message: 'Attendance changed on the server. The latest values were reloaded; review and retry.',
@@ -300,6 +303,7 @@ export default function AttendancePage() {
         } catch (reloadError) {
           if (!isAbortError(reloadError) && !isUnauthorized(reloadError)
             && targetDate === selectedDateRef.current
+            && selectedDateVersionRef.current === selectedDateVersion
             && saveVersionsRef.current.get(targetDate) === version) {
             const message = reloadError.message || 'Unable to reload attendance after a conflict';
             setAttendanceStatus({ kind: 'error', message: `Attendance reload failed: ${message}` });
@@ -307,7 +311,7 @@ export default function AttendancePage() {
           }
         }
       } else if (targetDate === selectedDateRef.current
-        && dateLoadVersionRef.current === dateLoadVersion
+        && selectedDateVersionRef.current === selectedDateVersion
         && saveVersionsRef.current.get(targetDate) === version) {
         attendanceRef.current = confirmedRef.current.get(targetDate) || {};
         setAttendance(attendanceRef.current);
@@ -382,26 +386,50 @@ export default function AttendancePage() {
   function confirmImport() {
     if (attendanceDateLoading || attendanceDateError || !importDraft?.entries.length || !importDraft.date) return;
     const draft = importDraft;
+    const sourceDateVersion = selectedDateVersionRef.current;
+    let importDateVersion = sourceDateVersion;
     setSaveError(null);
     (async () => {
       try {
-        const baseResponse = draft.date === date
+        const baseResponse = draft.date === selectedDateRef.current
           ? { map: attendanceRef.current, revision: revisionsRef.current.get(draft.date) }
           : await readAttendanceDate(draft.date);
+        if (selectedDateVersionRef.current !== sourceDateVersion) return;
         if (Number.isSafeInteger(baseResponse.revision) && baseResponse.revision >= 0) {
           revisionsRef.current.set(draft.date, baseResponse.revision);
         }
         const base = baseResponse.map;
         const next = { ...base, ...Object.fromEntries(draft.entries.map((entry) => [entry.username, entry.present])) };
-        setDate(draft.date);
+        if (draft.date !== selectedDateRef.current) {
+          selectedDateRef.current = draft.date;
+          selectedDateVersionRef.current += 1;
+          importDateVersion = selectedDateVersionRef.current;
+          dateLoadVersionRef.current += 1;
+          setAttendanceDateLoading(true);
+          setAttendanceDateError('');
+          setError('');
+          setSaveError(null);
+          setImportDraft(null);
+          setAttendanceStatus({ kind: 'idle', message: 'Attendance ready.' });
+          verifiedAttendanceDateRef.current = null;
+          attendanceRef.current = {};
+          setAttendance({});
+          setDate(draft.date);
+        }
         attendanceRef.current = next;
         setAttendance(next);
         await persist(draft.date, next);
+        if (selectedDateRef.current !== draft.date
+          || selectedDateVersionRef.current !== importDateVersion) return;
         const readback = await readAttendanceDate(draft.date);
+        if (selectedDateRef.current !== draft.date
+          || selectedDateVersionRef.current !== importDateVersion) return;
         applyAttendance(draft.date, readback.map, readback.revision);
         setImportDraft(null);
       } catch (cause) {
         if (isAbortError(cause) || isUnauthorized(cause)) return;
+        if (selectedDateRef.current !== draft.date
+          || selectedDateVersionRef.current !== importDateVersion) return;
         setSaveError((current) => current?.date === draft.date && current.action
           ? current
           : { message: cause.message || 'Unable to persist or verify CSV import', date: draft.date, action: 'reload' });
@@ -411,7 +439,7 @@ export default function AttendancePage() {
 
   function retrySave() {
     if (attendanceDateLoading || !saveError?.action) return;
-    if (saveError.date !== date) {
+    if (saveError.date !== selectedDateRef.current) {
       setSaveError(null);
       return;
     }
@@ -566,6 +594,7 @@ export default function AttendancePage() {
               disabled={attendanceSaving || attendanceDateLoading}
               onChange={(event) => {
                 selectedDateRef.current = event.target.value;
+                selectedDateVersionRef.current += 1;
                 dateLoadVersionRef.current += 1;
                 setAttendanceDateLoading(true);
                 setAttendanceDateError('');
