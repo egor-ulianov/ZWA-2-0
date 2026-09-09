@@ -135,8 +135,11 @@ export default function StudentProgress() {
                 label="Evaluations"
                 value={formatCount(evaluationCount, 'evaluation', 'evaluations')}
               />
-              <DataItem label="Task checked" value={p.assignment_task_checked ? 'Yes' : 'No'} />
-              <DataItem label="Mid-term" value={p.assignment_midterm_ok ? 'Yes' : 'No'} />
+              <DataItem
+                label="Task checked"
+                value={formatBooleanValue(p.assignment_task_checked)}
+              />
+              <DataItem label="Mid-term" value={formatBooleanValue(p.assignment_midterm_ok)} />
             </div>
           </section>
 
@@ -148,8 +151,11 @@ export default function StudentProgress() {
               </h2>
             </div>
             <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <DataItem label="Task checked" value={p.assignment_task_checked ? 'Yes' : 'No'} />
-              <DataItem label="Mid-term" value={p.assignment_midterm_ok ? 'Yes' : 'No'} />
+              <DataItem
+                label="Task checked"
+                value={formatBooleanValue(p.assignment_task_checked)}
+              />
+              <DataItem label="Mid-term" value={formatBooleanValue(p.assignment_midterm_ok)} />
               <DataItem label="Partner" value={p.assignment_partner || '—'} />
               <DataItem label="Final points" value={p.assignment_final_points ?? '—'} />
             </div>
@@ -260,6 +266,11 @@ export default function StudentProgress() {
 
 function formatCount(count, singular, plural) {
   return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function formatBooleanValue(value) {
+  if (typeof value !== 'boolean') return '—';
+  return value ? 'Yes' : 'No';
 }
 
 function DataItem({ label, value, className }) {

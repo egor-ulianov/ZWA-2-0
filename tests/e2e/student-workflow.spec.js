@@ -109,3 +109,29 @@ test('student can use the real login and progress flow against the test provider
   await expect(page.getByText('2026-09-08')).toBeVisible();
   await expect(page.getByText('Present', { exact: true })).toBeVisible();
 });
+
+test('student record marks missing assignment checks as unavailable', async ({ page }) => {
+  await installDeterministicNetwork(page);
+
+  await page.route('**/api/student/me', (route) =>
+    fulfillJson(route, { username: 'alice', progress: null }),
+  );
+  await page.route('**/api/student/attendance', (route) =>
+    fulfillJson(route, { username: 'alice', attendance: {} }),
+  );
+  await page.route('**/api/student/grades', (route) =>
+    fulfillJson(route, { username: 'alice', grades: {} }),
+  );
+
+  await page.goto('/student/progress');
+  await expect(page.getByRole('heading', { name: 'Your study record' })).toBeVisible();
+
+  for (const regionName of ['At a glance', 'Assignment record']) {
+    const region = page.getByRole('region', { name: regionName });
+    for (const label of ['Task checked', 'Mid-term']) {
+      const item = region.getByText(label, { exact: true }).locator('..');
+      await expect(item).toContainText('—');
+      await expect(item).not.toContainText('No');
+    }
+  }
+});
