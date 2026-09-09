@@ -123,13 +123,11 @@ test.describe('F2 lesson composition and deep links', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-5-js?slide=theory');
-    await expect(
-      page.getByRole('region', { name: 'Variables and types', exact: true }),
-    ).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Zadání', exact: true })).toHaveCount(0);
     await expect(page.getByTitle('JavaScript DOM sandbox')).toHaveCount(0);
 
     await page.goto('/interactive-zwa-5-js?slide=tasks');
-    const workspace = page.getByRole('region', { name: 'Variables and types', exact: true });
+    const workspace = page.locator('[data-projector-private="exercise-workspace"]');
     await expect(workspace).toBeVisible();
     await expect(workspace.getByRole('textbox')).toBeVisible();
     await expect(workspace.getByTitle('JavaScript DOM sandbox')).toBeVisible();

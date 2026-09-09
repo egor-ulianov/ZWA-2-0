@@ -180,14 +180,13 @@ export function ExerciseWorkspace({
               <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                 Soubory
               </p>
-              <div className="mt-2 flex flex-wrap gap-1" role="tablist" aria-label="Soubory">
+              <div className="mt-2 flex flex-wrap gap-1" role="group" aria-label="Soubory">
                 {normalizedFiles.map((file) => (
                   <button
                     key={file.id}
                     type="button"
-                    role="tab"
-                    aria-selected={file.id === currentFileId}
-                    className="rounded-md px-2 py-1 text-left text-xs font-medium text-zinc-700 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 aria-selected:bg-indigo-50 aria-selected:text-indigo-800 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:aria-selected:bg-indigo-950/50 dark:aria-selected:text-indigo-200"
+                    aria-pressed={file.id === currentFileId}
+                    className="rounded-md px-2 py-1 text-left text-xs font-medium text-zinc-700 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 aria-pressed:bg-indigo-50 aria-pressed:text-indigo-800 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:aria-pressed:bg-indigo-950/50 dark:aria-pressed:text-indigo-200"
                     onClick={() => handleFileChange(file.id)}
                   >
                     {file.name}
