@@ -87,7 +87,7 @@ test.describe('Czech unified lesson task workspace integration', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-5-js?slide=tasks');
-    const editor = page.locator('textarea').first();
+    const editor = page.getByRole('textbox').first();
     await editor.focus();
 
     for (const key of ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Home', 'End']) {

@@ -124,6 +124,39 @@ test.describe('runtime lesson task workspaces', () => {
     await expect(assignment).toContainText('Georgia');
   });
 
+  test('CSS II and JavaScript task IDEs provide syntax-aware student editors', async ({ page }) => {
+    for (const route of [
+      '/interactive-zwa-2?slide=tasks',
+      '/interactive-zwa-5-css-ii?slide=tasks',
+      '/interactive-zwa-5-js?slide=tasks',
+    ]) {
+      await installDeterministicNetwork(page);
+      await page.goto(route);
+
+      const ide = page.getByRole('region', { name: 'IDE' });
+      await expect(ide.locator('.cm-editor')).not.toHaveCount(0);
+    }
+  });
+
+  test('task choice arrow keys stay on the task slide', async ({ page }) => {
+    for (const route of [
+      '/interactive-zwa-5-css-ii?slide=tasks',
+      '/interactive-zwa-5-js?slide=tasks',
+    ]) {
+      await installDeterministicNetwork(page);
+      await page.goto(route);
+
+      const taskChoice = route.includes('5-js')
+        ? page.getByRole('tab').nth(1)
+        : route.includes('/interactive-zwa-2?')
+          ? page.getByRole('tab').first()
+          : page.getByRole('button', { name: 'Přejít na úlohu 2' }).first();
+      await taskChoice.focus();
+      await taskChoice.press('ArrowLeft');
+      await expect(page).toHaveURL(/slide=tasks/);
+    }
+  });
+
   test('HTML and form task selectors keep students in the unified workspace', async ({ page }) => {
     const cases = [
       {

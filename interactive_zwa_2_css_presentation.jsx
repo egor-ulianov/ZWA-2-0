@@ -256,6 +256,18 @@ function CssTaskStepTabs({ steps, activeIndex, onChange }) {
   );
 
   const handleKeyDown = (event, index) => {
+    const isTaskNavigationKey = [
+      'ArrowRight',
+      'ArrowDown',
+      'ArrowLeft',
+      'ArrowUp',
+      'Home',
+      'End',
+    ].includes(event.key);
+    if (isTaskNavigationKey) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     const nextIndex =
       event.key === 'ArrowRight' || event.key === 'ArrowDown'
         ? Math.min(index + 1, steps.length - 1)
@@ -267,7 +279,6 @@ function CssTaskStepTabs({ steps, activeIndex, onChange }) {
               ? steps.length - 1
               : index;
     if (nextIndex === index) return;
-    event.preventDefault();
     focusStep(nextIndex);
   };
 

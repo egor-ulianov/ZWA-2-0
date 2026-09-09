@@ -930,6 +930,14 @@ function QuizHtmlBasics() {
 
 function SectionTabs({ theory, examples, tryContent, task }) {
   const [tab, setTab] = useState('theory');
+
+  function keepTaskChoiceKeyboardLocal(event) {
+    if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
   return (
     <div className="mt-4">
       <div className="mb-2 flex flex-wrap gap-2">
@@ -941,6 +949,7 @@ function SectionTabs({ theory, examples, tryContent, task }) {
         ].map((t) => (
           <button
             key={t.id}
+            type="button"
             className={clsx(
               'px-2 py-1 rounded border text-xs',
               tab === t.id
@@ -948,6 +957,7 @@ function SectionTabs({ theory, examples, tryContent, task }) {
                 : 'bg-white/70 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800',
             )}
             onClick={() => setTab(t.id)}
+            onKeyDown={keepTaskChoiceKeyboardLocal}
           >
             {t.label}
           </button>
@@ -1032,6 +1042,9 @@ function TerminalPanel({ clearKey, onCommand }) {
             <span className="h-3 w-3 rounded-full bg-amber-400/90" />
             <span className="h-3 w-3 rounded-full bg-green-500/90" />
           </div>
+          <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+            IDE — simulovaný Linux terminál
+          </span>
           <div className="flex items-center gap-2 text-xs text-zinc-500">
             <kbd className="px-2 py-1 rounded bg-zinc-200/60 dark:bg-zinc-800">Enter</kbd>
             <span>spustit příkaz</span>
@@ -1043,8 +1056,9 @@ function TerminalPanel({ clearKey, onCommand }) {
         </div>
       </div>
       <div className="mt-3 text-xs text-zinc-500">
-        Poznámka: Tento terminál je výuková simulace (bez skutečných síťových volání). Výstupy jsou
-        zjednodušené pro podporu úloh.
+        <span className="font-semibold">IDE — simulovaný Linux terminál.</span> Tento terminál je
+        výuková simulace (bez skutečných síťových volání). Výstupy jsou zjednodušené pro podporu
+        úloh.
       </div>
     </div>
   );
@@ -1098,8 +1112,13 @@ export default function App() {
               onRunTests={() => setChecklistChecked(true)}
               task={
                 <>
-                  <p>V terminálu proveďte DNS, síťové, směrovací a TCP/HTTP příkazy.</p>
-                  <p>Výsledky jsou deterministické a zůstávají pouze v tomto okně prohlížeče.</p>
+                  <p>
+                    V simulovaném Linux terminálu splňte čtyři kontroly: DNS pro{' '}
+                    <Code>cvut.cz</Code>, místní konfiguraci přes <Code>ifconfig</Code>, trasu přes{' '}
+                    <Code>traceroute fel.cvut.cz</Code> a TCP/HTTP přes{' '}
+                    <Code>telnet zwa.toad.cz 80</Code>.
+                  </p>
+                  <p>Poté v části Náhled a testy spusťte kontrolní seznam.</p>
                 </>
               }
               editor={<TerminalPanel clearKey={clearKey} onCommand={handleCommand} />}

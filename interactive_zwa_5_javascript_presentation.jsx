@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import memeImg from './src/interactive-zwa-6/image.png';
 import JsSandbox from './src/components/playground/JsSandbox';
-import ExerciseWorkspace from './src/components/exercises/ExerciseWorkspace.jsx';
 import { getJavaScriptDefinition } from './src/components/exercises/testDefinitions.js';
+import { runExerciseTests } from './src/components/exercises/testRunner.js';
+import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
 import { getLessonByNumber } from './src/config/lessons.js';
 import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
@@ -94,62 +95,201 @@ function getJsTemplates(stepIndex) {
   return { step: steps[idx], all: steps };
 }
 
-function JsPlayground({ stepIndex }) {
-  const templates = useMemo(() => getJsTemplates(stepIndex), [stepIndex]);
-  const [logs, setLogs] = useState([]);
-
-  // Keep the console scoped to the selected task, as in the original playground.
-  /* eslint-disable react-hooks/set-state-in-effect -- task changes define a new console session. */
-  useEffect(() => {
-    setLogs([]);
-  }, [stepIndex]);
-  /* eslint-enable react-hooks/set-state-in-effect */
-
-  function handleConsole(message) {
-    setLogs((current) => [...current, message].slice(-100));
+function JsTaskTabs({ steps, activeIndex, onChange }) {
+  function handleKeyDown(event, index) {
+    const direction =
+      event.key === 'ArrowRight' || event.key === 'ArrowDown'
+        ? 1
+        : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+          ? -1
+          : event.key === 'Home'
+            ? 'first'
+            : event.key === 'End'
+              ? 'last'
+              : null;
+    if (!direction) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const nextIndex =
+      direction === 'first'
+        ? 0
+        : direction === 'last'
+          ? steps.length - 1
+          : Math.min(Math.max(index + direction, 0), steps.length - 1);
+    onChange(nextIndex);
   }
 
   return (
-    <div>
-      <ExerciseWorkspace
-        key={`javascript-exercise-${stepIndex}`}
-        files={[
-          { id: 'main.js', name: 'main.js', language: 'javascript', source: templates.step.js },
-        ]}
-        activeFile="main.js"
-        onChangeFile={() => {}}
-        onRun={() => setLogs([])}
-        testDefinition={getJavaScriptDefinition(stepIndex)}
-        preview={
+    <div className="mb-3" role="tablist" aria-label="Kroky úlohy JavaScript">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        Vyberte úlohu
+      </p>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {steps.map((step, index) => (
+          <button
+            key={step.title}
+            type="button"
+            role="tab"
+            aria-selected={activeIndex === index}
+            tabIndex={activeIndex === index ? 0 : -1}
+            onClick={() => onChange(index)}
+            onKeyDown={(event) => handleKeyDown(event, index)}
+            className={clsx(
+              'shrink-0 rounded-lg border px-3 py-2 text-left text-sm font-medium',
+              activeIndex === index
+                ? 'border-indigo-600 bg-indigo-700 text-white'
+                : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200',
+            )}
+          >
+            {step.title}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function JsCodeEditor({ source, onChange }) {
+  return (
+    <SyntaxCodeEditor
+      value={source}
+      minHeight="320px"
+      onChange={onChange}
+      language="javascript"
+      label="main.js — Editor"
+    />
+  );
+}
+
+function JsTaskWorkspace({ steps, stepIndex, onStepIndexChange }) {
+  const template = steps[stepIndex] || steps[0];
+  const [source, setSource] = useState(template.js);
+  const [hasRun, setHasRun] = useState(false);
+  const [runNumber, setRunNumber] = useState(0);
+  const [results, setResults] = useState([]);
+  const definition = getJavaScriptDefinition(stepIndex);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- each task starts a fresh student draft. */
+  useEffect(() => {
+    setSource(template.js);
+    setHasRun(false);
+    setResults([]);
+  }, [template]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  function handleSourceChange(value) {
+    setSource(value);
+    setHasRun(false);
+    setResults([]);
+  }
+
+  function runTests() {
+    setHasRun(true);
+    setResults([]);
+    setRunNumber((value) => value + 1);
+  }
+
+  function handleResult(result) {
+    setResults(runExerciseTests(definition, { source, result }));
+  }
+
+  return (
+    <div
+      data-projector-private="javascript-exercise"
+      className="overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
+    >
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200/70 px-4 py-3 dark:border-zinc-800">
+        <div>
+          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Plocha úkolu</p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            JavaScript v tomto okně prohlížeče
+          </p>
+        </div>
+        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+          Úpravy platí jen pro tuto relaci.
+        </span>
+      </header>
+
+      <section
+        role="region"
+        aria-label="Zadání"
+        className="border-b border-zinc-200/70 px-4 py-4 dark:border-zinc-800"
+      >
+        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Zadání</h2>
+        <div className="mt-2 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
+          <JsTaskTabs steps={steps} activeIndex={stepIndex} onChange={onStepIndexChange} />
+          <p className="font-semibold">{template.title}</p>
+          <p>{template.desc}</p>
+        </div>
+      </section>
+
+      <section
+        role="region"
+        aria-label="IDE"
+        className="border-b border-zinc-200/70 px-4 py-4 dark:border-zinc-800"
+      >
+        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">IDE — JavaScript</h2>
+        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Soubor: main.js</p>
+        <div className="mt-3">
+          <JsCodeEditor source={source} onChange={handleSourceChange} />
+        </div>
+      </section>
+
+      <section role="region" aria-label="Náhled a testy" className="min-w-0 p-4">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Náhled a testy</h2>
+          <button
+            type="button"
+            className="rounded-lg bg-indigo-700 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            onClick={runTests}
+          >
+            Spustit testy
+          </button>
+        </div>
+        <div className="min-w-0">
+          <h3 className="mb-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Náhled</h3>
           <JsSandbox
-            dom={templates.step.dom}
+            key={`javascript-run-${runNumber}`}
+            code={hasRun ? source : null}
+            dom={template.dom}
             stepIndex={stepIndex}
-            onConsole={handleConsole}
+            onResult={handleResult}
             title="Izolovaný JavaScript DOM sandbox"
             className="w-full min-h-[160px] rounded-xl border bg-white"
           />
-        }
-      />
-      <div className="mt-3" data-projector-private="console">
-        <div className="font-semibold text-sm mb-1">Konzole</div>
-        <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 min-h-[80px] max-h-[180px] overflow-auto text-xs">
-          {logs.length === 0 && <div className="text-zinc-500">(žádné výstupy)</div>}
-          {logs.map((l, i) => (
-            <div
-              key={i}
-              className={clsx(
-                l.type === 'error'
-                  ? 'text-rose-600'
-                  : l.type === 'warn'
-                    ? 'text-amber-600'
-                    : 'text-zinc-800 dark:text-zinc-200',
-              )}
-            >
-              {l.text}
-            </div>
-          ))}
         </div>
-      </div>
+        <div
+          className="mt-4 rounded-xl border border-zinc-200/70 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/60"
+          role="group"
+          aria-label="Výsledky testů"
+          aria-live="polite"
+        >
+          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Výsledky testů</h3>
+          {results.length === 0 ? (
+            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+              Spusťte testy a ověřte požadavek.
+            </p>
+          ) : (
+            <ul className="mt-2 space-y-1.5 text-sm">
+              {results.map((result, index) => (
+                <li
+                  key={`${result.id}-${index}`}
+                  className={
+                    result.ok
+                      ? 'text-emerald-700 dark:text-emerald-400'
+                      : 'text-rose-700 dark:text-rose-400'
+                  }
+                >
+                  <span aria-hidden="true">{result.ok ? '✓' : '×'}</span> <span>{result.text}</span>
+                  {result.hint && (
+                    <span className="ml-1 text-xs text-zinc-500">({result.hint})</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
@@ -569,18 +709,22 @@ export default function AppJsLesson5() {
       maxWidthClass="max-w-7xl"
     >
       <div className={hasTasks ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : ''}>
-        <div className={hasTasks ? '' : 'max-w-4xl'}>
-          <JsSlideContent slide={current} stepIndex={stepIndex} onStepIndexChange={setStepIndex} />
-        </div>
         {hasTasks && (
-          <div>
-            <div className="lg:sticky lg:top-8">
-              <JsPlayground stepIndex={stepIndex} />
-              <div className="mt-3 text-xs text-zinc-500">
-                Pozn.: Toto je výuková simulace pro procvičení JavaScriptu. Výsledky testů jsou
-                zjednodušené kvůli spolehlivému automatickému vyhodnocení.
-              </div>
-            </div>
+          <div className="lg:col-span-2">
+            <JsTaskWorkspace
+              steps={getJsTemplates(0).all}
+              stepIndex={stepIndex}
+              onStepIndexChange={setStepIndex}
+            />
+          </div>
+        )}
+        {!hasTasks && (
+          <div className="max-w-4xl">
+            <JsSlideContent
+              slide={current}
+              stepIndex={stepIndex}
+              onStepIndexChange={setStepIndex}
+            />
           </div>
         )}
       </div>

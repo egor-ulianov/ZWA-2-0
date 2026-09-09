@@ -15,6 +15,7 @@ import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonS
 import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
+import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
 
 import {
   CSS_LAYOUT_INSPECTION,
@@ -211,27 +212,28 @@ function Css2TaskEditor() {
   const { htmlCode, cssCode, setHtmlCode, setCssCode, applyOnce } = useContext(Css2TaskContext);
   return (
     <div className="space-y-3">
+      <p className="text-sm font-semibold">IDE — HTML a CSS II</p>
       <label className="block text-sm font-semibold" htmlFor="css2-html-task-editor">
         Editor HTML a CSS II — HTML
       </label>
-      <textarea
+      <SyntaxCodeEditor
         id="css2-html-task-editor"
-        aria-label="Editor HTML CSS II"
         value={htmlCode}
-        onChange={(event) => setHtmlCode(event.target.value)}
-        spellCheck={false}
-        className="min-h-[220px] w-full rounded border p-3 font-mono text-xs bg-white dark:bg-zinc-900"
+        onChange={setHtmlCode}
+        language="html"
+        label="Editor HTML CSS II"
+        minHeight="220px"
       />
       <label className="block text-sm font-semibold" htmlFor="css2-css-task-editor">
         Editor CSS II — CSS
       </label>
-      <textarea
+      <SyntaxCodeEditor
         id="css2-css-task-editor"
-        aria-label="Editor CSS CSS II"
         value={cssCode}
-        onChange={(event) => setCssCode(event.target.value)}
-        spellCheck={false}
-        className="min-h-[220px] w-full rounded border p-3 font-mono text-xs bg-white dark:bg-zinc-900"
+        onChange={setCssCode}
+        language="css"
+        label="Editor CSS II"
+        minHeight="220px"
       />
       <button
         type="button"
@@ -568,6 +570,31 @@ function Css2SlideContent({ slide, stepIndex, onStepIndexChange }) {
   const internal = useMemo(() => getTaskTemplates(0).all, []);
   const total = internal.length;
   const cur = internal[stepIndex];
+
+  function stopLessonNavigation(event) {
+    if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
+  function chooseTaskWithKeyboard(event, index) {
+    if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    const nextIndex =
+      event.key === 'Home'
+        ? 0
+        : event.key === 'End'
+          ? total - 1
+          : event.key === 'ArrowRight' || event.key === 'ArrowDown'
+            ? Math.min(total - 1, index + 1)
+            : Math.max(0, index - 1);
+    onStepIndexChange(nextIndex);
+  }
+
   return (
     <SharedSlideCard slide={slide} idPrefix="lesson-css-ii">
       {slide.bullets && (
@@ -611,8 +638,10 @@ function Css2SlideContent({ slide, stepIndex, onStepIndexChange }) {
           </div>
           <div className="mt-3 flex items-center justify-between">
             <button
+              type="button"
               className="px-3 py-1.5 text-sm rounded-lg border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 disabled:opacity-50"
               onClick={() => onStepIndexChange(Math.max(0, stepIndex - 1))}
+              onKeyDown={stopLessonNavigation}
               disabled={stepIndex === 0}
             >
               Předchozí
@@ -621,18 +650,22 @@ function Css2SlideContent({ slide, stepIndex, onStepIndexChange }) {
               {Array.from({ length: total }).map((_, i) => (
                 <button
                   key={i}
+                  type="button"
                   className={clsx(
                     'h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700',
                     i === stepIndex ? 'bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800',
                   )}
                   onClick={() => onStepIndexChange(i)}
+                  onKeyDown={(event) => chooseTaskWithKeyboard(event, i)}
                   aria-label={`Přejít na úlohu ${i + 1}`}
                 />
               ))}
             </div>
             <button
+              type="button"
               className="px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white disabled:opacity-50"
               onClick={() => onStepIndexChange(Math.min(total - 1, stepIndex + 1))}
+              onKeyDown={stopLessonNavigation}
               disabled={stepIndex === total - 1}
             >
               Další
