@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import PortalFrame from '../portal/PortalFrame.jsx';
 import { getCourseModule } from '../portal/courseMetadata.js';
 import LessonOutline from './LessonOutline.jsx';
@@ -210,6 +211,12 @@ export default function LessonShell({
           className={`${maxWidthClass} mx-auto min-w-0 px-4 py-8 md:px-8`}
         >
           <header className="mb-8 max-w-4xl">
+            <Link
+              href="/"
+              className="mb-5 inline-flex rounded-lg text-sm font-medium text-[var(--portal-text-muted)] underline-offset-4 hover:text-[var(--portal-text)] hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            >
+              ← Zpět na přehled lekcí
+            </Link>
             <p className="portal-kicker mb-2">
               {lesson?.number ? `Lekce ${lesson.number}` : 'Lekce'}
             </p>

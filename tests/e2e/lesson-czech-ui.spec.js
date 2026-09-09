@@ -95,4 +95,22 @@ test.describe('Czech unified lesson task workspace integration', () => {
       await expect(page).toHaveURL(/slide=tasks/);
     }
   });
+
+  test('student task pages link back to the lesson catalogue', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-1-html5?slide=tasks');
+
+    const catalogueLink = page.getByRole('link', { name: '← Zpět na přehled lekcí' });
+    await expect(catalogueLink).toHaveAttribute('href', '/');
+    await expect(catalogueLink).toBeVisible();
+  });
+
+  test('projector task pages omit the catalogue return link', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-1-html5?mode=projector&slide=tasks');
+
+    await expect(page.getByRole('link', { name: '← Zpět na přehled lekcí' })).toHaveCount(0);
+  });
 });

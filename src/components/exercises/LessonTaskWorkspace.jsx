@@ -63,6 +63,7 @@ function normalizeStaticResults(results) {
 export function LessonTaskWorkspace({
   task,
   editor,
+  ideTabs,
   preview = null,
   testDefinition,
   staticCheck,
@@ -106,6 +107,48 @@ export function LessonTaskWorkspace({
     }
   }, [onRunTests, source, staticCheck]);
 
+  const renderedIdeTabs = isValidElement(ideTabs) ? (
+    <div className="min-w-0">{ideTabs}</div>
+  ) : isValidElement(editor) ? (
+    <div className="min-w-0 p-4">{editor}</div>
+  ) : ['css', 'html', 'js', 'javascript', 'php'].includes(editorConfig.language) ? (
+    <div className="min-w-0 p-4">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          {editorConfig.label}
+        </span>
+        {editorConfig.fileName && (
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            Soubor: {editorConfig.fileName}
+          </span>
+        )}
+      </div>
+      <SyntaxCodeEditor
+        value={source}
+        onChange={handleSourceTextChange}
+        language={editorConfig.language}
+        label={editorConfig.label}
+        minHeight="320px"
+      />
+    </div>
+  ) : (
+    <label className="block p-4">
+      <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        {editorConfig.label}
+      </span>
+      <textarea
+        value={source}
+        onChange={handleSourceChange}
+        spellCheck={false}
+        maxLength={MAX_STATIC_SOURCE_LENGTH}
+        aria-label={editorConfig.label}
+        placeholder={editorConfig.placeholder}
+        data-language={editorConfig.language}
+        className="min-h-[320px] w-full resize-y rounded-lg border border-zinc-300 bg-zinc-950 p-3 font-mono text-xs leading-5 text-zinc-100 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 dark:border-zinc-700"
+      />
+    </label>
+  );
+
   return (
     <div
       data-projector-private={privateMarker || 'lesson-task-workspace'}
@@ -140,45 +183,7 @@ export function LessonTaskWorkspace({
         <div className="border-b border-zinc-200/70 px-4 py-3 dark:border-zinc-800">
           <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">IDE</h2>
         </div>
-        {isValidElement(editor) ? (
-          <div className="min-w-0 p-4">{editor}</div>
-        ) : ['css', 'html', 'js', 'javascript', 'php'].includes(editorConfig.language) ? (
-          <div className="min-w-0 p-4">
-            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                {editorConfig.label}
-              </span>
-              {editorConfig.fileName && (
-                <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Soubor: {editorConfig.fileName}
-                </span>
-              )}
-            </div>
-            <SyntaxCodeEditor
-              value={source}
-              onChange={handleSourceTextChange}
-              language={editorConfig.language}
-              label={editorConfig.label}
-              minHeight="320px"
-            />
-          </div>
-        ) : (
-          <label className="block p-4">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-              {editorConfig.label}
-            </span>
-            <textarea
-              value={source}
-              onChange={handleSourceChange}
-              spellCheck={false}
-              maxLength={MAX_STATIC_SOURCE_LENGTH}
-              aria-label={editorConfig.label}
-              placeholder={editorConfig.placeholder}
-              data-language={editorConfig.language}
-              className="min-h-[320px] w-full resize-y rounded-lg border border-zinc-300 bg-zinc-950 p-3 font-mono text-xs leading-5 text-zinc-100 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 dark:border-zinc-700"
-            />
-          </label>
-        )}
+        {renderedIdeTabs}
       </section>
 
       <section role="region" aria-label="Náhled a testy" className="min-w-0 p-4">
