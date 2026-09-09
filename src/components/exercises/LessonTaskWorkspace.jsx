@@ -1,6 +1,7 @@
 import React, { isValidElement, useCallback, useMemo, useState } from 'react';
 
 import { MAX_STATIC_SOURCE_LENGTH } from './staticTaskChecks.js';
+import SyntaxCodeEditor from './SyntaxCodeEditor.jsx';
 
 function normalizeEditor(editor) {
   if (typeof editor === 'string') {
@@ -17,6 +18,7 @@ function normalizeEditor(editor) {
     label: String(editor.label || 'Editor'),
     language: String(editor.language || 'text'),
     placeholder: String(editor.placeholder || ''),
+    fileName: String(editor.fileName || ''),
   };
 }
 
@@ -73,6 +75,11 @@ export function LessonTaskWorkspace({
 
   const handleSourceChange = useCallback((event) => {
     setSource(String(event.target.value || '').slice(0, MAX_STATIC_SOURCE_LENGTH));
+    setResults([]);
+  }, []);
+
+  const handleSourceTextChange = useCallback((value) => {
+    setSource(String(value || '').slice(0, MAX_STATIC_SOURCE_LENGTH));
     setResults([]);
   }, []);
 
@@ -135,6 +142,26 @@ export function LessonTaskWorkspace({
         </div>
         {isValidElement(editor) ? (
           <div className="min-w-0 p-4">{editor}</div>
+        ) : ['css', 'html', 'js', 'javascript', 'php'].includes(editorConfig.language) ? (
+          <div className="min-w-0 p-4">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                {editorConfig.label}
+              </span>
+              {editorConfig.fileName && (
+                <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Soubor: {editorConfig.fileName}
+                </span>
+              )}
+            </div>
+            <SyntaxCodeEditor
+              value={source}
+              onChange={handleSourceTextChange}
+              language={editorConfig.language}
+              label={editorConfig.label}
+              minHeight="320px"
+            />
+          </div>
         ) : (
           <label className="block p-4">
             <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">

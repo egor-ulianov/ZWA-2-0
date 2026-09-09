@@ -13,6 +13,41 @@ const taskRoutes = [
 ];
 
 test.describe('static lesson task workspaces', () => {
+  test('ZWA-7 task 1 exposes the expected HTML source in a local syntax editor', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-7?slide=task1');
+
+    const editorRegion = page.getByRole('region', { name: 'IDE' });
+    const editor = editorRegion.locator('[data-code-editor="syntax"][data-language="html"]');
+
+    await expect(editorRegion).toContainText('Soubor: index.html');
+    await expect(editor).toHaveCount(1);
+    await expect(editor.locator('.cm-editor')).toHaveCount(1);
+    await expect(editor.locator('.cm-line span').first()).toBeVisible();
+    await expect(editor.locator('.cm-content')).toContainText('<form id="registration-form">');
+  });
+
+  test('PHP static task editors use local syntax highlighting and named inputs', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+
+    for (const route of ['/interactive-zwa-8-php?slide=t1', '/interactive-zwa-9?slide=tasks']) {
+      await page.goto(route);
+
+      const editorRegion = page.getByRole('region', { name: 'IDE' });
+      const editor = editorRegion.locator('[data-code-editor="syntax"][data-language="php"]');
+
+      await expect(editorRegion).toContainText('Soubor:');
+      await expect(editor).toHaveCount(1);
+      await expect(editor.locator('.cm-editor')).toHaveCount(1);
+      await expect(editor.locator('.cm-line span').first()).toBeVisible();
+    }
+  });
+
   for (const route of taskRoutes) {
     test(`${route} exposes the Czech static task workspace zones`, async ({ page }) => {
       await installDeterministicNetwork(page);
@@ -38,9 +73,6 @@ test.describe('static lesson task workspaces', () => {
       await expect(previewRegion).toContainText('Statická kontrola');
       await expect(editor).toBeVisible();
 
-      const seededDraft = await editor.inputValue();
-      const baselineExternalRequests = externalRequests.length;
-
       await editor.fill(
         "globalThis.__staticTaskExecuted = 'executed'; fetch('https://static-task.invalid/should-not-run');",
       );
@@ -48,10 +80,11 @@ test.describe('static lesson task workspaces', () => {
       await expect(results).toContainText('nebyl nalezen');
       await expect.poll(() => page.evaluate(() => window.__staticTaskExecuted ?? null)).toBeNull();
 
-      await editor.fill(seededDraft);
+      await page.reload({ waitUntil: 'networkidle' });
+      externalRequests.length = 0;
       await runTests.click();
       await expect(results).not.toContainText('nebyl nalezen');
-      expect(externalRequests.slice(baselineExternalRequests)).toEqual([]);
+      expect(externalRequests).toEqual([]);
     });
   }
 

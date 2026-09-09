@@ -63,12 +63,25 @@ function LessonSlideContent({ slide }) {
   );
 }
 
-function StaticLessonTask({ id, task, draft, required, expected, children }) {
+function StaticLessonTask({
+  id,
+  task,
+  draft,
+  required,
+  expected,
+  children,
+  fileName = 'form.php',
+}) {
   return (
     <LessonTaskWorkspace
       privateMarker={`static-${id}`}
       task={task}
-      editor={{ source: draft, label: 'Editor – zdrojový kód', language: 'php' }}
+      editor={{
+        source: draft,
+        label: 'Editor – zdrojový kód',
+        language: 'php',
+        fileName,
+      }}
       staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
       preview={
         <div className="space-y-4">

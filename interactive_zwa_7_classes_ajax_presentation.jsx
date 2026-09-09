@@ -255,12 +255,26 @@ function ChallengeReveal({ children }) {
   );
 }
 
-function StaticLessonTask({ id, task, draft, required, expected, children }) {
+function StaticLessonTask({
+  id,
+  task,
+  draft,
+  required,
+  expected,
+  children,
+  language = 'js',
+  fileName = 'script.js',
+}) {
   return (
     <LessonTaskWorkspace
       privateMarker={`static-${id}`}
       task={task}
-      editor={{ source: draft, label: 'Editor – zdrojový kód', language: 'text' }}
+      editor={{
+        source: draft,
+        label: 'Editor – zdrojový kód',
+        language,
+        fileName,
+      }}
       staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
       preview={
         <div className="space-y-4">
@@ -880,7 +894,30 @@ function Task1Slide() {
           </ul>
         </>
       }
-      draft={`class FacultyProgram {
+      language="html"
+      fileName="index.html"
+      draft={`<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <title>Registrace studenta ČVUT</title>
+</head>
+<body>
+  <form id="registration-form">
+    <label>Jméno <input id="name" required></label>
+    <label>Příjmení <input id="surname" required></label>
+    <label>Heslo <input id="password" type="password" required></label>
+    <label>Číslo osoby ČVUT <input id="person-id" required></label>
+    <label>Fakulta <select id="faculty" required>
+      <option value="">Vyberte fakultu</option>
+      <option value="FIT">FIT</option>
+      <option value="FEL">FEL</option>
+    </select></label>
+    <label>Studijní program <input id="program" required></label>
+    <button type="submit">Registrovat</button>
+  </form>
+  <script>
+class FacultyProgram {
   constructor(faculty, program) {
     this.faculty = faculty;
     this.program = program;
@@ -899,7 +936,10 @@ class CvutStudent {
 
 document.getElementById('registration-form').addEventListener('submit', (event) => {
   event.preventDefault();
-});`}
+});
+  </script>
+</body>
+</html>`}
       required={['class FacultyProgram', 'class CvutStudent', 'addEventListener']}
       expected="Po odeslání vznikne objekt studenta s vnořeným oborem fakulty a programu."
     >

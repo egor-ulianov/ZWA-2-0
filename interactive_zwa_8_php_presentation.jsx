@@ -74,12 +74,25 @@ function LessonSlideContent({ slide }) {
   );
 }
 
-function StaticLessonTask({ id, task, draft, required, expected, children }) {
+function StaticLessonTask({
+  id,
+  task,
+  draft,
+  required,
+  expected,
+  children,
+  fileName = 'cviceni.php',
+}) {
   return (
     <LessonTaskWorkspace
       privateMarker={`static-${id}`}
       task={task}
-      editor={{ source: draft, label: 'Editor – zdrojový kód', language: 'php' }}
+      editor={{
+        source: draft,
+        label: 'Editor – zdrojový kód',
+        language: 'php',
+        fileName,
+      }}
       staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
       preview={
         <div className="space-y-4">
@@ -102,6 +115,7 @@ function Task1() {
     <StaticLessonTask
       id="zwa8-task1"
       task="Vytvořte soubor datum.php a do HTML vložte kód, který vypíše dnešní datum."
+      fileName="datum.php"
       draft={`<!DOCTYPE html>
 <p>Dnešní datum je: <?php echo date('j.n.Y'); ?></p>`}
       required={['<?php', "date('j.n.Y')", 'Dnešní datum']}
