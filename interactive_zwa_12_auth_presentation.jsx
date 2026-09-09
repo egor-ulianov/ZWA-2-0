@@ -37,8 +37,22 @@ function StaticLessonTask({ id, task, draft, required, expected, children }) {
   return (
     <LessonTaskWorkspace
       privateMarker={`static-${id}`}
-      task={task}
-      editor={{ source: draft, label: 'Editor – zdrojový kód', language: 'php' }}
+      task={
+        <div className="space-y-3">
+          <p>{task}</p>
+          <p>
+            <strong>Konkrétní vstup studenta:</strong> upravte PHP zdrojový kód pro přihlášení,
+            session a ochranu formulářů.
+          </p>
+          {children}
+        </div>
+      }
+      editor={{
+        source: draft,
+        label: 'Editor – zdrojový kód',
+        language: 'php',
+        fileName: 'login.php (PHP)',
+      }}
       staticCheck={(source) => runStaticTaskChecks({ id, required }, source)}
       preview={
         <div className="space-y-4">
@@ -49,7 +63,6 @@ function StaticLessonTask({ id, task, draft, required, expected, children }) {
             Náhled je pouze statické vysvětlení; PHP ani serverový kód se v tomto prohlížeči
             nespouští.
           </p>
-          {children}
         </div>
       }
     />
