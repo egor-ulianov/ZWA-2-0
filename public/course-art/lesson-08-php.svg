@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-hidden="true">
+  <rect width="960" height="540" fill="#f3bd8e"/>
+  <path d="M84 444h792" fill="none" stroke="#152038" stroke-width="12" stroke-linecap="round"/>
+  <path d="m92 190 118-70 118 70-118 70z" fill="#fffdf8" stroke="#152038" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M92 190v112l118 70 118-70V190" fill="#9dcdf0" stroke="#152038" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M210 260v112" fill="none" stroke="#152038" stroke-width="12"/>
+  <path d="M350 248h124" fill="none" stroke="#152038" stroke-width="12" stroke-dasharray="18 18" stroke-linecap="round"/>
+  <path d="m444 220 48 28-48 28z" fill="#f4c84a" stroke="#152038" stroke-width="10" stroke-linejoin="round"/>
+  <rect x="512" y="74" width="202" height="354" rx="18" fill="#2856a6" stroke="#152038" stroke-width="12"/>
+  <circle cx="613" cy="150" r="44" fill="#9dd9bf" stroke="#152038" stroke-width="10"/>
+  <path d="M560 230h106M560 272h106M560 314h78" fill="none" stroke="#fffdf8" stroke-width="12" stroke-linecap="round"/>
+  <path d="M730 248h104" fill="none" stroke="#152038" stroke-width="12" stroke-dasharray="18 18" stroke-linecap="round"/>
+  <path d="m808 220 48 28-48 28z" fill="#ef8e82" stroke="#152038" stroke-width="10" stroke-linejoin="round"/>
+  <rect x="754" y="316" width="130" height="112" fill="#fffdf8" stroke="#152038" stroke-width="12"/>
+  <path d="M780 349h78M780 382h54" fill="none" stroke="#152038" stroke-width="9" stroke-linecap="round"/>
+</svg>

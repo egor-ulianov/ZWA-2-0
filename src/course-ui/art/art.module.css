@@ -1,0 +1,58 @@
+.frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--course-blue-soft);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fallback {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: var(--course-coral);
+}
+
+.fallback::before,
+.fallback::after {
+  position: absolute;
+  content: '';
+}
+
+.fallback::before {
+  top: 19%;
+  left: 17%;
+  width: 30%;
+  aspect-ratio: 1;
+  border: 0.75rem solid var(--course-ink);
+  border-radius: 50%;
+  background: var(--course-yellow);
+}
+
+.fallback::after {
+  right: 13%;
+  bottom: 18%;
+  width: 44%;
+  height: 29%;
+  border: 0.75rem solid var(--course-ink);
+  background: var(--course-paper);
+}
+
+.frame[data-module='presentation-interaction'] .fallback {
+  background-color: var(--course-sky);
+}
+
+.frame[data-module='server-foundations'] .fallback {
+  background-color: var(--course-mint);
+}
+
+.frame[data-module='state-data'] .fallback {
+  background-color: var(--course-apricot);
+}
