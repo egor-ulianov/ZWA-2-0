@@ -82,6 +82,36 @@ test.describe('HTML5 course learning experience', () => {
     await expect(stage.locator('[data-solution-panel] [contenteditable="false"]')).toHaveCount(1);
   });
 
+  test('exercise sections keep a responsive text gutter from the stage edge', async ({ page }) => {
+    await page.goto('/interactive-zwa-1-html5?slide=html-task-media');
+    const stage = page.locator('[data-exercise-stage="true"]');
+    const regions = ['Zadání', 'IDE', 'Náhled', 'Ověření'];
+
+    for (const region of regions) {
+      await expect
+        .poll(async () => {
+          const padding = await stage
+            .getByRole('region', { name: region })
+            .evaluate((element) => Number.parseFloat(getComputedStyle(element).paddingInlineStart));
+          return padding;
+        })
+        .toBeGreaterThanOrEqual(24);
+    }
+
+    await page.setViewportSize({ width: 320, height: 720 });
+    for (const region of regions) {
+      const padding = await stage
+        .getByRole('region', { name: region })
+        .evaluate((element) => Number.parseFloat(getComputedStyle(element).paddingInlineStart));
+      expect(padding).toBeGreaterThanOrEqual(16);
+    }
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      ),
+    ).toBe(true);
+  });
+
   test('presenter and projector each render one new-mode main and exclude private controls', async ({
     page,
   }) => {

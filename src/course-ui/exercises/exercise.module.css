@@ -7,7 +7,7 @@
 
 .stage > section,
 .solution {
-  padding: clamp(1.25rem, 4vw, 2rem) 0;
+  padding: clamp(1.25rem, 4vw, 2rem) clamp(1rem, 3vw, 2rem);
   border-bottom: 1px solid var(--course-line);
 }
 
