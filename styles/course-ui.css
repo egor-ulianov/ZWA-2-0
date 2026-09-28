@@ -1,0 +1,77 @@
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+  --course-blue: #2856a6;
+  --course-blue-deep: #17376f;
+  --course-blue-soft: #e8effb;
+  --course-ink: #152038;
+  --course-ink-muted: #526078;
+  --course-paper: #fffdf8;
+  --course-canvas: #f5f1e8;
+  --course-white: #ffffff;
+  --course-line: #d8d5cd;
+  --course-yellow: #f4c84a;
+  --course-coral: #ef8e82;
+  --course-sky: #9dcdf0;
+  --course-mint: #9dd9bf;
+  --course-apricot: #f3bd8e;
+  --course-focus: #c84c2f;
+  --course-shadow: 0 1.25rem 3rem rgb(21 32 56 / 0.12);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --course-blue: #82aef5;
+  --course-blue-deep: #b9d1fb;
+  --course-blue-soft: #20375c;
+  --course-ink: #f6f0e5;
+  --course-ink-muted: #c0c6d2;
+  --course-paper: #172136;
+  --course-canvas: #10182a;
+  --course-white: #1c2941;
+  --course-line: #3a4963;
+  --course-yellow: #e4bd4f;
+  --course-coral: #d9847d;
+  --course-sky: #79acd1;
+  --course-mint: #75b99d;
+  --course-apricot: #d49a6d;
+  --course-focus: #ffd36a;
+  --course-shadow: 0 1.25rem 3rem rgb(2 8 20 / 0.4);
+}
+
+html {
+  min-width: 20rem;
+  background: var(--course-canvas);
+  font-family: 'Manrope Variable', Manrope, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid var(--course-focus);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--course-yellow);
+  color: #152038;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}

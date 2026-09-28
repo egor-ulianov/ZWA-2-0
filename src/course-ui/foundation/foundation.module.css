@@ -1,0 +1,56 @@
+.application {
+  min-height: 100vh;
+  background: var(--course-canvas);
+  color: var(--course-ink);
+}
+
+.masthead {
+  position: relative;
+  z-index: 20;
+  border-bottom: 1px solid var(--course-line);
+  background: var(--course-paper);
+}
+
+.mastheadInner {
+  display: flex;
+  width: min(calc(100% - 2rem), 78rem);
+  min-height: 4.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-inline: auto;
+}
+
+.identityGroup,
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.identity {
+  color: var(--course-blue);
+  font-size: 1.125rem;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+
+.context {
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--course-line);
+  color: var(--course-ink-muted);
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+@media (max-width: 42rem) {
+  .mastheadInner {
+    width: min(calc(100% - 1.25rem), 78rem);
+    min-height: 4rem;
+  }
+
+  .context {
+    display: none;
+  }
+}

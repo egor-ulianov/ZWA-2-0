@@ -2,12 +2,14 @@ import React from 'react';
 import Link from 'next/link';
 
 import CourseRoadmap from '../src/components/portal/CourseRoadmap.jsx';
-import PortalFrame from '../src/components/portal/PortalFrame.jsx';
+import { CourseApplication } from '../src/course-ui/foundation/CourseApplication.jsx';
+import { CourseMasthead } from '../src/course-ui/foundation/CourseMasthead.jsx';
 import { lessons } from '../src/config/lessons.js';
 
 export default function Home() {
   return (
-    <PortalFrame meta="Katalog kurzu">
+    <CourseApplication title="Katalog kurzu" variant="catalog">
+      <CourseMasthead contextLabel="Katalog kurzu" />
       <CourseRoadmap lessons={lessons} />
       <footer className="mx-auto flex w-full max-w-6xl justify-end px-4 pb-10 md:px-8">
         <Link
@@ -18,6 +20,6 @@ export default function Home() {
           Attendance (protected)
         </Link>
       </footer>
-    </PortalFrame>
+    </CourseApplication>
   );
 }
