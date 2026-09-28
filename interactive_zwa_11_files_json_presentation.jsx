@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
@@ -149,6 +150,12 @@ function TheoryJsonBasics() {
           </li>
         </ul>
       </InfoBox>
+      <EditorialIllustration
+        alt="Aplikační data se převádějí do struktury JSON, ukládají do souboru a znovu načítají."
+        height={887}
+        src="/course-art/editorial/json-file-storage.png"
+        width={1774}
+      />
       <TheoryCodeBlock>
         <code className="language-php">{`<?php
 $json = '{"name":"Alice","email":"a@example.com"}';

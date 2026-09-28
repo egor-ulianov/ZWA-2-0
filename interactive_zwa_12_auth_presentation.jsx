@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
@@ -233,6 +234,12 @@ function TheoryLoginSession() {
           <li>Chraňte přístup k chráněným stránkám kontrolou přihlášení v každém skriptu.</li>
         </ul>
       </InfoBox>
+      <EditorialIllustration
+        alt="Přihlašovací údaje projdou ověřením, vytvoří bezpečnou relaci a otevřou pouze povolený obsah."
+        height={887}
+        src="/course-art/editorial/authentication-flow.png"
+        width={1774}
+      />
       <TheoryCodeBlock>
         <code className="language-php">{`<?php
 // login.php

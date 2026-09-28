@@ -5,6 +5,7 @@ import lenin3 from './src/interactive-zwa-7/lenin3.png';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
@@ -556,6 +557,11 @@ function AjaxTheorySlide() {
         Umožňuje dynamicky aktualizovat části stránky na základě dat ze serveru. Dnes se místo XML
         používá většinou <strong>JSON</strong>.
       </p>
+
+      <EditorialIllustration
+        alt="Asynchronní požadavek přenese data mezi částí webové stránky a serverem bez obnovení celé stránky."
+        src="/course-art/editorial/ajax-request-cycle.png"
+      />
 
       <div className="mb-6 p-4 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
         <h4 className="font-semibold mb-3 text-lg">🌐 Klasický web vs. AJAX</h4>

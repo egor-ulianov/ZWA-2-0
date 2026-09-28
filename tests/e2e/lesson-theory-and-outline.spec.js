@@ -74,6 +74,21 @@ const editorialTheoryCases = [
   },
 ];
 
+const allLectureIllustrationCases = [
+  '/interactive-zwa-1-html5?slide=sections',
+  '/interactive-zwa-2-forms?slide=playground',
+  '/interactive-zwa-1?slide=theory',
+  '/interactive-zwa-2?slide=theory',
+  '/interactive-zwa-5-css-ii?slide=theory',
+  '/interactive-zwa-5-js?slide=theory',
+  '/interactive-zwa-7?slide=ajax-theory',
+  '/interactive-zwa-8-php?slide=theory',
+  '/interactive-zwa-9?slide=theory-lifecycle',
+  '/interactive-zwa-10-sessions-cookies?slide=theory-session-lifecycle',
+  '/interactive-zwa-11-files-json?slide=theory-json',
+  '/interactive-zwa-12-auth?slide=theory-login-session',
+];
+
 async function openLessonOutline(page) {
   const trigger = page.getByRole('button', { name: 'Osnova lekce' });
   await trigger.click();
@@ -108,8 +123,19 @@ test.describe('early lesson theory and task outline', () => {
       await expect(theory.getByRole('button', { name: 'Předchozí', exact: true })).toHaveCount(0);
       await expect(theory.getByRole('button', { name: 'Další', exact: true })).toHaveCount(0);
       await expect(theory.getByText(/Krok \d+ \/ \d+/)).toHaveCount(0);
+    }
+  });
 
-      const illustration = theory.locator('[data-editorial-illustration="true"]');
+  test('every lecture integrates one unique transparent illustration between teaching blocks', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+    const sources = [];
+
+    for (const route of allLectureIllustrationCases) {
+      await page.goto(route);
+      const illustration = page.locator('[data-editorial-illustration="true"]');
+
       await expect(illustration).toHaveCount(1);
       await expect(illustration.locator('img')).toHaveAttribute('alt', /\S+/);
       await expect(illustration.locator('figcaption')).toHaveCount(0);
@@ -122,41 +148,41 @@ test.describe('early lesson theory and task outline', () => {
           };
         }),
       ).toEqual({ backgroundColor: 'rgba(0, 0, 0, 0)', borderStyle: 'none' });
+      expect(
+        await illustration.evaluate(
+          (figure) => Boolean(figure.previousElementSibling) && Boolean(figure.nextElementSibling),
+        ),
+      ).toBe(true);
+
       await illustration.scrollIntoViewIfNeeded();
       await expect
         .poll(() => illustration.locator('img').evaluate((image) => image.naturalWidth), {
           timeout: 10_000,
         })
         .toBeGreaterThan(0);
-      const cornerAlphas = await illustration.locator('img').evaluate((image) => {
+      const image = illustration.locator('img');
+      sources.push(await image.getAttribute('src'));
+      const cornerAlphas = await image.evaluate((element) => {
         const canvas = document.createElement('canvas');
         canvas.width = 1;
         canvas.height = 1;
         const context = canvas.getContext('2d');
         const corners = [
           [0, 0],
-          [image.naturalWidth - 1, 0],
-          [0, image.naturalHeight - 1],
-          [image.naturalWidth - 1, image.naturalHeight - 1],
+          [element.naturalWidth - 1, 0],
+          [0, element.naturalHeight - 1],
+          [element.naturalWidth - 1, element.naturalHeight - 1],
         ];
         return corners.map(([x, y]) => {
           context.clearRect(0, 0, 1, 1);
-          context.drawImage(image, x, y, 1, 1, 0, 0, 1, 1);
+          context.drawImage(element, x, y, 1, 1, 0, 0, 1, 1);
           return context.getImageData(0, 0, 1, 1).data[3];
         });
       });
       expect(cornerAlphas.filter((alpha) => alpha === 0).length).toBeGreaterThanOrEqual(2);
-      expect(
-        await illustration.evaluate((figure) => {
-          const previous = figure.previousElementSibling;
-          const next = figure.nextElementSibling;
-          return (
-            previous?.matches('[data-theory-topic="true"]') &&
-            next?.matches('[data-theory-topic="true"]')
-          );
-        }),
-      ).toBe(true);
     }
+
+    expect(new Set(sources).size).toBe(allLectureIllustrationCases.length);
   });
 
   test('editorial theory remains readable without horizontal overflow at 320 pixels', async ({

@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
@@ -1150,6 +1151,13 @@ function FormsSections() {
         example={exStandard}
         Try={TryStandard}
         validate={{ initial: tplStandard, check: checkStandard }}
+      />
+
+      <EditorialIllustration
+        alt="Uživatel vyplňuje přístupný formulář, jehož hodnoty procházejí kontrolou na server."
+        height={887}
+        src="/course-art/editorial/accessible-form-submission.png"
+        width={1774}
       />
 
       <Block

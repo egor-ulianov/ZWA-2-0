@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
@@ -228,6 +229,12 @@ function TheorySessionLifecycle() {
           </li>
         </ol>
       </InfoBox>
+      <EditorialIllustration
+        alt="Cookie se session identifikátorem propojuje prohlížeč se zabezpečenými daty relace na serveru."
+        height={887}
+        src="/course-art/editorial/session-cookie-lifecycle.png"
+        width={1774}
+      />
       <TheoryCodeBlock>
         <code className="language-php">{`<?php
 // session.php

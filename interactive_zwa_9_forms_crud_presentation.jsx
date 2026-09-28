@@ -6,6 +6,7 @@ import memeImg from './src/interactive-zwa-8/meme.png';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
@@ -98,6 +99,12 @@ function TheoryLifecycle() {
           <li>Server pošle odpověď – obvykle opět HTML: buď se chybami, nebo s potvrzením.</li>
         </ol>
       </InfoBox>
+      <EditorialIllustration
+        alt="Formulář prochází validací a serverovou logikou, ukládá data a vrací aktualizovaný seznam."
+        height={887}
+        src="/course-art/editorial/server-form-crud.png"
+        width={1774}
+      />
       <TheoryCodeBlock>
         <code className="language-php">{`<?php
 // form.php – formulář i jeho obsluha v jednom souboru

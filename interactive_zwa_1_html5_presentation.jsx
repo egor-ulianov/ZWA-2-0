@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
@@ -349,6 +350,10 @@ function HtmlSections() {
     <div>
       <SectionTabs id="basics" theory={theoryBasics} example={exampleBasics} />
       <SectionTabs id="skeleton" theory={theorySkeleton} example={exampleSkeleton} />
+      <EditorialIllustration
+        alt="Rozložení HTML dokumentu od metadat po sémantické části viditelné stránky."
+        src="/course-art/editorial/html-document-anatomy.png"
+      />
       <SectionTabs id="semantic" theory={theorySemantic} example={exampleSemantic} />
       <SectionTabs id="media" theory={theoryMedia} example={exampleMedia} />
     </div>
