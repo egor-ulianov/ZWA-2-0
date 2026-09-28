@@ -11,6 +11,7 @@ import InfoBox from './src/components/lesson/InfoBox.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import TheoryCodeBlock from './src/components/lesson/TheoryCodeBlock.jsx';
 import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 
@@ -149,7 +150,7 @@ function TheoryLifecycle() {
           <li>Server pošle odpověď – obvykle opět HTML: buď se chybami, nebo s potvrzením.</li>
         </ol>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`<?php
 // form.php – formulář i jeho obsluha v jednom souboru
 $errors = [];
@@ -171,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?= in_array('web', $values['interests']) ? 'checked' : '' ?>> Web</label>
   <button type="submit">Odeslat</button>
 </form>`}</code>
-      </pre>
+      </TheoryCodeBlock>
     </div>
   );
 }
@@ -229,12 +230,12 @@ function TheoryMethods() {
           </li>
         </ul>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`// Rozdíl zdůrazněn: 
 $q = $_GET['q'] ?? null;   // vyhledávání
 $csrf = $_POST['csrf'] ?? null; // token z POST
 // $_REQUEST může namíchat hodnoty stejného jména z GET i POST – explicitnost je bezpečnější.`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <InfoBox>
         <div className="font-semibold mb-1">Superglobály v PHP – přehled</div>
         <ul className="list-disc pl-6 space-y-1 text-sm">
@@ -268,7 +269,7 @@ $csrf = $_POST['csrf'] ?? null; // token z POST
           </li>
         </ul>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`// Ukázky čtení superglobálů:
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
@@ -280,7 +281,7 @@ $_SESSION['last_visit'] = time();
 if (!empty($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
   // move_uploaded_file($_FILES['avatar']['tmp_name'], '/path/avatar.png');
 }`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <div className="text-xs text-zinc-500">
         Dokumentace:{' '}
         <a
@@ -378,7 +379,7 @@ function TheoryInputs() {
           </li>
         </ul>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-html">{`<!-- Radio (single) -->
 <label><input type="radio" name="spam" value="none"> Žádný</label>
 <label><input type="radio" name="spam" value="promo"> Promo</label>
@@ -393,10 +394,10 @@ function TheoryInputs() {
   <option value="PA1">PA1</option>
   <option value="OSY">OSY</option>
 </select>`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <InfoBox>
         <div className="font-semibold mb-1">Výpis pole rekurzivně</div>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-xs">
+        <TheoryCodeBlock>
           <code className="language-php">{`function printArrayRecursive(array $x, int $lvl = 0): void {
   foreach ($x as $k => $v) {
     echo str_repeat('&nbsp;&nbsp;', $lvl) . htmlspecialchars((string)$k) . ': ';
@@ -408,7 +409,7 @@ function TheoryInputs() {
     }
   }
 }`}</code>
-        </pre>
+        </TheoryCodeBlock>
       </InfoBox>
     </div>
   );
@@ -441,7 +442,7 @@ function TheoryValidation() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">Validace – příklady</div>
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-3 overflow-x-auto text-xs">
+          <TheoryCodeBlock>
             <code className="language-php">{`$errors = [];
 if (!filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL)) {
   $errors['email'] = 'Zadejte platný e-mail.';
@@ -457,11 +458,11 @@ $favs = $_POST['subjects'] ?? [];
 if ($best && !in_array($best, $favs, true)) {
   $errors['best_subject'] = 'Nejlepší předmět musí být mezi oblíbenými.';
 }`}</code>
-          </pre>
+          </TheoryCodeBlock>
         </div>
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">Sanitizace a escapování</div>
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-3 overflow-x-auto text-xs">
+          <TheoryCodeBlock>
             <code className="language-php">{`$name = trim($_POST['name'] ?? '');
 $name = preg_replace('/\\s+/', ' ', $name);      // normalizace whitespace
 $safeHtml = htmlspecialchars($name, ENT_QUOTES, 'UTF-8'); // escapování do HTML
@@ -473,7 +474,7 @@ $safeUrl = filter_var($rawUrl, FILTER_VALIDATE_URL) ? $rawUrl : '/'; // validace
 $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 $stmt = $pdo->prepare('INSERT INTO users(name, email) VALUES(?, ?)');
 $stmt->execute([$name, $_POST['email'] ?? '']);`}</code>
-          </pre>
+          </TheoryCodeBlock>
         </div>
       </div>
       <InfoBox>
@@ -536,13 +537,13 @@ function TheorySession() {
           úložiště na serveru.
         </p>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`session_start();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $_SESSION['last_form'] = $_POST;
 }
 $last = $_SESSION['last_form'] ?? null;`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <div className="text-xs text-zinc-500">
         Reference:{' '}
         <a
@@ -570,7 +571,7 @@ function TheoryCrud() {
           ID. Níže ukázka bez DB (soubor/array).
         </p>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`// index.php
 session_start();
 require __DIR__.'/storage.php'; // jednoduché úložiště v souboru JSON
@@ -611,29 +612,29 @@ switch ($action) {
     include __DIR__.'/views/delete_confirm.php';
     break;
 }`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">Formuláře – create/edit</div>
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-3 overflow-x-auto text-xs">
+          <TheoryCodeBlock>
             <code className="language-php">{`<!-- views/form.php -->
 <form method="post" action="">
   <label>Název: <input name="title" value="<?= htmlspecialchars($item['title'] ?? '') ?>"></label>
   <?php if (!empty($error)): ?><div class="err"><?= htmlspecialchars($error) ?></div><?php endif; ?>
   <button type="submit"><?= isset($item) ? 'Uložit' : 'Vytvořit' ?></button>
 </form>`}</code>
-          </pre>
+          </TheoryCodeBlock>
         </div>
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">Smazání s potvrzením</div>
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-3 overflow-x-auto text-xs">
+          <TheoryCodeBlock>
             <code className="language-php">{`<!-- views/delete_confirm.php -->
 <form method="post" onsubmit="return confirm('Opravdu smazat?')">
   <input type="hidden" name="_method" value="DELETE">
   <button type="submit" class="danger">Smazat</button>
   <a href="?action=detail&id=<?= (int)$_GET['id'] ?>">Zpět</a>
 </form>`}</code>
-          </pre>
+          </TheoryCodeBlock>
         </div>
       </div>
       <InfoBox type="warning">
@@ -687,9 +688,9 @@ function TheoryArchitecture() {
             <li>Menší JS bundle – výkon na slabších zařízeních.</li>
             <li>Skvělé pro obsahové a administrativní aplikace.</li>
           </ul>
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-3 overflow-x-auto text-xs">
+          <TheoryCodeBlock>
             <code className="language-text">{`Model (data, DB) ←→ Controller (logika) ←→ View (HTML šablona)`}</code>
-          </pre>
+          </TheoryCodeBlock>
         </div>
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">REST API – kdy a proč</div>
@@ -698,14 +699,14 @@ function TheoryArchitecture() {
             <li>Kešování odpovědí, škálování, možnost verzování.</li>
             <li>Jasné mapování: zdroj → URL, operace → HTTP verb.</li>
           </ul>
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-3 overflow-x-auto text-xs">
+          <TheoryCodeBlock>
             <code className="language-text">{`GET /articles       → list
 POST /articles      → create
 GET /articles/{id}  → detail
 PUT /articles/{id}  → full update
 PATCH /articles/{id}→ partial update
 DELETE /articles/{id} → delete`}</code>
-          </pre>
+          </TheoryCodeBlock>
         </div>
       </div>
       <div className="text-xs text-zinc-500">

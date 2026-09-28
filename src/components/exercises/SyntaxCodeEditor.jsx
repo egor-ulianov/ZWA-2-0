@@ -53,12 +53,36 @@ const PHP_STREAM_PARSER = {
 
 const phpLanguage = StreamLanguage.define(PHP_STREAM_PARSER);
 
+const SHELL_STREAM_PARSER = {
+  startState: () => ({}),
+  token(stream) {
+    if (stream.sol() && stream.match(/^\s*#.*/)) return 'comment';
+    if (stream.match(/^#.*/)) return 'comment';
+    if (stream.match(/^'(?:\\.|[^'\\])*'|^"(?:\\.|[^"\\])*"/)) return 'string';
+    if (
+      stream.match(
+        /^(?:sudo|ssh|scp|cd|ls|pwd|mkdir|touch|cat|grep|ping|traceroute|telnet|nslookup|ifconfig|chmod|php)\b/,
+      )
+    ) {
+      return 'keyword';
+    }
+    if (stream.match(/^\$[A-Za-z_][\w]*/)) return 'variableName';
+    if (stream.match(/^(?:\|\||&&|>>|>|<|=)/)) return 'operator';
+    stream.next();
+    return null;
+  },
+};
+
+const shellLanguage = StreamLanguage.define(SHELL_STREAM_PARSER);
+
 const LANGUAGE_EXTENSIONS = Object.freeze({
   css,
   html,
   js: javascript,
   javascript,
   php: () => phpLanguage.extension,
+  bash: () => shellLanguage.extension,
+  sh: () => shellLanguage.extension,
   text: () => [],
 });
 

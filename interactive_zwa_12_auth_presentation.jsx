@@ -6,6 +6,7 @@ import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import TheoryCodeBlock from './src/components/lesson/TheoryCodeBlock.jsx';
 import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 import { clsx } from './src/components/lesson/classNames.js';
@@ -189,7 +190,7 @@ function TheoryPasswords() {
           <li>Ideál: server heslo nezná, zná pouze jeho otisk; přenos vždy přes HTTPS.</li>
         </ul>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`<?php
 // Hashování a ověřování hesla
 $hash = password_hash('secret', PASSWORD_DEFAULT);
@@ -198,7 +199,7 @@ if (password_verify($_POST['password'] ?? '', $hash)) {
 } else {
   echo 'Bad';
 }`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <div className="text-xs text-zinc-500">Inspirace: lekce a slidy k ZWA‑12.</div>
     </div>
   );
@@ -222,7 +223,7 @@ function TheoryHttpAuth() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">Basic v PHP</div>
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-3 overflow-x-auto text-xs">
+          <TheoryCodeBlock>
             <code className="language-php">{`<?php
 if (
   isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']) &&
@@ -236,11 +237,11 @@ if (
   echo 'Chyba prihlaseni';
   exit;
 }`}</code>
-          </pre>
+          </TheoryCodeBlock>
         </div>
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">Digest – princip (ukázka)</div>
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-3 overflow-x-auto text-xs">
+          <TheoryCodeBlock>
             <code className="language-php">{`<?php
 $realm = 'Restricted area';
 $users = ['xklima' => 'martin', 'guest' => 'guest'];
@@ -252,7 +253,7 @@ if (empty($_SERVER['PHP_AUTH_DIGEST'])) {
 }
 // ... http_digest_parse(...) a ověření MD5(A1:nonce:...:A2) dle slidu ...
 ?>`}</code>
-          </pre>
+          </TheoryCodeBlock>
           <div className="text-xs text-zinc-500">
             Detailní ukázka viz odkaz na slidy (Digest v PHP).
           </div>
@@ -289,7 +290,7 @@ function TheoryLoginSession() {
           <li>Chraňte přístup k chráněným stránkám kontrolou přihlášení v každém skriptu.</li>
         </ul>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`<?php
 // login.php
 session_start();
@@ -301,7 +302,7 @@ if (($_POST['username'] ?? '') && password_verify($_POST['password'] ?? '', $has
   exit;
 }
 ?>`}</code>
-      </pre>
+      </TheoryCodeBlock>
     </div>
   );
 }
@@ -326,7 +327,7 @@ function TheorySecurity() {
           </li>
         </ul>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`<?php
 // CSRF token – generování a ověření
 session_start();
@@ -340,7 +341,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
   // ... zpracování POST ...
 }`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <div className="text-xs text-zinc-500">
         Čtěte:{' '}
         <a

@@ -7,6 +7,7 @@ import InfoBox from './src/components/lesson/InfoBox.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import TheoryCodeBlock from './src/components/lesson/TheoryCodeBlock.jsx';
 import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 
@@ -286,7 +287,7 @@ function Task1() {
       </InfoBox>
       <TaskReferenceSource>
         <div className="space-y-3">
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+          <TheoryCodeBlock>
             <code className="language-php">{`<!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -297,7 +298,7 @@ function Task1() {
   <p>Dnešní datum je: <?php echo date('j.n.Y'); ?></p>
 </body>
 </html>`}</code>
-          </pre>
+          </TheoryCodeBlock>
         </div>
       </TaskReferenceSource>
     </StaticLessonTask>
@@ -373,7 +374,7 @@ $cisloDne = (int)date('N', $timestamp);`}
         </ul>
       </InfoBox>
       <TaskReferenceSource>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+        <TheoryCodeBlock>
           <code className="language-php">{`<?php
 $datum = "12.6.2008";
 list($den, $mesic, $rok) = explode('.', $datum);
@@ -383,7 +384,7 @@ $timestamp = mktime(0, 0, 0, (int)$mesic, (int)$den, (int)$rok);
 $dny = [1=>"pondělí","úterý","středa","čtvrtek","pátek","sobota","neděle"];
 $cisloDne = (int)date('N', $timestamp);
 echo "$den.$mesic.$rok je " . $dny[$cisloDne];`}</code>
-        </pre>
+        </TheoryCodeBlock>
       </TaskReferenceSource>
     </StaticLessonTask>
   );
@@ -450,7 +451,7 @@ function Task3() {
         </ul>
       </InfoBox>
       <TaskReferenceSource>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+        <TheoryCodeBlock>
           <code className="language-php">{`<?php
 function formatCzechDate(string $dateStr): string {
   list($den, $mesic, $rok) = explode('.', $dateStr);
@@ -461,7 +462,7 @@ function formatCzechDate(string $dateStr): string {
 }
 
 echo formatCzechDate("12.6.2008");`}</code>
-        </pre>
+        </TheoryCodeBlock>
       </TaskReferenceSource>
     </StaticLessonTask>
   );
@@ -528,7 +529,7 @@ foreach ($data as $i => $d) {
         </ul>
       </InfoBox>
       <TaskReferenceSource>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+        <TheoryCodeBlock>
           <code className="language-php">{`<?php
 $data = ["12.6.2008", "5.1.2020", "1.12.2024"];
 
@@ -542,7 +543,7 @@ function formatCzechDate(string $dateStr): string {
 foreach ($data as $i => $d) {
   echo ($i + 1) . ". " . formatCzechDate($d) . "<br>";
 }`}</code>
-        </pre>
+        </TheoryCodeBlock>
       </TaskReferenceSource>
     </StaticLessonTask>
   );
@@ -606,7 +607,7 @@ function Task5() {
         </ul>
       </InfoBox>
       <TaskReferenceSource>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+        <TheoryCodeBlock>
           <code className="language-php">{`<?php
 function extractMonths(array $dates): array {
   return array_map(function ($str) {
@@ -618,7 +619,7 @@ function extractMonths(array $dates): array {
 
 $data = ["12.6.2008", "5.1.2020", "1.12.2024", "20.1.2021"];
 print_r(extractMonths($data)); // např. [6,1,12,1]`}</code>
-        </pre>
+        </TheoryCodeBlock>
       </TaskReferenceSource>
     </StaticLessonTask>
   );
@@ -679,7 +680,7 @@ return $unique;`}
         </ul>
       </InfoBox>
       <TaskReferenceSource>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+        <TheoryCodeBlock>
           <code className="language-php">{`<?php
 function extractUniqueMonths(array $dates): array {
   $months = array_map(function ($str) {
@@ -693,7 +694,7 @@ function extractUniqueMonths(array $dates): array {
 
 $data = ["12.6.2008", "5.1.2020", "1.12.2024", "20.1.2021"];
 print_r(extractUniqueMonths($data)); // např. [1,6,12]`}</code>
-        </pre>
+        </TheoryCodeBlock>
       </TaskReferenceSource>
     </StaticLessonTask>
   );
@@ -754,7 +755,7 @@ function Task7() {
         </ul>
       </InfoBox>
       <TaskReferenceSource>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+        <TheoryCodeBlock>
           <code className="language-php">{`<?php
 function isPositiveInt(string $s): bool {
   if ($s === '') return false;
@@ -767,7 +768,7 @@ var_dump(isPositiveInt("123")); // true
 var_dump(isPositiveInt("0"));   // false
 var_dump(isPositiveInt("-1"));  // false
 var_dump(isPositiveInt("12a")); // false`}</code>
-        </pre>
+        </TheoryCodeBlock>
       </TaskReferenceSource>
     </StaticLessonTask>
   );
@@ -822,7 +823,7 @@ function Task8() {
         </ul>
       </InfoBox>
       <TaskReferenceSource>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+        <TheoryCodeBlock>
           <code className="language-php">{`<?php
 function isPositiveInt(string $s, ?int $min = null, ?int $max = null): bool {
   if ($s === '' || !ctype_digit($s)) return false;
@@ -847,7 +848,7 @@ var_dump(isPositiveInt("10", 5));         // true
 var_dump(isPositiveInt("3", 5));          // false
 var_dump(isPositiveInt("12", 5, 10));     // false (12 > 10)
 var_dump(isPositiveInt("7", 5, 10));      // true`}</code>
-        </pre>
+        </TheoryCodeBlock>
       </TaskReferenceSource>
     </StaticLessonTask>
   );
@@ -1142,11 +1143,11 @@ function SshTutorial() {
             <Code>webove aplikace</Code> (doporučeno ihned změnit).
           </li>
         </ul>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-3">
+        <TheoryCodeBlock>
           <code className="language-bash">{`ssh username@zwa.toad.cz
 # Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
 # password: webove aplikace (výchozí)`}</code>
-        </pre>
+        </TheoryCodeBlock>
         <InfoBox>
           <div className="text-sm">
             Po přihlášení můžete ověřit, že webové prostředí reaguje, návštěvou{' '}
@@ -1162,12 +1163,12 @@ function SshTutorial() {
           Po prvním přihlášení s výchozím heslem <Code>webove aplikace</Code> doporučujeme okamžitě
           změnit své heslo pomocí <Code>passwd</Code>:
         </p>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-3">
+        <TheoryCodeBlock>
           <code className="language-bash">{`passwd
 # Current password: ****
 # New password: ****
 # Retype new password: ****`}</code>
-        </pre>
+        </TheoryCodeBlock>
         <InfoBox type="warning">
           <div className="text-sm">
             Pokud server používá napojení na centrální ČVUT autentizaci, správa hesla může probíhat
@@ -1190,7 +1191,7 @@ function SshTutorial() {
             Ověřte v prohlížeči: <Code>http://zwa.toad.cz/~username/</Code>
           </li>
         </ul>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-3">
+        <TheoryCodeBlock>
           <code className="language-bash">{`mkdir -p ~/www/01
 cd ~/www/01
 cat > index.html <<'HTML'
@@ -1205,7 +1206,7 @@ cat > index.html <<'HTML'
 </body>
 </html>
 HTML`}</code>
-        </pre>
+        </TheoryCodeBlock>
       </div>
 
       <div className="text-xs text-zinc-500">
@@ -1283,7 +1284,7 @@ function FileZillaTutorial() {
             HTML, uložte, FileZilla nabídne upload → potvrďte.
           </li>
         </ul>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-3">
+        <TheoryCodeBlock>
           <code className="language-html">{`<!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -1294,7 +1295,7 @@ function FileZillaTutorial() {
   <h1>Hello world!</h1>
 </body>
 </html>`}</code>
-        </pre>
+        </TheoryCodeBlock>
         <div className="text-sm text-zinc-700 dark:text-zinc-300">
           Pak otevřete <Code>http://zwa.toad.cz/~username/</Code> a ověřte, že vidíte obsah. Pokud
           vidíte složku, vstupte do <Code>01/</Code> a otevřete <Code>index.html</Code>.

@@ -22,6 +22,34 @@ const earlyLessonCases = [
 ];
 
 test.describe('early lesson theory and task outline', () => {
+  test('lecture code examples use read-only syntax highlighting', async ({ page }) => {
+    await installDeterministicNetwork(page);
+    await page.goto('/interactive-zwa-7?slide=ajax-practice');
+
+    const codeBlock = page.locator('[data-theory-code-block]').first();
+    await expect(codeBlock).toBeVisible();
+    await expect(codeBlock).toHaveAttribute('data-language', 'js');
+    await expect(codeBlock.locator('.cm-editor')).toBeVisible();
+    await expect(codeBlock.locator('.cm-content')).toHaveAttribute('contenteditable', 'false');
+
+    await page.goto('/interactive-zwa-7?mode=projector&slide=ajax-practice');
+    await expect(page.getByText('function loadDoc()', { exact: false })).toBeVisible();
+  });
+
+  test('PHP and shell lecture examples use their matching language modes', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-9?slide=theory-lifecycle');
+    const phpBlock = page.locator('[data-theory-code-block]').first();
+    await expect(phpBlock).toHaveAttribute('data-language', 'php');
+    await expect(phpBlock.locator('.cm-editor')).toBeVisible();
+
+    await page.goto('/interactive-zwa-8-php?slide=ssh');
+    const shellBlock = page.locator('[data-theory-code-block]').first();
+    await expect(shellBlock).toHaveAttribute('data-language', 'bash');
+    await expect(shellBlock.locator('.cm-editor')).toBeVisible();
+  });
+
   for (const testCase of earlyLessonCases) {
     test(`${testCase.route} is theory-only and exposes named tasks in the outline`, async ({
       page,

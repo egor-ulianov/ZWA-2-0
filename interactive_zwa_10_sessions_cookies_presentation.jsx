@@ -6,6 +6,7 @@ import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import TheoryCodeBlock from './src/components/lesson/TheoryCodeBlock.jsx';
 import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 import { clsx } from './src/components/lesson/classNames.js';
@@ -166,14 +167,14 @@ function TheoryBasics() {
           <li>Velikostní limity: cca do 4 kB na cookie; web by měl používat jen nutné cookies.</li>
         </ul>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`<?php
 // Superglobály
 $theme = $_COOKIE['theme'] ?? 'light';
 // Session až po session_start():
 session_start();
 $_SESSION['visited_at'] = time();`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <div className="text-xs text-zinc-500">
         Dokumentace:{' '}
         <a
@@ -219,7 +220,7 @@ function TheoryCookiesAPI() {
           </li>
         </ul>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`<?php
 // Nastavení cookie (7 dní), pouze HTTPS, HttpOnly, SameSite=Lax
 setcookie('theme', 'dark', [
@@ -238,7 +239,7 @@ setcookie('theme', '', [
   'expires' => time() - 3600,
   'path'    => '/',
 ]);`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <div className="text-xs text-zinc-500">
         Reference:{' '}
         <a
@@ -284,7 +285,7 @@ function TheorySessionLifecycle() {
           </li>
         </ol>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`<?php
 // session.php
 ini_set('session.use_strict_mode', '1');
@@ -295,7 +296,7 @@ if (!isset($_SESSION['counter'])) {
 }
 $_SESSION['counter']++;
 echo "Počet návštěv: " . (int)$_SESSION['counter'];`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <InfoBox type="warning">
         <div className="font-semibold mb-1">Doporučení</div>
         <ul className="list-disc pl-6 space-y-1 text-sm">
@@ -363,7 +364,7 @@ function TheorySecurity() {
           </li>
         </ul>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`<?php
 // Generování a ověřování CSRF
 session_start();
@@ -379,7 +380,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
   // ... zpracování POST ...
 }`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <div className="text-xs text-zinc-500">
         Čtěte:{' '}
         <a
@@ -410,7 +411,7 @@ function TheoryExamples() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">Login flow + regenerace ID</div>
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-3 overflow-x-auto text-xs">
+          <TheoryCodeBlock>
             <code className="language-php">{`<?php
 // login.php
 session_start();
@@ -422,26 +423,26 @@ if ($_POST['username'] === 'admin' && $_POST['password'] === 'secret') {
   exit;
 }
 // ... formulář ...`}</code>
-          </pre>
+          </TheoryCodeBlock>
         </div>
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">Flash zprávy (jednorázové)</div>
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-3 overflow-x-auto text-xs">
+          <TheoryCodeBlock>
             <code className="language-php">{`<?php
 // set_flash.php
 session_start();
 $_SESSION['flash'] = 'Uloženo!';
 header('Location: /list.php');
 exit;`}</code>
-          </pre>
-          <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-3 overflow-x-auto text-xs mt-2">
+          </TheoryCodeBlock>
+          <TheoryCodeBlock>
             <code className="language-php">{`<?php
 // list.php
 session_start();
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 if ($flash) { echo "<div class='ok'>".htmlspecialchars($flash)."</div>"; }`}</code>
-          </pre>
+          </TheoryCodeBlock>
         </div>
       </div>
       <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
@@ -453,7 +454,7 @@ if ($flash) { echo "<div class='ok'>".htmlspecialchars($flash)."</div>"; }`}</co
           </li>
           <li>Na příští návštěvě ověřte hash a vytvořte novou session (rotate tokeny).</li>
         </ul>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-3 overflow-x-auto text-xs">
+        <TheoryCodeBlock>
           <code className="language-php">{`<?php
 $token = bin2hex(random_bytes(32));
 $hash  = hash('sha256', $token);
@@ -465,7 +466,7 @@ setcookie('__Host-remember', $token, [
   'httponly' => true,
   'samesite' => 'Lax',
 ]);`}</code>
-        </pre>
+        </TheoryCodeBlock>
       </div>
     </div>
   );

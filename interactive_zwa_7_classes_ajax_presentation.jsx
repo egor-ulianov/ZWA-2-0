@@ -10,6 +10,7 @@ import InfoBox from './src/components/lesson/InfoBox.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import TheoryCodeBlock from './src/components/lesson/TheoryCodeBlock.jsx';
 import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 
@@ -596,9 +597,9 @@ class AccessUser extends User {
           </span>
         </div>
         <h3 className="text-lg font-semibold mb-3">{steps[step].title}</h3>
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+        <TheoryCodeBlock>
           <code className="language-js">{steps[step].code}</code>
-        </pre>
+        </TheoryCodeBlock>
       </div>
 
       <div className="flex items-center justify-between mt-4">
@@ -659,7 +660,7 @@ function MethodsPrivateSlide() {
         </li>
       </ul>
 
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-js">{`class AccessUser extends User {
   #role; // Soukromé pole
   
@@ -681,7 +682,7 @@ function MethodsPrivateSlide() {
 
 const admin = new AccessUser("John", "Smith", "ADMIN");
 console.log(admin.toAccessString());`}</code>
-      </pre>
+      </TheoryCodeBlock>
     </div>
   );
 }
@@ -902,9 +903,9 @@ function AjaxPracticeSlide() {
       </div>
 
       <h3 className="text-lg font-semibold mb-3">{modes[mode].title}</h3>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-4">
+      <TheoryCodeBlock>
         <code className="language-js">{modes[mode].code}</code>
-      </pre>
+      </TheoryCodeBlock>
 
       <InfoBox>
         <p className="text-sm">
@@ -1040,7 +1041,7 @@ document.getElementById('registration-form').addEventListener('submit', (event) 
           <li>Fakulta, Studijní program</li>
         </ul>
 
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-6">
+        <TheoryCodeBlock>
           <code className="language-js">{`class FacultyProgram {
   constructor(faculty, program) {
     this.faculty = faculty;
@@ -1062,7 +1063,7 @@ class CvutStudent {
 const fp = new FacultyProgram(faculty, program);
 const student = new CvutStudent(name, surname, pwd, id, fp);
 console.log(student);`}</code>
-        </pre>
+        </TheoryCodeBlock>
 
         <ChallengeReveal>
           <div className="mt-6 p-6 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border-2 border-emerald-300 dark:border-emerald-800">
@@ -1072,7 +1073,7 @@ console.log(student);`}</code>
 
             <div className="mb-4">
               <h5 className="font-semibold mb-2">HTML (index.html)</h5>
-              <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <TheoryCodeBlock>
                 <code className="language-html">{`<!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -1118,12 +1119,12 @@ console.log(student);`}</code>
   </form>
 </body>
 </html>`}</code>
-              </pre>
+              </TheoryCodeBlock>
             </div>
 
             <div>
               <h5 className="font-semibold mb-2">JavaScript (script.js)</h5>
-              <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <TheoryCodeBlock>
                 <code className="language-js">{`// Definice tříd
 class FacultyProgram {
   constructor(faculty, program) {
@@ -1195,7 +1196,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // e.target.reset();
   });
 });`}</code>
-              </pre>
+              </TheoryCodeBlock>
             </div>
           </div>
         </ChallengeReveal>
@@ -1241,12 +1242,12 @@ passwordInput.addEventListener('input', () => {
           server.
         </p>
 
-        <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm mb-4">
+        <TheoryCodeBlock>
           <code className="language-js">{`const demoWeakPasswords = new Set(["password", "123456", "qwerty"]);
 passwordInput.addEventListener('input', () => {
   showWarning(demoWeakPasswords.has(passwordInput.value));
 });`}</code>
-        </pre>
+        </TheoryCodeBlock>
 
         <div className="rounded-xl bg-zinc-50 dark:bg-zinc-800/60 p-4 mb-6">
           <h4 className="font-semibold mb-2">Demo hint (není bezpečnostní kontrola):</h4>
@@ -1277,7 +1278,7 @@ passwordInput.addEventListener('input', () => {
 
             <div className="mb-4">
               <h5 className="font-semibold mb-2">HTML (index.html)</h5>
-              <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <TheoryCodeBlock>
                 <code className="language-html">{`<!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -1313,12 +1314,12 @@ passwordInput.addEventListener('input', () => {
   </div>
 </body>
 </html>`}</code>
-              </pre>
+              </TheoryCodeBlock>
             </div>
 
             <div>
               <h5 className="font-semibold mb-2">JavaScript (script.js)</h5>
-              <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+              <TheoryCodeBlock>
                 <code className="language-js">{`// Pouze UX nápověda; nikdy nenahrazuje serverovou validaci.
 const demoWeakPasswords = new Set(['password', '123456', 'qwerty']);
 
@@ -1376,7 +1377,7 @@ document.addEventListener('DOMContentLoaded', () => {
   passwordInput.addEventListener('input', checkPassword);
 });
 */`}</code>
-              </pre>
+              </TheoryCodeBlock>
             </div>
           </div>
         </ChallengeReveal>

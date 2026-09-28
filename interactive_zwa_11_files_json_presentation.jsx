@@ -6,6 +6,7 @@ import Code from './src/components/lesson/Code.jsx';
 import InfoBox from './src/components/lesson/InfoBox.jsx';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import TheoryCodeBlock from './src/components/lesson/TheoryCodeBlock.jsx';
 import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
 import { clsx } from './src/components/lesson/classNames.js';
@@ -149,7 +150,7 @@ function TheoryFilesBasics() {
           </li>
         </ul>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`<?php
 $path = __DIR__ . '/data.txt';
 $ok = file_put_contents($path, "Ahoj svět\\n", LOCK_EX);
@@ -158,7 +159,7 @@ if ($ok === false) {
 }
 $content = @file_get_contents($path);
 echo $content === false ? 'Nelze číst' : $content;`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <div className="text-xs text-zinc-500">
         Reference:{' '}
         <a
@@ -205,14 +206,14 @@ function TheoryJsonBasics() {
           </li>
         </ul>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`<?php
 $json = '{"name":"Alice","email":"a@example.com"}';
 $data = json_decode($json, true); // asociativní pole
 echo $data['name'] ?? 'neznámé';
 
 $encoded = json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <div className="text-xs text-zinc-500">
         Reference:{' '}
         <a
@@ -260,7 +261,7 @@ function TheoryUsersLibrary() {
           </li>
         </ul>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`<?php
 // users.lib.php
 const USERS_FILE = __DIR__ . '/users.json';
@@ -327,7 +328,7 @@ function edit_user(string $id, string $name, string $email, string $avatar): boo
   if ($found) { save_all_users($users); }
   return $found;
 }`}</code>
-      </pre>
+      </TheoryCodeBlock>
     </div>
   );
 }
@@ -349,14 +350,14 @@ function TheoryPagination() {
           </li>
         </ul>
       </InfoBox>
-      <pre className="rounded-lg bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-sm">
+      <TheoryCodeBlock>
         <code className="language-php">{`<?php
 function list_users_paginated(?int $limit = null, int $offset = 0): array {
   $all = load_all_users();
   // length = null → do konce pole
   return array_slice($all, max(0, $offset), $limit ?? null);
 }`}</code>
-      </pre>
+      </TheoryCodeBlock>
       <div className="text-xs text-zinc-500">
         Poznámka: Ujistěte se, že stránkovací odkazy nepřekračují meze (offset ≥ 0, offset &lt;=
         count).

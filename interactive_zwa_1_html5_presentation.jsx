@@ -16,6 +16,7 @@ import Code from './src/components/lesson/Code.jsx';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import TheoryCodeBlock from './src/components/lesson/TheoryCodeBlock.jsx';
 
 function HtmlPreview({ html, title = 'Náhled HTML playgroundu' }) {
   return (
@@ -427,9 +428,9 @@ function SectionTabs({ theory, example, id }) {
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
           Ukázka
         </h3>
-        <pre className="whitespace-pre-wrap rounded bg-zinc-100/80 p-3 text-xs dark:bg-zinc-800/80">
-          {example}
-        </pre>
+        <TheoryCodeBlock>
+          <code className="language-html">{example}</code>
+        </TheoryCodeBlock>
       </div>
     </section>
   );
