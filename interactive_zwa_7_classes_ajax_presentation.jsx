@@ -1,5 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
+import {
+  EditorialChapter,
+  EditorialChapterSection,
+} from './src/course-ui/content/EditorialChapter.jsx';
 import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
@@ -224,239 +228,144 @@ function LessonSlideContent({ slide, password, setPassword, isWeakPassword }) {
 
 function OopTheorySlide() {
   return (
-    <div>
-      <h3 className="text-xl font-semibold mb-4">Základní OOP pojmy</h3>
-      <div className="space-y-3 mb-6">
-        <div className="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 p-4">
-          <h4 className="font-semibold mb-1">Zapouzdření (Encapsulation)</h4>
-          <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            Data a metody jsou pohromadě v jednom objektu. Skrýváme implementační detaily a
-            vystavujeme jen potřebné rozhraní.
-          </p>
-        </div>
-        <div className="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 p-4">
-          <h4 className="font-semibold mb-1">Dědičnost (Inheritance)</h4>
-          <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            Možnost přebírat vlastnosti a metody z nadřazené třídy. Redukuje duplicitu kódu a
-            vytváří hierarchie tříd.
-          </p>
-        </div>
-        <div className="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 p-4">
-          <h4 className="font-semibold mb-1">Polymorfismus</h4>
-          <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            Různé implementace stejného rozhraní. Objekty různých tříd mohou reagovat na stejné
-            zprávy různým způsobem.
-          </p>
-        </div>
-      </div>
-
-      <h3 className="text-xl font-semibold mb-3">Class-based vs Prototype-based OOP</h3>
-      <div className="overflow-x-auto mb-4">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="bg-zinc-100 dark:bg-zinc-800">
-              <th className="border border-zinc-300 dark:border-zinc-700 p-2 text-left">
-                Vlastnost
-              </th>
-              <th className="border border-zinc-300 dark:border-zinc-700 p-2 text-left">
-                Class-based
-              </th>
-              <th className="border border-zinc-300 dark:border-zinc-700 p-2 text-left">
-                Prototype-based
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border border-zinc-300 dark:border-zinc-700 p-2">Vytváření objektů</td>
-              <td className="border border-zinc-300 dark:border-zinc-700 p-2">
-                Z tříd (blueprints)
-              </td>
-              <td className="border border-zinc-300 dark:border-zinc-700 p-2">Z prototypů</td>
-            </tr>
-            <tr className="bg-zinc-50 dark:bg-zinc-900/40">
-              <td className="border border-zinc-300 dark:border-zinc-700 p-2">Struktura</td>
-              <td className="border border-zinc-300 dark:border-zinc-700 p-2">Pevně daná</td>
-              <td className="border border-zinc-300 dark:border-zinc-700 p-2">Dynamická</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div className="mb-6 p-4 rounded-xl bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800">
-        <h4 className="font-semibold mb-3 text-lg">🔗 Jak fungují prototypy v JavaScriptu?</h4>
-        <div className="space-y-3 text-sm text-zinc-700 dark:text-zinc-300">
-          <p>
-            <strong>Každý objekt v JS má interní odkaz na svůj prototyp</strong> – jiný objekt, ze
-            kterého &quot;dědí&quot; vlastnosti a metody. Tento odkaz se ukládá do vlastnosti{' '}
-            <Code>[[Prototype]]</Code>
-            (přístupná přes <Code>__proto__</Code> nebo <Code>Object.getPrototypeOf()</Code>).
-          </p>
-          <p>
-            <strong>Prototype chain (řetězec prototypů):</strong> Když přistoupíte k vlastnosti
-            objektu, kterou objekt nemá, JavaScript se podívá do jeho prototypu, pak do prototypu
-            prototypu, atd., dokud nenajde vlastnost nebo nenarazí na konec řetězce (
-            <Code>null</Code>).
-          </p>
-          <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-3 font-mono text-xs">
-            <div>
-              const animal = {'{'} eats: true {'}'};
-            </div>
-            <div>
-              const rabbit = {'{'} jumps: true {'}'};
-            </div>
-            <div>rabbit.__proto__ = animal;</div>
-            <div className="mt-2 text-emerald-600 dark:text-emerald-400">
-              {'//'} rabbit.eats → true (z prototypu)
-            </div>
-            <div className="text-emerald-600 dark:text-emerald-400">
-              {'//'} rabbit.jumps → true (vlastní vlastnost)
-            </div>
-          </div>
-          <p>
-            <strong>Konstruktorové funkce a .prototype:</strong> Když vytvoříte objekt pomocí{' '}
-            <Code>new</Code>, nový objekt získá jako prototyp vlastnost <Code>prototype</Code>{' '}
-            konstruktorové funkce.
-          </p>
-          <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-3 font-mono text-xs">
-            <div>
-              function User(name) {'{'} this.name = name; {'}'}
-            </div>
-            <div>User.prototype.greet = function() {'{'}</div>
-            <div className="pl-4">
-              return `Hi, ${'{'}this.name{'}'}!`;
-            </div>
-            <div>{'}'};</div>
-            <div className="mt-2">const user = new User(&quot;Alice&quot;);</div>
-            <div className="text-emerald-600 dark:text-emerald-400">
-              {'//'} user.__proto__ === User.prototype
-            </div>
-          </div>
-          <p>
-            <strong>ES6 class je syntaktický cukr:</strong> Moderní <Code>class</Code> syntaxe pod
-            kapotou stále vytváří konstruktorovou funkci a nastavuje prototypy stejným způsobem!
-          </p>
-        </div>
-      </div>
-
-      <InfoBox type="tip">
-        <h4 className="font-semibold mb-2">💡 Did you know?</h4>
+    <EditorialChapter intro="Objekt propojuje data s operacemi, které nad nimi dávají smysl. V JavaScriptu jsou třídy pohodlným zápisem, ale skutečné sdílení chování stále zajišťuje prototypový řetězec.">
+      <EditorialChapterSection index={1} title="Objekt drží stav a nabízí chování">
         <p>
-          Před ES6 (2015) neexistovalo klíčové slovo <Code>class</Code>. Všechno se řešilo pomocí
-          konstruktorových funkcí a manuálního nastavování prototypů. ES6 třídy jsou jen čitelnější
-          způsob zápisu, ale mechanismus zůstává stejný – prototypy!
+          Vlastnosti popisují aktuální stav objektu a metody určují, co s ním lze bezpečně dělat.
+          Zapouzdření neznamená schovat všechno; znamená vystavit malé srozumitelné rozhraní a
+          zabránit tomu, aby okolní kód závisel na každém detailu implementace.
         </p>
-      </InfoBox>
-    </div>
+        <p>
+          Dědičnost může sdílet společné chování, ale vytváří také vazbu mezi potomkem a rodičem.
+          Když vztah „je druhem“ není přirozený, bývá čitelnější složit objekt z menších
+          spolupracujících částí.
+        </p>
+      </EditorialChapterSection>
+
+      <EditorialIllustration
+        alt="Objekt propojuje svůj stav a chování s dalšími objekty v prototypovém řetězci."
+        height={771}
+        src="/course-art/editorial/javascript-oop-model.png"
+        width={2038}
+      />
+
+      <EditorialChapterSection index={2} title="Třída je zápis, prototyp je mechanismus">
+        <p>
+          Syntaxe <Code>class</Code> popisuje konstruktor a metody na jednom místě. Instance ale
+          metody nekopíruje: při jejich hledání pokračuje přes svůj prototyp, prototyp rodiče a dál,
+          dokud vlastnost nenajde nebo nedojde na konec řetězce.
+        </p>
+        <TheoryCodeBlock>
+          <code className="language-js">{`class User {
+  constructor(name) {
+    this.name = name;
+  }
+
+  greet() {
+    return \`Ahoj, \${this.name}!\`;
+  }
+}
+
+const ada = new User('Ada');
+Object.getPrototypeOf(ada) === User.prototype; // true`}</code>
+        </TheoryCodeBlock>
+      </EditorialChapterSection>
+
+      <EditorialChapterSection index={3} title="Vyhledávání pokračuje po řetězci">
+        <p>
+          Když objekt nemá požadovanou vlastnost, JavaScript ji hledá na jeho prototypu a potom na
+          dalších prototypech. Prakticky to znamená, že všechny instance mohou sdílet jednu metodu,
+          zatímco každá instance si ponechá vlastní data.
+        </p>
+        <p>
+          Řetězec kontrolujte přes <Code>Object.getPrototypeOf()</Code>. Historické{' '}
+          <Code>__proto__</Code> pomáhá při čtení staršího kódu, ale pro novou implementaci není
+          vhodným veřejným rozhraním.
+        </p>
+      </EditorialChapterSection>
+
+      <EditorialChapterSection index={4} title="Používejte nejmenší užitečnou abstrakci">
+        <p>
+          Objektový literál stačí pro jednu hodnotu, tovární funkce dobře vytváří více podobných
+          objektů a třída pomáhá tam, kde potřebujete jasnou identitu, sdílené metody nebo soukromý
+          stav. OOP není cíl samo o sobě; je to nástroj pro čitelnější změny.
+        </p>
+      </EditorialChapterSection>
+    </EditorialChapter>
   );
 }
 
 function CreatingObjectsSlide() {
-  const [step, setStep] = useState(0);
-  const steps = [
-    {
-      title: '1. new Object() + přiřazení',
-      code: `const user1 = new Object();
-user1.name = "John";
-user1.surname = "Smith";
-console.log(user1);`,
+  return (
+    <EditorialChapter intro="Stejná data lze v JavaScriptu vytvořit několika způsoby. Volba není soutěž o nejmodernější syntaxi: měla by odpovídat počtu objektů, množství sdíleného chování a tomu, jak se bude model dál měnit.">
+      <EditorialChapterSection index={1} title="Objektový literál pro jednu konkrétní hodnotu">
+        <p>
+          Literál je nejčitelnější, když potřebujete jeden konfigurační objekt nebo jednorázový
+          záznam. Struktura je vidět přímo v místě použití a není potřeba zavádět konstrukční
+          abstrakci.
+        </p>
+        <TheoryCodeBlock>
+          <code className="language-js">{`const user = {
+  name: 'Ada',
+  surname: 'Lovelace',
+  getFullName() {
+    return \`\${this.name} \${this.surname}\`;
+  },
+};`}</code>
+        </TheoryCodeBlock>
+      </EditorialChapterSection>
+
+      <EditorialIllustration
+        alt="Objekty vznikají přímo, pomocí opakovatelně použitelné továrny nebo podle třídního předpisu."
+        height={771}
+        src="/course-art/editorial/javascript-object-creation.png"
+        width={2038}
+      />
+
+      <EditorialChapterSection index={2} title="Tovární funkce pro opakované vytvoření">
+        <p>
+          Továrna je obyčejná funkce, která vrací nový objekt. Hodí se, když potřebujete více
+          podobných hodnot, ale nepotřebujete identitu instance ani dědičnost. Závislosti lze předat
+          jako parametry a výsledný objekt zůstává jednoduchý.
+        </p>
+        <TheoryCodeBlock>
+          <code className="language-js">{`function createUser(name, surname) {
+  return {
+    name,
+    surname,
+    getFullName() {
+      return \`\${name} \${surname}\`;
     },
-    {
-      title: '2. Konstruktorová funkce',
-      code: `function User(name, surname) {
-  this.name = name;
-  this.surname = surname;
+  };
 }
 
-const user2 = new User("John", "Smith");`,
-    },
-    {
-      title: '3. Objektový literál',
-      code: `const user3 = {
-  name: "John",
-  surname: "Smith",
+const ada = createUser('Ada', 'Lovelace');`}</code>
+        </TheoryCodeBlock>
+      </EditorialChapterSection>
+
+      <EditorialChapterSection index={3} title="Třída pro stabilní model a sdílené metody">
+        <p>
+          Třída dává smysl, když objekty představují dlouhodobou doménovou roli a mají společné
+          chování. Konstruktor nastaví platný počáteční stav, metody se sdílejí přes prototyp a
+          soukromá pole mohou chránit interní pravidla.
+        </p>
+        <TheoryCodeBlock>
+          <code className="language-js">{`class User {
+  #role;
+
+  constructor(name, surname, role = 'USER') {
+    this.name = name;
+    this.surname = surname;
+    this.#role = role;
+  }
+
   getFullName() {
     return \`\${this.name} \${this.surname}\`;
   }
-};`,
-    },
-    {
-      title: '4. ES6 třídy (doporučeno)',
-      code: `class User {
-  constructor(name, surname) {
-    this.name = name;
-    this.surname = surname;
-  }
-}
-
-class AccessUser extends User {
-  #role; // Soukromé pole
-  
-  constructor(name, surname, role) {
-    super(name, surname);
-    this.#role = role;
-  }
-}`,
-    },
-  ];
-
-  return (
-    <div>
-      <p className="mb-4 text-zinc-700 dark:text-zinc-300">
-        JavaScript nabízí několik způsobů vytváření objektů:
-      </p>
-
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm px-2 py-1 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
-            Způsob {step + 1} / {steps.length}
-          </span>
-        </div>
-        <h3 className="text-lg font-semibold mb-3">{steps[step].title}</h3>
-        <TheoryCodeBlock>
-          <code className="language-js">{steps[step].code}</code>
+}`}</code>
         </TheoryCodeBlock>
-      </div>
-
-      <div className="flex items-center justify-between mt-4">
-        <button
-          className="px-4 py-2 rounded-lg border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 disabled:opacity-50"
-          onClick={() => setStep(Math.max(0, step - 1))}
-          disabled={step === 0}
-        >
-          Předchozí
-        </button>
-        <div className="flex items-center gap-1">
-          {steps.map((_, i) => (
-            <button
-              key={i}
-              className={clsx(
-                'h-2.5 w-2.5 rounded-full border',
-                i === step
-                  ? 'bg-sky-500 border-sky-500'
-                  : 'bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700',
-              )}
-              onClick={() => setStep(i)}
-            />
-          ))}
-        </div>
-        <button
-          className="px-4 py-2 rounded-lg border border-sky-500/30 bg-sky-600 text-white disabled:opacity-50"
-          onClick={() => setStep(Math.min(steps.length - 1, step + 1))}
-          disabled={step === steps.length - 1}
-        >
-          Další
-        </button>
-      </div>
-
-      {step === steps.length - 1 && (
-        <div className="mt-6 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/60">
-          <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            ES6 syntaxe <Code>class</Code> je jen <strong>syntaktický cukr</strong> nad prototypy.
-          </p>
-        </div>
-      )}
-    </div>
+      </EditorialChapterSection>
+    </EditorialChapter>
   );
 }
 
@@ -505,236 +414,143 @@ console.log(admin.toAccessString());`}</code>
 
 function AjaxTheorySlide() {
   return (
-    <div>
-      <h3 className="text-xl font-semibold mb-4">Co je AJAX?</h3>
-      <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed mb-2 text-lg">
-        <strong>AJAX</strong> = <strong>A</strong>synchronous <strong>J</strong>avaScript{' '}
-        <strong>a</strong>nd <strong>X</strong>ML
-      </p>
-      <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed mb-6">
-        Technika pro <strong>asynchronní komunikaci se serverem</strong> bez reloadu celé stránky.
-        Umožňuje dynamicky aktualizovat části stránky na základě dat ze serveru. Dnes se místo XML
-        používá většinou <strong>JSON</strong>.
-      </p>
+    <EditorialChapter intro="AJAX označuje způsob, jakým stránka komunikuje se serverem bez úplného obnovení dokumentu. Moderní implementace používá fetch, Promise a async/await; důležitější než název je ale správně řídit celý životní cyklus požadavku.">
+      <EditorialChapterSection index={1} title="Aktualizuje se jen část rozhraní">
+        <p>
+          Uživatelská akce spustí HTTP požadavek na pozadí. Stránka zůstává dostupná, server vrátí
+          data a JavaScript podle výsledku upraví konkrétní část DOM. Přenáší se obvykle JSON,
+          nikoli nová kopie celé stránky.
+        </p>
+        <p>
+          Asynchronní neznamená okamžité. Rozhraní musí uživateli ukázat, že operace běží, zabránit
+          nechtěnému opakování a po dokončení zobrazit buď nová data, nebo srozumitelnou chybu.
+        </p>
+      </EditorialChapterSection>
 
       <EditorialIllustration
-        alt="Asynchronní požadavek přenese data mezi částí webové stránky a serverem bez obnovení celé stránky."
-        src="/course-art/editorial/ajax-request-cycle.png"
+        alt="Asynchronní požadavek prochází stavem načítání a končí úspěšnou nebo chybovou aktualizací části stránky."
+        height={771}
+        src="/course-art/editorial/ajax-request-states.png"
+        width={2038}
       />
 
-      <div className="mb-6 p-4 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-        <h4 className="font-semibold mb-3 text-lg">🌐 Klasický web vs. AJAX</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h5 className="font-semibold text-sm mb-2 text-rose-700 dark:text-rose-400">
-              ❌ Bez AJAXu (tradiční model)
-            </h5>
-            <ol className="list-decimal pl-5 space-y-1 text-xs text-zinc-700 dark:text-zinc-300">
-              <li>Uživatel klikne na odkaz/tlačítko</li>
-              <li>Prohlížeč pošle požadavek na server</li>
-              <li>Server zpracuje a vrátí celou HTML stránku</li>
-              <li>
-                <strong>Celá stránka se znovu načte</strong>
-              </li>
-              <li>Uživatel vidí &quot;bliknutí&quot; a ztrátu stavu</li>
-            </ol>
-          </div>
-          <div>
-            <h5 className="font-semibold text-sm mb-2 text-emerald-700 dark:text-emerald-400">
-              ✅ S AJAXem
-            </h5>
-            <ol className="list-decimal pl-5 space-y-1 text-xs text-zinc-700 dark:text-zinc-300">
-              <li>Uživatel provede akci</li>
-              <li>JavaScript pošle požadavek na pozadí</li>
-              <li>Server vrátí jen data (JSON, XML, text)</li>
-              <li>
-                <strong>Aktualizuje se jen část stránky</strong>
-              </li>
-              <li>Plynulá interakce bez reloadu</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-
-      <div className="mb-6 p-4 rounded-xl bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800">
-        <h4 className="font-semibold mb-3 text-lg">⚡ Synchronní vs. Asynchronní</h4>
-        <div className="space-y-3 text-sm text-zinc-700 dark:text-zinc-300">
-          <div>
-            <p className="font-semibold mb-1">🔒 Synchronní požadavek:</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>
-                Kód čeká na odpověď serveru – <strong>blokuje celou stránku</strong>
-              </li>
-              <li>Uživatel nemůže nic dělat, dokud server neodpoví</li>
-              <li>UI &quot;zamrzne&quot; (špatný UX)</li>
-            </ul>
-          </div>
-          <div>
-            <p className="font-semibold mb-1">🚀 Asynchronní požadavek (AJAX):</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>
-                Požadavek běží na pozadí – <strong>neblokuje UI</strong>
-              </li>
-              <li>Uživatel může dál pracovat se stránkou</li>
-              <li>Po obdržení odpovědi se spustí callback funkce</li>
-              <li>Moderní přístup: Promises a async/await</li>
-            </ul>
-          </div>
-        </div>
-        <div className="mt-3 rounded-lg bg-white/60 dark:bg-zinc-900/60 p-3 font-mono text-xs">
-          <div className="text-rose-600 dark:text-rose-400">
-            {'//'} ❌ Synchronní (nedoporučeno)
-          </div>
-          <div>const xhr = new XMLHttpRequest();</div>
-          <div>
-            xhr.open(&apos;GET&apos;, url,{' '}
-            <span className="text-rose-600 dark:text-rose-400 font-bold">false</span>); {'//'} false
-            = sync
-          </div>
-          <div>xhr.send(); {'//'} Blokuje!</div>
-          <div className="mt-2"></div>
-          <div className="text-emerald-600 dark:text-emerald-400">
-            {'//'} ✅ Asynchronní (doporučeno)
-          </div>
-          <div>fetch(url) {'//'} Neblokuje</div>
-          <div className="pl-4">.then(res =&gt; res.json())</div>
-          <div className="pl-4">.then(data =&gt; console.log(data));</div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 p-4">
-          <h4 className="font-semibold mb-2">✅ Výhody AJAXu</h4>
-          <ul className="list-disc pl-5 space-y-1 text-sm">
-            <li>
-              <strong>Rychlejší odezva</strong> – načítají se jen data, ne celá stránka
-            </li>
-            <li>
-              <strong>Lepší UX</strong> – plynulá interakce bez &quot;blikání&quot;
-            </li>
-            <li>
-              <strong>Menší přenos dat</strong> – šetří bandwidth
-            </li>
-            <li>
-              <strong>Desktopový zážitek</strong> – aplikace se chová jako nativní software
-            </li>
-          </ul>
-        </div>
-        <div className="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 p-4">
-          <h4 className="font-semibold mb-2">⚠️ Nevýhody/Výzvy</h4>
-          <ul className="list-disc pl-5 space-y-1 text-sm">
-            <li>
-              <strong>SEO</strong> – obsah načítaný AJAXem je hůře indexovatelný
-            </li>
-            <li>
-              <strong>Historie prohlížeče</strong> – tlačítko zpět nemusí fungovat správně
-            </li>
-            <li>
-              <strong>Složitější debugging</strong> – asynchronní kód je náročnější
-            </li>
-            <li>
-              <strong>Závislost na JS</strong> – bez JS aplikace nefunguje
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="mb-4 p-4 rounded-xl bg-violet-50/80 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800">
-        <h4 className="font-semibold mb-2">📚 Historie AJAXu</h4>
-        <div className="space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <p>
-            <strong>1999:</strong> Microsoft představil XMLHttpRequest v IE5 (původně pro Outlook
-            Web Access)
-          </p>
-          <p>
-            <strong>2005:</strong> Jesse James Garrett pojmenoval techniku &quot;AJAX&quot; – rychlý
-            vzestup popularity
-          </p>
-          <p>
-            <strong>2006+:</strong> AJAX se stal standardem (Gmail, Google Maps, Facebook)
-          </p>
-          <p>
-            <strong>2015:</strong> Standardizace <Code>fetch()</Code> API – moderní, promise-based
-            přístup
-          </p>
-          <p>
-            <strong>Dnes:</strong> fetch() + async/await je preferovaný způsob. JSON kompletně
-            nahradil XML.
-          </p>
-        </div>
-      </div>
-
-      <InfoBox>
-        <p className="text-sm">
-          <strong>💡 Fun fact:</strong> Přestože se AJAX jmenuje &quot;...and XML&quot;, dnes se XML
-          téměř nepoužívá. JSON je jednodušší, menší a přirozeně podporovaný JavaScriptem (
-          <Code>JSON.parse()</Code>, <Code>JSON.stringify()</Code>).
+      <EditorialChapterSection index={2} title="Požadavek má více stavů než úspěch a neúspěch">
+        <p>
+          Praktické rozhraní rozlišuje výchozí stav, načítání, úspěch, prázdný výsledek a chybu.
+          Každý stav potřebuje vlastní prezentaci. Díky tomu se logika nerozpadne na nahodilé změny
+          textu a uživatel vždy ví, co aplikace právě dělá.
         </p>
-      </InfoBox>
-    </div>
+      </EditorialChapterSection>
+
+      <EditorialChapterSection index={3} title="HTTP odpověď musíte vyhodnotit">
+        <p>
+          <Code>fetch()</Code> odmítne Promise při síťové chybě, ale odpověď se stavem 404 nebo 500
+          je z pohledu přenosu úspěšná. Aplikace proto musí zkontrolovat <Code>response.ok</Code> a
+          teprve potom zpracovat tělo odpovědi.
+        </p>
+        <TheoryCodeBlock>
+          <code className="language-js">{`const response = await fetch('/api/projects');
+
+if (!response.ok) {
+  throw new Error(\`Server odpověděl stavem \${response.status}\`);
+}
+
+const projects = await response.json();`}</code>
+        </TheoryCodeBlock>
+      </EditorialChapterSection>
+
+      <EditorialChapterSection index={4} title="Asynchronní tok má vlastní pravidla">
+        <p>
+          Blok <Code>try</Code> zachytí chybu požadavku i zpracování dat, zatímco{' '}
+          <Code>finally</Code>
+          vždy ukončí stav načítání. U opakovaných požadavků je navíc potřeba řešit pořadí odpovědí,
+          aby starší výsledek nepřepsal novější stav rozhraní.
+        </p>
+        <p>
+          Požadavek, který už není potřebný, lze zrušit pomocí <Code>AbortController</Code>. To je
+          užitečné například při živém vyhledávání nebo při odchodu z komponenty, která výsledek už
+          nebude zobrazovat.
+        </p>
+      </EditorialChapterSection>
+    </EditorialChapter>
   );
 }
 
 function AjaxPracticeSlide() {
-  const [mode, setMode] = useState(0);
-  const modes = [
-    {
-      title: 'XMLHttpRequest (starší)',
-      code: `function loadDoc() {
-  const xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState === 4 && this.status === 200) {
-      console.log(this.responseText);
-    }
-  };
-  xhttp.open("GET", "https://jsonplaceholder.typicode.com/todos/1", true);
-  xhttp.send();
-}`,
-    },
-    {
-      title: 'fetch() (moderní)',
-      code: `fetch("https://jsonplaceholder.typicode.com/todos/1")
-  .then(response => response.text())
-  .then(text => console.log(text))
-  .catch(error => console.error('Error:', error));`,
-    },
-  ];
-
   return (
-    <div>
-      <div className="flex gap-2 mb-4">
-        <button
-          className={clsx(
-            'px-4 py-2 rounded-lg text-sm',
-            mode === 0 ? 'bg-sky-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800',
-          )}
-          onClick={() => setMode(0)}
-        >
-          XMLHttpRequest
-        </button>
-        <button
-          className={clsx(
-            'px-4 py-2 rounded-lg text-sm',
-            mode === 1 ? 'bg-sky-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800',
-          )}
-          onClick={() => setMode(1)}
-        >
-          fetch()
-        </button>
-      </div>
-
-      <h3 className="text-lg font-semibold mb-3">{modes[mode].title}</h3>
-      <TheoryCodeBlock>
-        <code className="language-js">{modes[mode].code}</code>
-      </TheoryCodeBlock>
-
-      <InfoBox>
-        <p className="text-sm">
-          💡 <Code>fetch()</Code> je čitelnější a promise-based. Ukázka používá neutrální veřejný
-          JSON soubor; tajná data ani hesla nikdy nestahujte do prohlížeče.
+    <EditorialChapter intro="Spolehlivý AJAX nezačíná voláním fetch, ale jasným rozdělením odpovědností. Jedna část získá a ověří data, druhá řídí stav operace a třetí promítne výsledek do rozhraní.">
+      <EditorialChapterSection index={1} title="Oddělte získání dat od vykreslení">
+        <p>
+          Funkce pro komunikaci se serverem by měla vracet data nebo vyhodit chybu. Nemá zároveň
+          hledat elementy v DOM a rozhodovat o jejich vzhledu. Takové rozdělení usnadňuje testování
+          i pozdější nahrazení API.
         </p>
-      </InfoBox>
-    </div>
+        <TheoryCodeBlock>
+          <code className="language-js">{`async function loadProject(projectId, signal) {
+  const response = await fetch(\`/api/projects/\${projectId}\`, { signal });
+
+  if (!response.ok) {
+    throw new Error(\`Projekt nelze načíst: \${response.status}\`);
+  }
+
+  return response.json();
+}`}</code>
+        </TheoryCodeBlock>
+      </EditorialChapterSection>
+
+      <EditorialIllustration
+        alt="Praktický tok požadavku odděluje vstup uživatele, síťovou komunikaci, ověření odpovědi a aktualizaci rozhraní."
+        height={771}
+        src="/course-art/editorial/ajax-practical-flow.png"
+        width={2038}
+      />
+
+      <EditorialChapterSection index={2} title="Řiďte celý životní cyklus operace">
+        <p>
+          Před odesláním požadavku nastavte stav načítání. Po úspěchu uložte data, při chybě
+          zobrazte uživatelsky srozumitelnou zprávu a v bloku <Code>finally</Code> vždy ukončete
+          indikátor průběhu.
+        </p>
+        <TheoryCodeBlock>
+          <code className="language-js">{`async function showProject(projectId) {
+  renderStatus('loading');
+
+  try {
+    const project = await loadProject(projectId);
+    renderProject(project);
+    renderStatus('success');
+  } catch (error) {
+    console.error(error);
+    renderStatus('error');
+  } finally {
+    setControlsDisabled(false);
+  }
+}`}</code>
+        </TheoryCodeBlock>
+      </EditorialChapterSection>
+
+      <EditorialChapterSection index={3} title="Aktualizujte DOM bezpečně a předvídatelně">
+        <p>
+          Textová data vkládejte přes <Code>textContent</Code>, nikoli přes <Code>innerHTML</Code>.
+          Rozhraní si připravte pro prázdný výsledek i opakování akce; načtení dat totiž nemusí vždy
+          skončit položkou, kterou lze rovnou vykreslit.
+        </p>
+        <TheoryCodeBlock>
+          <code className="language-js">{`function renderProject(project) {
+  const title = document.querySelector('[data-project-title]');
+  title.textContent = project?.name ?? 'Projekt nemá název';
+}`}</code>
+        </TheoryCodeBlock>
+      </EditorialChapterSection>
+
+      <EditorialChapterSection index={4} title="XMLHttpRequest patří hlavně do staršího kódu">
+        <p>
+          Ve starších projektech se můžete setkat s <Code>XMLHttpRequest</Code>. Pro nový kód je
+          zpravidla čitelnější <Code>fetch()</Code> s <Code>async/await</Code>, protože odděluje
+          sekvenční kroky bez ručního sledování <Code>readyState</Code> a callbacků.
+        </p>
+      </EditorialChapterSection>
+    </EditorialChapter>
   );
 }
 

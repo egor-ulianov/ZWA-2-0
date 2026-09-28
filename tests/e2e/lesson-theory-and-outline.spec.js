@@ -207,10 +207,10 @@ test.describe('early lesson theory and task outline', () => {
     const codeBlock = page.locator('figure[data-language]').first();
     await expect(codeBlock).toBeVisible();
     await expect(codeBlock).toHaveAttribute('data-language', 'js');
-    await expect(codeBlock.locator('pre code')).toContainText('function loadDoc()');
+    await expect(codeBlock.locator('pre code')).toContainText('async function loadProject');
 
     await page.goto('/interactive-zwa-7?mode=projector&slide=ajax-practice');
-    await expect(page.getByText('function loadDoc()', { exact: false })).toBeVisible();
+    await expect(page.getByText('async function loadProject', { exact: false })).toBeVisible();
   });
 
   test('PHP and shell lecture examples use their matching language modes', async ({ page }) => {

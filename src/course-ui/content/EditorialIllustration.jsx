@@ -4,7 +4,11 @@ import styles from './content.module.css';
 
 export default function EditorialIllustration({ alt, height = 1024, src, width = 1536 }) {
   return (
-    <figure className={styles.editorialFigure} data-editorial-illustration="true">
+    <figure
+      className={styles.editorialFigure}
+      data-editorial-illustration="true"
+      data-integrated-artwork="true"
+    >
       <Image
         alt={alt}
         height={height}

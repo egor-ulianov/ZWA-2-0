@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import discordLogo from './src/interactive-zwa-1/assets/discord-logo.png';
-import telegramQr from './src/interactive-zwa-1/assets/telegram-qr.png';
 import { getLessonByNumber } from './src/config/lessons.js';
+import {
+  EditorialChapter,
+  EditorialChapterSection,
+} from './src/course-ui/content/EditorialChapter.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
@@ -401,27 +403,16 @@ const sections = [
     id: 'about-course',
     title: 'O ČEM JE PŘEDMĚT?',
     activityType: 'learn',
-    bullets: [
-      'KLIENT: Design, Logika, Architektura',
-      'SERVER: Logika, Bezpečnost, Architektura',
-      'KOMUNIKACE: Technologie, Struktura, Bezpečnost',
-    ],
   },
   {
     id: 'tips',
     title: 'DOPORUČENÍ PRO SEMESTRÁLKU',
     activityType: 'learn',
-    bullets: [
-      'Pracujte průběžně – vyhnete se stresu',
-      'Zvolte jednoduché zadání a udělejte ho kvalitně',
-      'Používejte git – zvyk do praxe',
-    ],
   },
   {
     id: 'extras',
     title: 'DODATEČNÉ INFO',
     activityType: 'learn',
-    bullets: ['Telegram skupina cvičení (odkazy, Q&A)', 'FEL ČVUT Discord – odpovědi 1× týdně'],
   },
   {
     id: 'theory',
@@ -540,6 +531,147 @@ function NetworkTheory({ sections }) {
   );
 }
 
+function CoursePurposeChapter() {
+  return (
+    <EditorialChapter intro="Webová aplikace není jen stránka v prohlížeči. Je to spolupráce uživatelského rozhraní, serverové logiky a komunikační vrstvy, která mezi nimi bezpečně přenáší požadavky a data.">
+      <EditorialChapterSection index={1} title="Jedna aplikace, tři odpovědnosti">
+        <p>
+          Klient, server a komunikace řeší různé problémy, ale výsledný produkt funguje jen tehdy,
+          když mají jasně rozdělené role. V průběhu kurzu proto nebudeme sbírat izolované příkazy;
+          budeme sledovat, kudy data procházejí a kdo za ně v každém kroku odpovídá.
+        </p>
+      </EditorialChapterSection>
+
+      <EditorialIllustration
+        alt="Klientská aplikace komunikuje přes zabezpečenou síťovou vrstvu se serverem a datovým úložištěm."
+        height={771}
+        src="/course-art/editorial/course-system-map.png"
+        width={2038}
+      />
+
+      <EditorialChapterSection index={2} title="Klient: to, co člověk používá">
+        <p>
+          V prohlížeči skládáme strukturu pomocí HTML, vzhled pomocí CSS a chování pomocí
+          JavaScriptu. Dobrý klient není jen hezký: musí být čitelný, přístupný a předvídatelně
+          reagovat na vstup uživatele i na stav načítání nebo chybu.
+        </p>
+      </EditorialChapterSection>
+
+      <EditorialChapterSection index={3} title="Server: pravidla a důvěryhodná data">
+        <p>
+          Server přijímá požadavky, ověřuje jejich oprávněnost, provádí aplikační logiku a pracuje s
+          uloženými daty. Kontroly na klientovi zpříjemňují používání, ale bezpečnostní rozhodnutí a
+          validace důležitých dat vždy patří také na server.
+        </p>
+      </EditorialChapterSection>
+
+      <EditorialChapterSection index={4} title="Komunikace: smlouva mezi oběma stranami">
+        <p>
+          HTTP určuje podobu požadavku a odpovědi, adresy určují cílový zdroj a stavové kódy
+          popisují výsledek. Bezpečné spojení chrání přenos, ale dobře navržené rozhraní navíc jasně
+          říká, jaká data očekává a co může klient udělat dál.
+        </p>
+      </EditorialChapterSection>
+    </EditorialChapter>
+  );
+}
+
+function SemesterProjectChapter() {
+  return (
+    <EditorialChapter intro="Semestrální práce se daří tehdy, když vzniká jako řada malých ověřených kroků. Cílem není co největší množství funkcí, ale spolehlivá aplikace, jejímž rozhodnutím rozumíte a umíte je obhájit.">
+      <EditorialChapterSection index={1} title="Začněte malým, uzavřeným problémem">
+        <p>
+          Jedna dobře dokončená uživatelská cesta je cennější než široké zadání plné rozpracovaných
+          obrazovek. Nejprve si určete, kdo aplikaci používá, jaký úkol v ní dokončí a jak poznáte,
+          že řešení funguje.
+        </p>
+      </EditorialChapterSection>
+
+      <EditorialIllustration
+        alt="Semestrální projekt postupuje od jednoduchého nápadu přes kód a verzování k otestované webové aplikaci."
+        height={771}
+        src="/course-art/editorial/semester-project-route.png"
+        width={2038}
+      />
+
+      <EditorialChapterSection index={2} title="Stavte po svislých řezech">
+        <p>
+          Nejprve propojte jednoduché rozhraní s jedním serverovým požadavkem a uložením dat. Až
+          tento celek funguje, přidávejte další scénáře. Každý krok tak zůstává spustitelný a chyba
+          má omezený prostor, ve kterém ji hledat.
+        </p>
+      </EditorialChapterSection>
+
+      <EditorialChapterSection index={3} title="Git používejte jako pracovní deník">
+        <p>
+          Commit zachycuje jednu srozumitelnou změnu a jeho zpráva vysvětluje její účel. Pravidelné
+          verzování umožní bezpečně experimentovat, porovnat rozhodnutí a vrátit se k poslednímu
+          funkčnímu stavu bez ztráty práce.
+        </p>
+      </EditorialChapterSection>
+
+      <EditorialChapterSection index={4} title="Ověřujte průběžně, ne až před odevzdáním">
+        <p>
+          Po každé části projděte hlavní scénář, chybový vstup i prázdný stav. Před odevzdáním pak
+          nezachraňujete několik neznámých problémů najednou, ale pouze dokončujete aplikaci, jejíž
+          základní cesta už byla mnohokrát ověřena.
+        </p>
+      </EditorialChapterSection>
+    </EditorialChapter>
+  );
+}
+
+function CourseSupportChapter() {
+  return (
+    <EditorialChapter intro="Když se zaseknete, napište včas a přiložte dostatek kontextu. Dobře položená otázka umožní ostatním rychle pochopit situaci a často vás při jejím formulování dovede k příčině problému.">
+      <EditorialChapterSection index={1} title="Co má obsahovat užitečný dotaz">
+        <p>
+          Uveďte, čeho jste chtěli dosáhnout, co se stalo místo toho a jaký krok problém spouští.
+          Přidejte krátký relevantní úryvek kódu a přesné chybové hlášení; neposílejte hesla, tokeny
+          ani celý projekt bez vysvětlení.
+        </p>
+      </EditorialChapterSection>
+
+      <EditorialIllustration
+        alt="Student získává pomoc od skupinové diskuze i strukturovaného výukového kanálu."
+        height={771}
+        src="/course-art/editorial/course-support-channels.png"
+        width={2038}
+      />
+
+      <EditorialChapterSection index={2} title="Skupina cvičení pro rychlou koordinaci">
+        <p>
+          Telegram je vhodný pro krátké organizační otázky, sdílení aktuálních odkazů a rychlé
+          ověření, zda podobný problém řeší i někdo další. Technický dotaz formulujte tak, aby byl
+          srozumitelný i bez znalosti předchozí konverzace.
+        </p>
+      </EditorialChapterSection>
+
+      <EditorialChapterSection index={3} title="Discord pro dohledatelnou technickou diskuzi">
+        <p>
+          Delší otázky, vysvětlení řešení a témata užitečná pro více studentů patří do předmětového
+          Discordu. Odpověď nemusí přijít okamžitě, proto na problém upozorněte s předstihem a
+          mezitím popište, které varianty jste už vyzkoušeli.
+        </p>
+        <ul className={contentStyles.editorialChapterLinks}>
+          <li>
+            <a href="https://t.me/+W4QiRAsv2dxmYzE8" target="_blank" rel="noopener noreferrer">
+              <span>Otevřít skupinu cvičení na Telegramu</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://discord.gg/YZjJbkvfaS" target="_blank" rel="noopener noreferrer">
+              <span>Otevřít Discord předmětu</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+          </li>
+        </ul>
+      </EditorialChapterSection>
+    </EditorialChapter>
+  );
+}
+
 function LessonSlideContent({ slide, commandLog }) {
   const hasSteps = Array.isArray(slide.steps) && slide.steps.length > 0;
   const hasSections = Array.isArray(slide.sections) && slide.sections.length > 0;
@@ -595,6 +727,9 @@ function LessonSlideContent({ slide, commandLog }) {
         </ul>
       )}
       {slide.id === 'quiz-html' && <QuizHtmlBasics />}
+      {slide.id === 'about-course' && <CoursePurposeChapter />}
+      {slide.id === 'tips' && <SemesterProjectChapter />}
+      {slide.id === 'extras' && <CourseSupportChapter />}
       {hasSteps && currentStep && (
         <div className="mt-4">
           <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4">
@@ -639,38 +774,6 @@ function LessonSlideContent({ slide, commandLog }) {
               Další
             </button>
           </div>
-        </div>
-      )}
-      {slide.id === 'extras' && (
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <a
-            href="https://t.me/+W4QiRAsv2dxmYzE8"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-xl overflow-hidden border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 hover:shadow transition-shadow"
-          >
-            <img
-              src={telegramQr.src}
-              alt="Telegram skupina – QR"
-              className="w-full h-48 object-contain bg-white dark:bg-zinc-900 p-2"
-            />
-            <div className="px-3 py-2 text-xs text-sky-700 dark:text-sky-400 underline">
-              Otevřít Telegram skupinu
-            </div>
-          </a>
-          <a
-            href="https://discord.gg/YZjJbkvfaS"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-xl overflow-hidden border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 hover:shadow transition-shadow"
-          >
-            <div className="w-full h-48 flex items-center justify-center bg-gradient-to-br from-indigo-50 to-sky-50 dark:from-zinc-900 dark:to-zinc-950">
-              <img src={discordLogo.src} alt="FEL Discord" className="h-16 w-16 object-contain" />
-            </div>
-            <div className="px-3 py-2 text-xs text-indigo-700 dark:text-indigo-400 underline">
-              Připojit se na Discord
-            </div>
-          </a>
         </div>
       )}
     </>

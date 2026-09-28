@@ -128,6 +128,90 @@
   height: auto;
 }
 
+.editorialChapter {
+  margin-block: 2rem;
+  border-top: 2px solid var(--course-ink);
+}
+
+.editorialChapterLead {
+  max-width: 46rem;
+  margin: 0;
+  padding-block: clamp(1.5rem, 4vw, 2.5rem);
+  color: var(--course-ink-muted);
+  font-size: clamp(1.05rem, 2vw, 1.24rem);
+  line-height: 1.8;
+}
+
+.editorialChapterSection {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  gap: clamp(1rem, 4vw, 2.25rem);
+  padding-block: clamp(2rem, 5vw, 3.5rem);
+  border-top: 1px solid var(--course-line);
+}
+
+.editorialChapterIndex {
+  padding-top: 0.3rem;
+  color: var(--course-blue);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.editorialChapterBody {
+  min-width: 0;
+}
+
+.editorialChapterBody h3 {
+  margin: 0 0 1rem;
+  color: var(--course-ink);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 820;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.editorialChapterBody p {
+  margin: 0;
+  color: var(--course-ink-muted);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.editorialChapterBody p + p,
+.editorialChapterBody p + pre,
+.editorialChapterBody figure + p {
+  margin-top: 1rem;
+}
+
+.editorialChapterBody strong {
+  color: var(--course-ink);
+}
+
+.editorialChapterLinks {
+  display: grid;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  border-bottom: 1px solid var(--course-line);
+  list-style: none;
+}
+
+.editorialChapterLinks a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  padding-block: 1rem;
+  border-top: 1px solid var(--course-line);
+  color: var(--course-blue-deep);
+  font-weight: 760;
+  text-decoration: none;
+}
+
+.editorialChapterLinks a:hover {
+  color: var(--course-blue);
+}
+
 .lessonSummary {
   margin-block: clamp(1.25rem, 4vw, 2.5rem);
   border-top: 2px solid var(--course-ink);
@@ -175,7 +259,8 @@
 }
 
 @media (max-width: 34rem) {
-  .theoryTopic {
+  .theoryTopic,
+  .editorialChapterSection {
     grid-template-columns: minmax(0, 1fr);
     gap: 0.65rem;
   }
