@@ -1,0 +1,66 @@
+.inlineCode {
+  padding: 0.12em 0.34em;
+  border-bottom: 2px solid var(--course-yellow);
+  background: color-mix(in srgb, var(--course-yellow) 17%, transparent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}
+
+.callout {
+  margin-block: 2rem;
+  padding: 0.35rem 0 0.35rem 1.25rem;
+  border-left: 0.35rem solid var(--course-blue);
+}
+
+.callout[data-tone='tip'] {
+  border-left-color: var(--course-mint);
+}
+
+.callout[data-tone='warning'] {
+  border-left-color: var(--course-coral);
+}
+
+.callout h3 {
+  margin: 0 0 0.45rem;
+  color: var(--course-blue-deep);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.callout > div > :first-child {
+  margin-top: 0;
+}
+
+.callout > div > :last-child {
+  margin-bottom: 0;
+}
+
+.codeFigure {
+  margin: 2rem 0;
+  border-block: 1px solid var(--course-line);
+  background: #111a2b;
+  color: #f7f1e7;
+}
+
+.codeFigure figcaption {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid rgb(255 255 255 / 0.15);
+  color: #b8c8e6;
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.codeFigure pre {
+  max-width: 100%;
+  overflow: auto;
+  margin: 0;
+  padding: 1.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
