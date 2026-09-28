@@ -190,6 +190,16 @@ test.describe('early lesson theory and task outline', () => {
     ).toHaveCount(1);
   });
 
+  test('network task workspace stays inside the active slide card', async ({ page }) => {
+    await installDeterministicNetwork(page);
+    await page.goto('/interactive-zwa-1?slide=network-task-dns');
+
+    const slide = page.getByRole('region', { name: 'DNS: host / nslookup' });
+    await expect(slide.getByRole('region', { name: 'Zadání' })).toHaveCount(1);
+    await expect(slide.getByRole('region', { name: 'IDE' })).toHaveCount(1);
+    await expect(slide.getByRole('region', { name: 'Náhled a testy' })).toHaveCount(1);
+  });
+
   test('network theory does not render a terminal outside a task workspace', async ({ page }) => {
     await installDeterministicNetwork(page);
     await page.goto('/interactive-zwa-1?slide=theory');

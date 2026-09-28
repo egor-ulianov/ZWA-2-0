@@ -531,7 +531,7 @@ function LessonSlideContent({ slide, commandLog }) {
   const totalSections = hasSections ? slide.sections.length : 0;
   const currentSection = hasSections ? slide.sections[stepIndex] : null;
   return (
-    <SharedSlideCard slide={slide} idPrefix="lesson-network">
+    <>
       {slide.body && !hasSections && (
         <div
           className={clsx(
@@ -717,7 +717,7 @@ function LessonSlideContent({ slide, commandLog }) {
           </a>
         </div>
       )}
-    </SharedSlideCard>
+    </>
   );
 }
 
@@ -1043,16 +1043,12 @@ export default function App() {
       footerText="© 2025 ZWA – Interaktivní výuková ukázka (Egor Ulianov)"
       maxWidthClass="max-w-7xl"
     >
-      <div className={activeNetworkTask ? 'grid grid-cols-1 gap-6 lg:grid-cols-2' : ''}>
-        <div>
-          <LessonSlideContent
-            slide={current}
-            commandLog={commandLogs[activeNetworkTask?.id] || []}
-          />
-        </div>
+      <SharedSlideCard slide={current} idPrefix="lesson-network">
+        <LessonSlideContent slide={current} commandLog={commandLogs[activeNetworkTask?.id] || []} />
         {activeNetworkTask && (
-          <div>
+          <div className="mt-6">
             <LessonTaskWorkspace
+              key={activeNetworkTask.id}
               privateMarker="network-exercise"
               onRunTests={() =>
                 setChecklistChecked((checked) => ({ ...checked, [activeNetworkTask.id]: true }))
@@ -1104,7 +1100,7 @@ export default function App() {
             />
           </div>
         )}
-      </div>
+      </SharedSlideCard>
     </LessonShell>
   );
 }
