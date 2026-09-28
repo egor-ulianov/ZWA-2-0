@@ -108,6 +108,14 @@ test('every catalog lesson uses the shared shell and navigation contract', () =>
     const sourcePath = lessonSourcePath(lesson);
     assert.ok(existsSync(sourcePath), `${lesson.componentKey} source must exist`);
     const source = readFileSync(sourcePath, 'utf8');
+    if (lesson.number === 1) {
+      assert.match(source, /LearningExperience/, lesson.componentKey);
+      assert.match(source, /useLearningNavigation/, lesson.componentKey);
+      assert.match(source, /<LearningExperience\b/, lesson.componentKey);
+      assert.match(source, /useLearningNavigation\(/, lesson.componentKey);
+      assert.doesNotMatch(source, /LessonShell|useSlideNavigation/, lesson.componentKey);
+      continue;
+    }
     assert.match(source, /LessonShell/, lesson.componentKey);
     assert.match(source, /useSlideNavigation/, lesson.componentKey);
     assert.match(source, /<LessonShell\b/, lesson.componentKey);
@@ -126,11 +134,16 @@ test('playground lessons keep their isolated execution adapters', () => {
 
   for (const componentKey of playgroundComponents) {
     const source = readFileSync(join(root, `${componentKey}.jsx`), 'utf8');
-    assert.match(
-      source,
-      /src\/components\/playground\/(?:SandboxedPreview|JsSandbox)/,
-      componentKey,
-    );
+    if (componentKey === 'interactive_zwa_1_html5_presentation') {
+      assert.match(source, /src\/course-ui\/exercises\/runtime\/SandboxFrame/, componentKey);
+      assert.doesNotMatch(source, /src\/components\/playground/, componentKey);
+    } else {
+      assert.match(
+        source,
+        /src\/components\/playground\/(?:SandboxedPreview|JsSandbox)/,
+        componentKey,
+      );
+    }
     assert.doesNotMatch(source, /new Function\s*\(/, componentKey);
   }
 });

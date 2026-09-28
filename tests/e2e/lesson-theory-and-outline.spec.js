@@ -21,6 +21,18 @@ const earlyLessonCases = [
   },
 ];
 
+async function openLessonOutline(page, route) {
+  if (route.includes('interactive-zwa-1-html5')) {
+    await page.getByRole('button', { name: 'Osnova lekce' }).click();
+    return page.getByRole('dialog', { name: 'Osnova lekce' });
+  }
+  return page.getByRole('navigation', { name: 'Osnova kurzu' });
+}
+
+function outlineButton(outline, name) {
+  return outline.getByRole('button').filter({ hasText: name });
+}
+
 test.describe('early lesson theory and task outline', () => {
   test('lecture code examples use read-only syntax highlighting', async ({ page }) => {
     await installDeterministicNetwork(page);
@@ -66,9 +78,9 @@ test.describe('early lesson theory and task outline', () => {
         );
       }
 
-      const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
+      const outline = await openLessonOutline(page, testCase.route);
       for (const task of testCase.tasks) {
-        await expect(outline.getByRole('button', { name: task, exact: true })).toBeVisible();
+        await expect(outlineButton(outline, task)).toBeVisible();
       }
     });
   }
@@ -79,10 +91,12 @@ test.describe('early lesson theory and task outline', () => {
     await installDeterministicNetwork(page);
     await page.goto('/interactive-zwa-1-html5?slide=tasks');
 
-    const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
-    await expect(
-      outline.getByRole('button', { name: 'Kostra dokumentu', exact: true }),
-    ).toHaveAttribute('aria-current', 'step');
+    const outline = await openLessonOutline(page, '/interactive-zwa-1-html5?slide=tasks');
+    await expect(outlineButton(outline, 'Kostra dokumentu')).toHaveAttribute(
+      'aria-current',
+      'step',
+    );
+    await page.keyboard.press('Escape');
     await expect(page.getByRole('region', { name: 'IDE' })).toBeVisible();
   });
 
@@ -110,10 +124,9 @@ test.describe('early lesson theory and task outline', () => {
     for (const testCase of cases) {
       await installDeterministicNetwork(page);
       await page.goto(testCase.route);
-      const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
-
       for (const task of testCase.tasks) {
-        await outline.getByRole('button', { name: task, exact: true }).click();
+        const outline = await openLessonOutline(page, testCase.route);
+        await outlineButton(outline, task).click();
         const ide = page.getByRole('region', { name: 'IDE' });
         const tabs = ide.getByRole('tablist', { name: 'Soubory IDE' });
         await expect(tabs).toBeVisible();
@@ -130,16 +143,17 @@ test.describe('early lesson theory and task outline', () => {
     await page.goto('/interactive-zwa-1-html5?slide=html-task-skeleton');
 
     const ide = page.getByRole('region', { name: 'IDE' });
-    const editor = ide.locator('[data-code-editor="syntax"] .cm-content');
+    const editor = ide.locator('[data-studio-editor="true"] .cm-content');
     await editor.click();
     await page.keyboard.press('Control+End');
     await page.keyboard.type('TEST-STATE-NEPŘENÁŠET');
 
-    await page
-      .getByRole('navigation', { name: 'Osnova kurzu' })
-      .getByRole('button', { name: 'Sémantická struktura', exact: true })
-      .click();
-    await expect(ide.locator('[data-code-editor="syntax"] .cm-content')).not.toContainText(
+    const outline = await openLessonOutline(
+      page,
+      '/interactive-zwa-1-html5?slide=html-task-skeleton',
+    );
+    await outlineButton(outline, 'Sémantická struktura').click();
+    await expect(ide.locator('[data-studio-editor="true"] .cm-content')).not.toContainText(
       'TEST-STATE-NEPŘENÁŠET',
     );
   });

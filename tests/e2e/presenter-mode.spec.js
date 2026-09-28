@@ -21,8 +21,8 @@ test.describe('lesson projector and presenter modes', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-1-html5?mode=unknown&slide=intro');
-    await expect(page.locator('[data-lesson-mode="student"]')).toBeVisible();
-    await expect(page.getByRole('navigation', { name: /Osnova kurzu/i })).toBeVisible();
+    await expect(page.locator('[data-learning-experience="student"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Osnova lekce' })).toBeVisible();
   });
 
   test('projector keeps lesson teaching copy while stripping activity controls', async ({
@@ -69,8 +69,8 @@ test.describe('lesson projector and presenter modes', () => {
     await page.goto('/interactive-zwa-1-html5?mode=presenter&slide=intro');
     await expect(page.getByRole('navigation', { name: /Osnova prezentujícího/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Otevřít projektor/i })).toBeVisible();
-    await expect(page.getByRole('tablist')).toBeVisible();
-    await expect(page.getByRole('tabpanel')).toHaveCount(1);
+    await expect(page.getByRole('region', { name: 'Aktuální výukový obsah' })).toBeVisible();
+    await expect(page.getByRole('tablist')).toHaveCount(0);
   });
 
   test('successful projector popup does not show the blocked-popup fallback', async ({ page }) => {

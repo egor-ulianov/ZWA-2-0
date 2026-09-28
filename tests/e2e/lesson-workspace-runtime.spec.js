@@ -31,8 +31,14 @@ test.describe('runtime lesson task workspaces', () => {
 
       await expect(page.getByRole('region', { name: 'Zadání' }).first()).toBeVisible();
       await expect(page.getByRole('region', { name: 'IDE' }).first()).toBeVisible();
-      await expect(page.getByRole('region', { name: 'Náhled a testy' }).first()).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Spustit testy' }).first()).toBeVisible();
+      if (route.includes('interactive-zwa-1-html5')) {
+        await expect(page.getByRole('region', { name: 'Náhled' }).first()).toBeVisible();
+        await expect(page.getByRole('region', { name: 'Ověření' }).first()).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Spustit ověření' }).first()).toBeVisible();
+      } else {
+        await expect(page.getByRole('region', { name: 'Náhled a testy' }).first()).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Spustit testy' }).first()).toBeVisible();
+      }
     });
   }
 
@@ -74,19 +80,32 @@ test.describe('runtime lesson task workspaces', () => {
       await installDeterministicNetwork(page);
       await page.goto(testCase.route);
       const editor = page.getByRole('region', { name: 'IDE' }).first();
-      const preview = page.getByRole('region', { name: 'Náhled a testy' }).first();
+      const migratedHtml = testCase.route.includes('interactive-zwa-1-html5');
+      const preview = page
+        .getByRole('region', { name: migratedHtml ? 'Náhled' : 'Náhled a testy' })
+        .first();
+      const verification = migratedHtml
+        ? page.getByRole('region', { name: 'Ověření' }).first()
+        : preview;
 
       await expect(editor.getByRole('textbox').first()).toBeVisible();
       await expect(preview.locator(`iframe[title="${testCase.iframeTitle}"]`)).toBeVisible();
       await expect(editor.locator(`iframe[title="${testCase.iframeTitle}"]`)).toHaveCount(0);
 
-      await preview.getByRole('button', { name: 'Spustit testy', exact: true }).click();
+      await verification
+        .getByRole('button', {
+          name: migratedHtml ? 'Spustit ověření' : 'Spustit testy',
+          exact: true,
+        })
+        .click();
       if (testCase.iframeTitle.startsWith('Náhled HTML')) {
-        await expect(preview.getByText(/Chyba validace:/)).toBeVisible();
+        await expect(verification.getByText(/Chyba validace:/)).toBeVisible();
       } else {
         await expect(preview.getByRole('status')).toContainText(/Úloha|#site-header/);
       }
-      await expect(preview.getByRole('group', { name: 'Výsledky testů' })).toBeVisible();
+      if (!migratedHtml) {
+        await expect(preview.getByRole('group', { name: 'Výsledky testů' })).toBeVisible();
+      }
     }
   });
 
@@ -198,13 +217,26 @@ test.describe('runtime lesson task workspaces', () => {
       await page.goto(testCase.route);
 
       const assignment = page.getByRole('region', { name: 'Zadání' });
-      await page
-        .getByRole('navigation', { name: 'Osnova kurzu' })
-        .getByRole('button', { name: testCase.task, exact: true })
-        .click();
+      if (testCase.route.includes('interactive-zwa-1-html5')) {
+        await page.getByRole('button', { name: 'Osnova lekce' }).click();
+        await page
+          .getByRole('dialog', { name: 'Osnova lekce' })
+          .getByRole('button')
+          .filter({ hasText: testCase.task })
+          .click();
+      } else {
+        await page
+          .getByRole('navigation', { name: 'Osnova kurzu' })
+          .getByRole('button', { name: testCase.task, exact: true })
+          .click();
+      }
       await expect(assignment).toContainText(testCase.assignment);
       await expect(page.getByRole('region', { name: 'IDE' })).toBeVisible();
-      await expect(page.getByRole('region', { name: 'Náhled a testy' })).toBeVisible();
+      await expect(
+        page.getByRole('region', {
+          name: testCase.route.includes('interactive-zwa-1-html5') ? 'Náhled' : 'Náhled a testy',
+        }),
+      ).toBeVisible();
     }
   });
 
@@ -217,7 +249,10 @@ test.describe('runtime lesson task workspaces', () => {
       await page.goto(route);
 
       const ide = page.getByRole('region', { name: 'IDE' });
-      await expect(ide.locator('[data-code-editor="syntax"][data-language="html"]')).toHaveCount(1);
+      const editorSelector = route.includes('interactive-zwa-1-html5')
+        ? '[data-studio-editor="true"][data-language="html"]'
+        : '[data-code-editor="syntax"][data-language="html"]';
+      await expect(ide.locator(editorSelector)).toHaveCount(1);
       await expect(ide.locator('.cm-editor')).toHaveCount(1);
       await expect(ide.locator('.cm-content')).toHaveCount(1);
       await expect(ide.locator('.cm-gutters')).toHaveCount(1);
@@ -252,10 +287,14 @@ test.describe('runtime lesson task workspaces', () => {
       test(`${checkerCase.route} runs its existing checker`, async ({ page }) => {
         await installDeterministicNetwork(page);
         await page.goto(checkerCase.route);
+        const migratedHtml = checkerCase.route.includes('interactive-zwa-1-html5');
         await page
-          .getByRole('region', { name: 'Náhled a testy' })
+          .getByRole('region', { name: migratedHtml ? 'Ověření' : 'Náhled a testy' })
           .first()
-          .getByRole('button', { name: 'Spustit testy', exact: true })
+          .getByRole('button', {
+            name: migratedHtml ? 'Spustit ověření' : 'Spustit testy',
+            exact: true,
+          })
           .click();
         if (checkerCase.state) {
           await checkerCase.state(page);

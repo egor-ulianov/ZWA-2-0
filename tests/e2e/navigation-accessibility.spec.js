@@ -61,20 +61,26 @@ test.describe('public catalog and lesson navigation', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-1-html5?slide=tasks#stale');
-    await expect(page.getByRole('navigation', { name: 'Osnova kurzu' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Osnova lekce' })).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'Navigace mezi snímky' })).toHaveCount(0);
     await expect(page.getByText('Lekce 1', { exact: true }).first()).toBeVisible();
+    await page.getByRole('button', { name: 'Osnova lekce' }).click();
     await expect(
       page
-        .getByRole('navigation', { name: 'Osnova kurzu' })
-        .getByRole('button', { name: 'Kostra dokumentu' }),
+        .getByRole('dialog', { name: 'Osnova lekce' })
+        .getByRole('button')
+        .filter({ hasText: 'Kostra dokumentu' }),
     ).toHaveAttribute('aria-current', 'step');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('tasks');
     await expect.poll(() => new URL(page.url()).hash).toBe('');
 
     await page.goto('/interactive-zwa-1-html5?slide=missing');
+    await page.getByRole('button', { name: 'Osnova lekce' }).click();
     await expect(
-      page.getByRole('navigation', { name: 'Osnova kurzu' }).getByRole('button', { name: 'Úvod' }),
+      page
+        .getByRole('dialog', { name: 'Osnova lekce' })
+        .getByRole('button')
+        .filter({ hasText: 'Úvod' }),
     ).toHaveAttribute('aria-current', 'step');
     await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('intro');
   });
@@ -85,21 +91,22 @@ test.describe('public catalog and lesson navigation', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-1-html5?slide=intro');
-    const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
+    const outlineTrigger = page.getByRole('button', { name: 'Osnova lekce' });
+    await outlineTrigger.click();
+    let outline = page.getByRole('dialog', { name: 'Osnova lekce' });
     await expect(outline).toBeVisible();
     await expect(page.getByRole('tablist')).toHaveCount(0);
     await expect(page.getByRole('tabpanel')).toHaveCount(0);
-    const slides = outline.getByRole('button');
+    let slides = outline.getByRole('button').filter({ hasNotText: '×' });
     await expect(slides).toHaveCount(6);
 
     await slides.nth(1).click();
-    await expect(slides.nth(1)).toHaveAttribute('aria-current', 'step');
     await expect(page).toHaveURL(/slide=sections/);
 
     await page.keyboard.press('End');
-    await expect(slides.nth(5)).toHaveAttribute('aria-current', 'step');
+    await expect(page).toHaveURL(/slide=html-task-media/);
     await page.keyboard.press('Home');
-    await expect(slides.nth(0)).toHaveAttribute('aria-current', 'step');
+    await expect(page).toHaveURL(/slide=intro/);
   });
 
   test('presenter controls are keyboard reachable', async ({ page }) => {
@@ -133,16 +140,28 @@ test.describe('public catalog and lesson navigation', () => {
       expect(response.ok()).toBe(true);
       await expect(page.locator('h1').first()).toBeVisible();
 
-      const navigation = page.getByRole('navigation', { name: 'Osnova kurzu' });
+      if (lesson.number === 1) {
+        await page.getByRole('button', { name: 'Osnova lekce' }).click();
+      }
+      const navigation =
+        lesson.number === 1
+          ? page.getByRole('dialog', { name: 'Osnova lekce' })
+          : page.getByRole('navigation', { name: 'Osnova kurzu' });
       const slideButtons = navigation.getByRole('button');
-      const slideCount = await slideButtons.count();
+      const navigableButtons =
+        lesson.number === 1 ? slideButtons.filter({ hasNotText: '×' }) : slideButtons;
+      const slideCount = await navigableButtons.count();
       expect(slideCount).toBeGreaterThan(1);
       await expect(page.getByRole('tablist')).toHaveCount(0);
 
       const activeSlide = navigation.locator('button[aria-current="step"]');
       await expect(activeSlide).toHaveCount(1);
-      await slideButtons.nth(1).click();
-      await expect(slideButtons.nth(1)).toHaveAttribute('aria-current', 'step');
+      await navigableButtons.nth(1).click();
+      if (lesson.number === 1) {
+        await expect(page).toHaveURL(/slide=/);
+      } else {
+        await expect(slideButtons.nth(1)).toHaveAttribute('aria-current', 'step');
+      }
     });
   }
 });
