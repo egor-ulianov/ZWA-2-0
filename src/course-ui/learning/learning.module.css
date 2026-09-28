@@ -34,10 +34,16 @@
 
 .heroArtwork {
   width: min(100%, 75rem);
-  max-height: min(56vw, 38rem);
+  height: clamp(13rem, 20vw, 18rem);
   margin-inline: auto;
   border: 2px solid var(--course-ink);
   border-radius: 0.2rem;
+}
+
+@media (max-width: 42rem) {
+  .heroArtwork {
+    height: clamp(10rem, 45vw, 13rem);
+  }
 }
 
 .editorialHeader {

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import memeImg from './src/interactive-zwa-6/image.png';
 import { getLessonByNumber } from './src/config/lessons.js';
 import Code from './src/course-ui/content/InlineCode.jsx';
+import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
@@ -498,16 +499,24 @@ function JavaScriptTheory({ sections }) {
   return (
     <div className={contentStyles.theoryFlow} data-theory-flow="true">
       {sections.map((section, index) => (
-        <section className={contentStyles.theoryTopic} data-theory-topic="true" key={section.title}>
-          <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
-          <div className={contentStyles.theoryBody}>
-            <h3>{section.title}</h3>
-            <p>{section.body}</p>
-            {section.points.map((point) => (
-              <p key={point}>{point}</p>
-            ))}
-          </div>
-        </section>
+        <React.Fragment key={section.title}>
+          <section className={contentStyles.theoryTopic} data-theory-topic="true">
+            <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
+            <div className={contentStyles.theoryBody}>
+              <h3>{section.title}</h3>
+              <p>{section.body}</p>
+              {section.points.map((point) => (
+                <p key={point}>{point}</p>
+              ))}
+            </div>
+          </section>
+          {index === 3 ? (
+            <EditorialIllustration
+              alt="Kliknutí v prohlížeči prochází stromem DOM do JavaScriptu a vrací se jako změna stránky."
+              src="/course-art/editorial/javascript-event-flow.png"
+            />
+          ) : null}
+        </React.Fragment>
       ))}
     </div>
   );

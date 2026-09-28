@@ -10,6 +10,7 @@ import React, {
   useState,
 } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
+import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
@@ -702,15 +703,23 @@ function CssLayoutTheory({ sections }) {
   return (
     <div className={contentStyles.theoryFlow} data-theory-flow="true">
       {sections.map((section, index) => (
-        <section className={contentStyles.theoryTopic} data-theory-topic="true" key={section.title}>
-          <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
-          <div className={contentStyles.theoryBody}>
-            <h3>{section.title}</h3>
-            {section.paragraphs.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-          </div>
-        </section>
+        <React.Fragment key={section.title}>
+          <section className={contentStyles.theoryTopic} data-theory-topic="true">
+            <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
+            <div className={contentStyles.theoryBody}>
+              <h3>{section.title}</h3>
+              {section.paragraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+          </section>
+          {index === 3 ? (
+            <EditorialIllustration
+              alt="Stejný webový obsah se přeskupuje pro monitor, tablet a mobilní telefon."
+              src="/course-art/editorial/responsive-layout.png"
+            />
+          ) : null}
+        </React.Fragment>
       ))}
     </div>
   );

@@ -5,6 +5,7 @@ import telegramQr from './src/interactive-zwa-1/assets/telegram-qr.png';
 import semestralMeme from './src/interactive-zwa-1/assets/semestral-meme.png';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
@@ -524,15 +525,25 @@ function NetworkTheory({ sections }) {
   return (
     <div className={contentStyles.theoryFlow} data-theory-flow="true">
       {sections.map((section, index) => (
-        <section className={contentStyles.theoryTopic} data-theory-topic="true" key={section.title}>
-          <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
-          <div className={contentStyles.theoryBody}>
-            <h3>{section.title}</h3>
-            {section.points.map((point) => (
-              <p key={point}>{point}</p>
-            ))}
-          </div>
-        </section>
+        <React.Fragment key={section.title}>
+          <section className={contentStyles.theoryTopic} data-theory-topic="true">
+            <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
+            <div className={contentStyles.theoryBody}>
+              <h3>{section.title}</h3>
+              {section.points.map((point) => (
+                <p key={point}>{point}</p>
+              ))}
+            </div>
+          </section>
+          {index === 1 ? (
+            <EditorialIllustration
+              alt="Schéma cesty webového požadavku od prohlížeče přes DNS a směrovače k zabezpečenému serveru."
+              height={772}
+              src="/course-art/editorial/network-request-journey.png"
+              width={2038}
+            />
+          ) : null}
+        </React.Fragment>
       ))}
     </div>
   );

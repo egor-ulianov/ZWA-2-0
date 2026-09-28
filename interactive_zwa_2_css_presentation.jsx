@@ -12,6 +12,7 @@ import React, {
 import heroImg from './src/interactive-zwa-1/assets/semestral-meme.png';
 import memeImg from './src/interactive-zwa-2/assets/image.png';
 import { getLessonByNumber } from './src/config/lessons.js';
+import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
@@ -786,15 +787,23 @@ function CssTheory({ sections }) {
   return (
     <div className={contentStyles.theoryFlow} data-theory-flow="true">
       {sections.map((section, index) => (
-        <section className={contentStyles.theoryTopic} data-theory-topic="true" key={section.title}>
-          <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
-          <div className={contentStyles.theoryBody}>
-            <h3>{section.title}</h3>
-            {section.paragraphs.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-          </div>
-        </section>
+        <React.Fragment key={section.title}>
+          <section className={contentStyles.theoryTopic} data-theory-topic="true">
+            <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
+            <div className={contentStyles.theoryBody}>
+              <h3>{section.title}</h3>
+              {section.paragraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+          </section>
+          {index === 0 ? (
+            <EditorialIllustration
+              alt="Několik vrstev CSS pravidel se spojuje do výsledného vzhledu webové stránky."
+              src="/course-art/editorial/css-cascade.png"
+            />
+          ) : null}
+        </React.Fragment>
       ))}
     </div>
   );

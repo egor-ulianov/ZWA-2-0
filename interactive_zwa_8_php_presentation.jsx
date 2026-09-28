@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
@@ -1005,13 +1006,21 @@ function PhpTheorySections() {
   return (
     <div className={contentStyles.theoryFlow} data-theory-flow="true">
       {sections.map((section, index) => (
-        <section className={contentStyles.theoryTopic} data-theory-topic="true" key={section.title}>
-          <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
-          <div className={contentStyles.theoryBody}>
-            <h3>{section.title}</h3>
-            {section.content}
-          </div>
-        </section>
+        <React.Fragment key={section.title}>
+          <section className={contentStyles.theoryTopic} data-theory-topic="true">
+            <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
+            <div className={contentStyles.theoryBody}>
+              <h3>{section.title}</h3>
+              {section.content}
+            </div>
+          </section>
+          {index === 2 ? (
+            <EditorialIllustration
+              alt="Webový požadavek prochází PHP serverem, aplikační logikou a databází a vrací hotovou stránku."
+              src="/course-art/editorial/php-request-lifecycle.png"
+            />
+          ) : null}
+        </React.Fragment>
       ))}
     </div>
   );

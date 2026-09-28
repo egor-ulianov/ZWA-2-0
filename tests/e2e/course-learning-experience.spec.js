@@ -26,6 +26,20 @@ test.describe('HTML5 course learning experience', () => {
     await expect(page.locator('[class*="portal-"], .lesson-shell')).toHaveCount(0);
   });
 
+  test('lecture artwork introduces the page without dominating the desktop viewport', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.goto('/interactive-zwa-1-html5?slide=intro');
+
+    const artwork = page.locator('header [data-module="web-foundations"]').first();
+    await expect(artwork).toBeVisible();
+    const bounds = await artwork.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds.height).toBeLessThanOrEqual(300);
+    expect(bounds.height).toBeGreaterThanOrEqual(240);
+  });
+
   test('outline drawer traps entry, closes with escape and restores focus', async ({ page }) => {
     await page.goto('/interactive-zwa-1-html5?slide=intro');
     const trigger = page.getByRole('button', { name: 'Osnova lekce' });

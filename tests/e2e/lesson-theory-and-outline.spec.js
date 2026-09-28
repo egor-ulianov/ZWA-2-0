@@ -108,6 +108,54 @@ test.describe('early lesson theory and task outline', () => {
       await expect(theory.getByRole('button', { name: 'Předchozí', exact: true })).toHaveCount(0);
       await expect(theory.getByRole('button', { name: 'Další', exact: true })).toHaveCount(0);
       await expect(theory.getByText(/Krok \d+ \/ \d+/)).toHaveCount(0);
+
+      const illustration = theory.locator('[data-editorial-illustration="true"]');
+      await expect(illustration).toHaveCount(1);
+      await expect(illustration.locator('img')).toHaveAttribute('alt', /\S+/);
+      await expect(illustration.locator('figcaption')).toHaveCount(0);
+      expect(
+        await illustration.evaluate((element) => {
+          const styles = getComputedStyle(element);
+          return {
+            backgroundColor: styles.backgroundColor,
+            borderStyle: styles.borderStyle,
+          };
+        }),
+      ).toEqual({ backgroundColor: 'rgba(0, 0, 0, 0)', borderStyle: 'none' });
+      await illustration.scrollIntoViewIfNeeded();
+      await expect
+        .poll(() => illustration.locator('img').evaluate((image) => image.naturalWidth), {
+          timeout: 10_000,
+        })
+        .toBeGreaterThan(0);
+      const cornerAlphas = await illustration.locator('img').evaluate((image) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const context = canvas.getContext('2d');
+        const corners = [
+          [0, 0],
+          [image.naturalWidth - 1, 0],
+          [0, image.naturalHeight - 1],
+          [image.naturalWidth - 1, image.naturalHeight - 1],
+        ];
+        return corners.map(([x, y]) => {
+          context.clearRect(0, 0, 1, 1);
+          context.drawImage(image, x, y, 1, 1, 0, 0, 1, 1);
+          return context.getImageData(0, 0, 1, 1).data[3];
+        });
+      });
+      expect(cornerAlphas.filter((alpha) => alpha === 0).length).toBeGreaterThanOrEqual(2);
+      expect(
+        await illustration.evaluate((figure) => {
+          const previous = figure.previousElementSibling;
+          const next = figure.nextElementSibling;
+          return (
+            previous?.matches('[data-theory-topic="true"]') &&
+            next?.matches('[data-theory-topic="true"]')
+          );
+        }),
+      ).toBe(true);
     }
   });
 

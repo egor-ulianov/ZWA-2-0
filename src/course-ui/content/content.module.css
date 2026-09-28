@@ -114,9 +114,27 @@
   color: var(--course-ink);
 }
 
+.editorialFigure {
+  width: min(52rem, calc(100vw - 2rem));
+  margin: clamp(1.5rem, 4vw, 3rem) 50%;
+  border: 0;
+  background: transparent;
+  transform: translateX(-50%);
+}
+
+.editorialFigure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 @media (max-width: 34rem) {
   .theoryTopic {
     grid-template-columns: minmax(0, 1fr);
     gap: 0.65rem;
+  }
+
+  .editorialFigure {
+    width: calc(100vw - 2rem);
   }
 }
