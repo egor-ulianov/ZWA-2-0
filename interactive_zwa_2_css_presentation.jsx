@@ -960,10 +960,6 @@ export default function App() {
             onStepIndexChange={setStepIndex}
           />
         )}
-        <p>
-          Toto je výuková simulace pro procvičení CSS. Výsledky jsou zjednodušené kvůli spolehlivému
-          automatickému vyhodnocení.
-        </p>
       </LearningSection>
     </LearningExperience>
   );
