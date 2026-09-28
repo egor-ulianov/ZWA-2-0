@@ -18,7 +18,28 @@ const taskRoutes = [
   '/interactive-zwa-12-auth?slide=tasks',
 ];
 
-async function expectTaskWorkspace(page) {
+function usesNewExerciseStage(route) {
+  return (
+    route.includes('interactive-zwa-1-html5') ||
+    route.includes('interactive-zwa-2-forms') ||
+    route.includes('interactive-zwa-1?')
+  );
+}
+
+async function expectTaskWorkspace(page, route) {
+  if (usesNewExerciseStage(route)) {
+    await expect(page.getByRole('button', { name: 'Osnova lekce' })).toHaveCount(1);
+    await expect(page.getByRole('navigation', { name: 'Osnova kurzu' })).toHaveCount(0);
+    for (const label of ['Zadání', 'IDE', 'Náhled', 'Ověření']) {
+      await expect(page.getByRole('region', { name: label })).toHaveCount(1);
+      await expect(page.getByRole('region', { name: label })).toBeVisible();
+    }
+    const verification = page.getByRole('region', { name: 'Ověření' });
+    await expect(
+      verification.getByRole('button', { name: 'Spustit ověření', exact: true }),
+    ).toBeVisible();
+    return;
+  }
   await expect(page.getByRole('navigation', { name: 'Osnova kurzu' })).toHaveCount(1);
   await expect(page.getByRole('navigation', { name: 'Navigace mezi snímky' })).toHaveCount(0);
 
@@ -41,7 +62,7 @@ test.describe('Czech unified lesson task workspace integration', () => {
       expect(response).not.toBeNull();
       expect(response.ok()).toBe(true);
 
-      await expectTaskWorkspace(page);
+      await expectTaskWorkspace(page, route);
     });
   }
 
@@ -56,12 +77,19 @@ test.describe('Czech unified lesson task workspace integration', () => {
       await expect(page.getByRole('main')).toBeVisible();
 
       await expect(page.getByRole('navigation', { name: 'Osnova kurzu' })).toHaveCount(0);
-      await expect(page.getByRole('navigation', { name: 'Navigace mezi snímky' })).toHaveCount(0);
+      await expect(page.getByRole('navigation', { name: 'Navigace mezi snímky' })).toHaveCount(
+        usesNewExerciseStage(route) ? 1 : 0,
+      );
       await expect(page.locator('[data-projector-private]')).toHaveCount(0);
       await expect(page.getByRole('region', { name: 'Zadání' })).toHaveCount(0);
       await expect(page.getByRole('region', { name: 'IDE' })).toHaveCount(0);
       await expect(page.getByRole('region', { name: 'Náhled a testy' })).toHaveCount(0);
+      await expect(page.getByRole('region', { name: 'Náhled' })).toHaveCount(0);
+      await expect(page.getByRole('region', { name: 'Ověření' })).toHaveCount(0);
       await expect(page.getByRole('button', { name: 'Spustit testy', exact: true })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Spustit ověření', exact: true })).toHaveCount(
+        0,
+      );
       await expect(page.getByText('Plocha úkolu', { exact: true })).toHaveCount(0);
     });
   }
@@ -101,7 +129,7 @@ test.describe('Czech unified lesson task workspace integration', () => {
 
     await page.goto('/interactive-zwa-1-html5?slide=tasks');
 
-    const catalogueLink = page.getByRole('link', { name: '← Zpět na přehled lekcí' });
+    const catalogueLink = page.getByRole('link', { name: 'ZWA' });
     await expect(catalogueLink).toHaveAttribute('href', '/');
     await expect(catalogueLink).toBeVisible();
   });

@@ -20,6 +20,14 @@ const nonTaskRoutes = [
   '/interactive-zwa-5-css-ii?slide=links',
 ];
 
+function usesNewExerciseStage(route) {
+  return (
+    route.includes('interactive-zwa-1-html5') ||
+    route.includes('interactive-zwa-2-forms') ||
+    route.includes('interactive-zwa-1?')
+  );
+}
+
 test.describe('runtime lesson task workspaces', () => {
   for (const route of taskRoutes) {
     test(`${route} exposes the Czech task workspace zones`, async ({ page }) => {
@@ -31,7 +39,7 @@ test.describe('runtime lesson task workspaces', () => {
 
       await expect(page.getByRole('region', { name: 'Zadání' }).first()).toBeVisible();
       await expect(page.getByRole('region', { name: 'IDE' }).first()).toBeVisible();
-      if (route.includes('interactive-zwa-1-html5')) {
+      if (usesNewExerciseStage(route)) {
         await expect(page.getByRole('region', { name: 'Náhled' }).first()).toBeVisible();
         await expect(page.getByRole('region', { name: 'Ověření' }).first()).toBeVisible();
         await expect(page.getByRole('button', { name: 'Spustit ověření' }).first()).toBeVisible();
@@ -80,7 +88,7 @@ test.describe('runtime lesson task workspaces', () => {
       await installDeterministicNetwork(page);
       await page.goto(testCase.route);
       const editor = page.getByRole('region', { name: 'IDE' }).first();
-      const migratedHtml = testCase.route.includes('interactive-zwa-1-html5');
+      const migratedHtml = usesNewExerciseStage(testCase.route);
       const preview = page
         .getByRole('region', { name: migratedHtml ? 'Náhled' : 'Náhled a testy' })
         .first();
@@ -217,26 +225,15 @@ test.describe('runtime lesson task workspaces', () => {
       await page.goto(testCase.route);
 
       const assignment = page.getByRole('region', { name: 'Zadání' });
-      if (testCase.route.includes('interactive-zwa-1-html5')) {
-        await page.getByRole('button', { name: 'Osnova lekce' }).click();
-        await page
-          .getByRole('dialog', { name: 'Osnova lekce' })
-          .getByRole('button')
-          .filter({ hasText: testCase.task })
-          .click();
-      } else {
-        await page
-          .getByRole('navigation', { name: 'Osnova kurzu' })
-          .getByRole('button', { name: testCase.task, exact: true })
-          .click();
-      }
+      await page.getByRole('button', { name: 'Osnova lekce' }).click();
+      await page
+        .getByRole('dialog', { name: 'Osnova lekce' })
+        .getByRole('button')
+        .filter({ hasText: testCase.task })
+        .click();
       await expect(assignment).toContainText(testCase.assignment);
       await expect(page.getByRole('region', { name: 'IDE' })).toBeVisible();
-      await expect(
-        page.getByRole('region', {
-          name: testCase.route.includes('interactive-zwa-1-html5') ? 'Náhled' : 'Náhled a testy',
-        }),
-      ).toBeVisible();
+      await expect(page.getByRole('region', { name: 'Náhled' })).toBeVisible();
     }
   });
 
@@ -249,9 +246,7 @@ test.describe('runtime lesson task workspaces', () => {
       await page.goto(route);
 
       const ide = page.getByRole('region', { name: 'IDE' });
-      const editorSelector = route.includes('interactive-zwa-1-html5')
-        ? '[data-studio-editor="true"][data-language="html"]'
-        : '[data-code-editor="syntax"][data-language="html"]';
+      const editorSelector = '[data-studio-editor="true"][data-language="html"]';
       await expect(ide.locator(editorSelector)).toHaveCount(1);
       await expect(ide.locator('.cm-editor')).toHaveCount(1);
       await expect(ide.locator('.cm-content')).toHaveCount(1);
@@ -287,7 +282,7 @@ test.describe('runtime lesson task workspaces', () => {
       test(`${checkerCase.route} runs its existing checker`, async ({ page }) => {
         await installDeterministicNetwork(page);
         await page.goto(checkerCase.route);
-        const migratedHtml = checkerCase.route.includes('interactive-zwa-1-html5');
+        const migratedHtml = usesNewExerciseStage(checkerCase.route);
         await page
           .getByRole('region', { name: migratedHtml ? 'Ověření' : 'Náhled a testy' })
           .first()
@@ -319,34 +314,36 @@ test.describe('runtime lesson task workspaces', () => {
     await installDeterministicNetwork(page);
     await page.goto('/interactive-zwa-1?slide=tasks-net');
 
-    const workspace = page.getByRole('region', { name: 'Náhled a testy' }).first();
+    const workspace = page.getByRole('region', { name: 'Ověření' }).first();
     const commandInput = page.getByRole('textbox', { name: 'Příkaz terminálu' });
     await expect(commandInput).toBeVisible();
-    const runTests = workspace.getByRole('button', { name: 'Spustit testy', exact: true });
+    const runTests = workspace.getByRole('button', { name: 'Spustit ověření', exact: true });
 
     await runTests.click();
 
-    await expect(workspace.getByText('Kontrola neúspěšná')).toBeVisible();
-    await expect(workspace.getByText('Požadavek: ověření DNS — nesplněn')).toBeVisible();
+    await expect(workspace.getByText(/× Nesplněno/)).toBeVisible();
+    await expect(workspace.getByText(/○ Čeká.*Požadavek: ověření DNS/)).toBeVisible();
 
     await commandInput.fill('host cvut.cz');
     await commandInput.press('Enter');
     await expect(page.getByText(/cvut\.cz má adresu 147\.32\.0\.1/)).toBeVisible();
     await runTests.click();
-    await expect(workspace.getByText('Kontrola úspěšná')).toBeVisible();
-    await expect(workspace.getByText(/nesplněn/)).toHaveCount(0);
+    await expect(workspace.getByText(/✓ Splněno.*kontrola úspěšná/)).toBeVisible();
+    await expect(workspace.getByText(/○ Čeká/)).toHaveCount(0);
 
+    await page.getByRole('button', { name: 'Osnova lekce' }).click();
     await page
-      .getByRole('navigation', { name: 'Osnova kurzu' })
-      .getByRole('button', { name: 'Lokální síť a konektivita: ifconfig / ping', exact: true })
+      .getByRole('dialog', { name: 'Osnova lekce' })
+      .getByRole('button')
+      .filter({ hasText: 'Lokální síť a konektivita: ifconfig / ping' })
       .click();
-    const localWorkspace = page.getByRole('region', { name: 'Náhled a testy' }).first();
-    await localWorkspace.getByRole('button', { name: 'Spustit testy', exact: true }).click();
-    await expect(localWorkspace.getByText('Kontrola neúspěšná')).toBeVisible();
+    const localWorkspace = page.getByRole('region', { name: 'Ověření' }).first();
+    await localWorkspace.getByRole('button', { name: 'Spustit ověření', exact: true }).click();
+    await expect(localWorkspace.getByText(/× Nesplněno/)).toBeVisible();
     await commandInput.fill('ifconfig');
     await commandInput.press('Enter');
-    await localWorkspace.getByRole('button', { name: 'Spustit testy', exact: true }).click();
-    await expect(localWorkspace.getByText('Kontrola úspěšná')).toBeVisible();
+    await localWorkspace.getByRole('button', { name: 'Spustit ověření', exact: true }).click();
+    await expect(localWorkspace.getByText(/✓ Splněno.*kontrola úspěšná/)).toBeVisible();
   });
 
   test('network task keeps terminal commands local and makes no external requests', async ({

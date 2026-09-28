@@ -15,7 +15,7 @@ const playgroundLessons = [
     name: 'HTML forms interaction',
     href: '/interactive-zwa-2-forms?slide=forms-task-standard',
     verify: async (page) => {
-      const editor = page.getByRole('textbox', { name: 'Editor HTML formuláře' });
+      const editor = page.getByRole('textbox', { name: /Editor HTML formuláře/ });
       await editor.fill(`<!doctype html>
 <html lang="cs"><body>
   <form><label for="name">Jméno</label><input id="name" name="name"></form>

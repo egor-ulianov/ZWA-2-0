@@ -5,26 +5,26 @@ import React, {
   useImperativeHandle,
   useContext,
   useMemo,
-  useRef,
   useState,
 } from 'react';
-import SandboxedPreview from './src/components/playground/SandboxedPreview';
 import { getLessonByNumber } from './src/config/lessons.js';
-import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
-import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
-import Code from './src/components/lesson/Code.jsx';
-import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
-import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
-import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
-import TheoryCodeBlock from './src/components/lesson/TheoryCodeBlock.jsx';
+import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import Code from './src/course-ui/content/InlineCode.jsx';
+import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
+import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
+import StudioTabs from './src/course-ui/exercises/StudioTabs.jsx';
+import SandboxFrame from './src/course-ui/exercises/runtime/SandboxFrame.jsx';
+import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
+import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
+import { useLearningNavigation } from './src/course-ui/learning/useLearningNavigation.js';
 
 function SectionCard({ title, children, footer }) {
   return (
-    <div className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-5">
-      <div className="text-lg font-semibold mb-2">{title}</div>
-      <div className="text-sm text-zinc-700 dark:text-zinc-300">{children}</div>
+    <section>
+      <h3>{title}</h3>
+      <div>{children}</div>
       {footer}
-    </div>
+    </section>
   );
 }
 
@@ -502,10 +502,7 @@ function runFormTaskChecks(text, taskId) {
 
 const FormTaskContext = createContext(null);
 
-const FormTaskProvider = forwardRef(function FormTaskProvider(
-  { initialHtml, taskId, children },
-  ref,
-) {
+function FormTaskProvider({ initialHtml, taskId, children }) {
   const [html, setHtml] = useState(initialHtml);
   const [checking, setChecking] = useState(false);
   const [results, setResults] = useState(null);
@@ -527,8 +524,6 @@ const FormTaskProvider = forwardRef(function FormTaskProvider(
     }
   }, [html]);
 
-  useImperativeHandle(ref, () => ({ runValidation: validateOnline }), [validateOnline]);
-
   return (
     <FormTaskContext.Provider
       value={{
@@ -543,80 +538,79 @@ const FormTaskProvider = forwardRef(function FormTaskProvider(
       {children}
     </FormTaskContext.Provider>
   );
-});
+}
 
 function FormTaskFileEditor() {
-  const { html, setHtml, checking, validateOnline, local } = useContext(FormTaskContext);
+  const { html, setHtml, local } = useContext(FormTaskContext);
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium">Editor HTML formuláře</label>
-      <SyntaxCodeEditor
+    <div>
+      <StudioEditor
         value={html}
         onChange={setHtml}
         language="html"
-        label="Editor HTML formuláře"
-        minHeight="280px"
+        label="Editor HTML formuláře pro úkol"
+        minHeight="360px"
       />
-      <div className="text-xs" aria-label="Průběžná nápověda editoru">
-        <p className="font-medium text-zinc-700 dark:text-zinc-200">Průběžná nápověda editoru</p>
-        <div className={local.passed ? 'text-emerald-600' : 'text-amber-600'}>
+      <div aria-label="Průběžná nápověda editoru">
+        <p>
+          <strong>Průběžná nápověda editoru</strong>
+        </p>
+        <p>
           {local.passed
             ? 'Lokální kontroly: vše v pořádku.'
             : `Nalezeno ${local.issues.length} připomínek:`}
-        </div>
+        </p>
         {!local.passed && (
-          <ul className="list-disc pl-5 mt-1 space-y-0.5">
+          <ul>
             {local.issues.map((message) => (
               <li key={message}>{message}</li>
             ))}
           </ul>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          className="px-3 py-1.5 rounded bg-fuchsia-600 text-white disabled:opacity-50"
-          onClick={validateOnline}
-          disabled={checking}
-        >
-          {checking ? 'Validuji…' : 'Validovat online (W3C)'}
-        </button>
-        <a
-          className="px-3 py-1.5 rounded border"
-          href="https://validator.w3.org/nu/"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
+      <p>
+        <a href="https://validator.w3.org/nu/" target="_blank" rel="noreferrer noopener">
           Otevřít W3C Validator
         </a>
-      </div>
+      </p>
     </div>
   );
 }
 
 function FormTaskPreview() {
-  const { html, results } = useContext(FormTaskContext);
+  const { html } = useContext(FormTaskContext);
+  return <SandboxFrame html={html} mode="static" title="Náhled HTML formuláře" />;
+}
+
+function FormTaskVerification() {
+  const { checking, results, local } = useContext(FormTaskContext);
+  if (checking) return <p role="status">Validuji formulář…</p>;
+  if (results?.type === 'error') {
+    return <p role="status">× Nesplněno — Chyba validace: {results.error}</p>;
+  }
+  if (results?.type === 'online') {
+    const messages = results.data?.messages?.slice(0, 8) || [];
+    return (
+      <div role="status">
+        <p>
+          <strong>{messages.length === 0 ? '✓ Splněno' : '× Nesplněno'}</strong> — Výsledky W3C
+        </p>
+        {messages.length ? <pre>{JSON.stringify({ messages }, null, 2)}</pre> : null}
+      </div>
+    );
+  }
   return (
-    <div className="space-y-3">
-      <SandboxedPreview
-        html={html}
-        mode="static"
-        title="Náhled HTML formuláře"
-        className="w-full min-h-[280px] rounded border bg-white text-xs"
-      />
-      {results?.type === 'online' && (
-        <div className="text-xs rounded border p-2 bg-white/70 dark:bg-zinc-900/60">
-          <div className="font-medium mb-1">Výsledky W3C (shrnutí)</div>
-          <pre className="whitespace-pre-wrap">
-            {JSON.stringify({ messages: results.data?.messages?.slice(0, 8) || [] }, null, 2)}
-          </pre>
-        </div>
-      )}
-      {results?.type === 'error' && (
-        <div className="text-xs text-rose-600" role="status">
-          Chyba validace: {results.error}
-        </div>
-      )}
+    <div aria-live="polite">
+      <p>
+        <strong>{local.passed ? '✓ Splněno' : '× Zatím nesplněno'}</strong> — lokální kontrola
+      </p>
+      {!local.passed ? (
+        <ul>
+          {local.issues.map((issue) => (
+            <li key={issue}>{issue}</li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }
@@ -737,7 +731,7 @@ const FormValidationEditor = forwardRef(function FormValidationEditor(
           </div>
         )}
         {showPreview ? (
-          <SandboxedPreview
+          <SandboxFrame
             html={html}
             mode="static"
             title="Náhled HTML formuláře"
@@ -766,19 +760,14 @@ const FormValidationEditor = forwardRef(function FormValidationEditor(
 
 function Block({ id, title, theory, example }) {
   return (
-    <div id={id}>
-      <SectionCard title={title} footer={null}>
-        <div className="text-sm text-zinc-700 dark:text-zinc-300">{theory}</div>
-        <div className="mt-3">
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            Ukázka
-          </h3>
-          <TheoryCodeBlock>
-            <code className="language-html">{example}</code>
-          </TheoryCodeBlock>
-        </div>
-      </SectionCard>
-    </div>
+    <section id={id}>
+      <h3>{title}</h3>
+      <div>{theory}</div>
+      <h4>Ukázka</h4>
+      <EditorialCode language="html" label={`${id}.html`}>
+        {example}
+      </EditorialCode>
+    </section>
   );
 }
 
@@ -1403,45 +1392,91 @@ const FORM_TASK_STARTERS = {
   ].join('\n'),
 };
 
-const slides = [
+const sections = [
   { id: 'overview', title: 'Přehled', activityType: 'learn' },
   { id: 'playground', title: 'Sekce', activityType: 'build' },
   ...FORM_TASKS.map((task) => ({ id: task.id, title: task.label, activityType: 'apply' })),
 ];
 
-function useLegacyTaskAlias(slideList, legacyId, firstTaskId) {
+function useFormsNavigation(sectionList, legacyId, firstTaskId) {
   const aliasRequested =
     typeof window !== 'undefined' &&
     new URLSearchParams(window.location.search).get('slide') === legacyId;
-  const navigationSlides = useMemo(
+  const navigationSections = useMemo(
     () =>
       aliasRequested
-        ? slideList.map((slide) => (slide.id === firstTaskId ? { ...slide, id: legacyId } : slide))
-        : slideList,
-    [aliasRequested, firstTaskId, legacyId, slideList],
+        ? sectionList.map((section) =>
+            section.id === firstTaskId ? { ...section, id: legacyId } : section,
+          )
+        : sectionList,
+    [aliasRequested, firstTaskId, legacyId, sectionList],
   );
-  return { ...useSlideNavigation(navigationSlides), slides: navigationSlides };
+  return { ...useLearningNavigation(navigationSections), sections: navigationSections };
+}
+
+function FormTaskStage({ task }) {
+  const { checking, validateOnline } = useContext(FormTaskContext);
+  return (
+    <ExerciseStage
+      brief={
+        <>
+          <p>
+            <strong>{task.label}</strong>
+          </p>
+          <p>{task.description}</p>
+        </>
+      }
+      onVerify={checking ? undefined : validateOnline}
+      preview={<FormTaskPreview />}
+      privateMarker="forms-exercise"
+      studio={
+        <StudioTabs
+          files={[
+            {
+              id: 'index-html',
+              label: 'index.html',
+              panel: <FormTaskFileEditor />,
+            },
+          ]}
+          solution={{
+            label: 'Řešení',
+            panel: (
+              <StudioEditor
+                value={FORM_REFERENCE_SOLUTIONS[task.id]}
+                language="html"
+                label="Referenční řešení formuláře"
+                minHeight="360px"
+                readOnly
+              />
+            ),
+          }}
+        />
+      }
+      verification={<FormTaskVerification />}
+      verificationLabel={checking ? 'Validuji…' : 'Spustit ověření'}
+    />
+  );
 }
 
 export default function AppFormsLesson2() {
   const {
-    activeSlide,
-    setActiveSlide,
-    slides: navigationSlides,
-  } = useLegacyTaskAlias(slides, 'tasks', FORM_TASKS[0].id);
-  const formsTaskRef = useRef(null);
-  const currentSlide =
-    navigationSlides.find((slide) => slide.id === activeSlide) || navigationSlides[0];
+    activeSection,
+    setActiveSection,
+    sections: navigationSections,
+  } = useFormsNavigation(sections, 'tasks', FORM_TASKS[0].id);
+  const currentSection =
+    navigationSections.find((section) => section.id === activeSection) || navigationSections[0];
   const activeTask =
-    FORM_TASKS.find((task) => task.id === activeSlide) ||
-    (activeSlide === 'tasks' ? FORM_TASKS[0] : null);
+    FORM_TASKS.find((task) => task.id === activeSection) ||
+    (activeSection === 'tasks' ? FORM_TASKS[0] : null);
+  const lesson = getLessonByNumber(2);
 
   return (
-    <LessonShell
-      lesson={getLessonByNumber(2)}
-      slides={navigationSlides}
-      activeSlide={activeSlide}
-      onChange={setActiveSlide}
+    <LearningExperience
+      lesson={lesson}
+      sections={navigationSections}
+      activeSection={activeSection}
+      onChange={setActiveSection}
       title="ZWA-2: Klientské formuláře (lekce 2)"
       objective="Rozpoznáte HTML5 prvky formulářů a ověříte jejich atributy i klientskou validaci."
       subtitle={
@@ -1459,11 +1494,10 @@ export default function AppFormsLesson2() {
         </>
       }
       footerText="© 2025 ZWA – Interaktivní formuláře, lekce 2"
-      maxWidthClass="max-w-7xl"
     >
-      <SharedSlideCard slide={currentSlide} idPrefix="lesson-forms">
-        {activeSlide === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <LearningSection section={currentSection} idPrefix="lesson-forms">
+        {activeSection === 'overview' && (
+          <div>
             <SectionCard title="Standardní prvky">
               <ul className="list-disc pl-6 text-sm">
                 <li>
@@ -1527,54 +1561,18 @@ export default function AppFormsLesson2() {
           </div>
         )}
 
-        {activeSlide === 'playground' && <FormsSections />}
+        {activeSection === 'playground' && <FormsSections />}
 
         {activeTask && (
-          <div className="space-y-3">
-            <FormTaskProvider
-              key={activeTask.id}
-              ref={formsTaskRef}
-              initialHtml={FORM_TASK_STARTERS[activeTask.id]}
-              taskId={activeTask.id}
-            >
-              <LessonTaskWorkspace
-                privateMarker="forms-exercise"
-                task={
-                  <>
-                    <p className="font-medium">{activeTask.label}</p>
-                    <p>{activeTask.description}</p>
-                  </>
-                }
-                onRunTests={() => formsTaskRef.current?.runValidation()}
-                ideTabs={
-                  <WorkspaceIdeTabs
-                    files={[
-                      {
-                        id: 'index-html',
-                        label: 'index.html',
-                        panel: <FormTaskFileEditor />,
-                      },
-                    ]}
-                    solution={{
-                      label: 'Řešení',
-                      panel: (
-                        <SyntaxCodeEditor
-                          value={FORM_REFERENCE_SOLUTIONS[activeTask.id]}
-                          language="html"
-                          label="Referenční řešení formuláře"
-                          minHeight="280px"
-                          readOnly
-                        />
-                      ),
-                    }}
-                  />
-                }
-                preview={<FormTaskPreview />}
-              />
-            </FormTaskProvider>
-          </div>
+          <FormTaskProvider
+            key={activeTask.id}
+            initialHtml={FORM_TASK_STARTERS[activeTask.id]}
+            taskId={activeTask.id}
+          >
+            <FormTaskStage task={activeTask} />
+          </FormTaskProvider>
         )}
-      </SharedSlideCard>
-    </LessonShell>
+      </LearningSection>
+    </LearningExperience>
   );
 }

@@ -4,7 +4,22 @@ const { expect, test } = createRequire(import.meta.url)('@playwright/test');
 import { installDeterministicNetwork } from './helpers/browser.js';
 
 async function expectSelectedOutlineSlide(page, name) {
+  const drawerTrigger = page.getByRole('button', { name: 'Osnova lekce' });
   const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
+  const usesDrawer = await Promise.race([
+    drawerTrigger.waitFor({ state: 'visible' }).then(() => true),
+    outline.waitFor({ state: 'visible' }).then(() => false),
+  ]);
+  if (usesDrawer) {
+    await drawerTrigger.click();
+    const drawer = page.getByRole('dialog', { name: 'Osnova lekce' });
+    await expect(drawer).toBeVisible();
+    await expect(drawer.getByRole('button').filter({ hasText: name })).toHaveAttribute(
+      'aria-current',
+      'step',
+    );
+    return;
+  }
   await expect(outline).toBeVisible();
   await expect(outline.getByRole('button', { name, exact: true })).toHaveAttribute(
     'aria-current',
@@ -13,6 +28,37 @@ async function expectSelectedOutlineSlide(page, name) {
 }
 
 test.describe('F1 lesson composition and deep links', () => {
+  for (const lesson of [
+    {
+      route: '/interactive-zwa-2-forms?slide=tasks',
+      artwork: '[data-module="web-foundations"]',
+    },
+    {
+      route: '/interactive-zwa-1?slide=tasks-net',
+      artwork: '[data-module="web-foundations"]',
+    },
+  ]) {
+    test(`${lesson.route} uses the new learning and exercise architecture`, async ({ page }) => {
+      await installDeterministicNetwork(page);
+      await page.goto(lesson.route);
+
+      await expect(page.locator('[data-learning-experience="student"]')).toBeVisible();
+      await expect(page.locator(lesson.artwork).first()).toBeVisible();
+      await expect(page.getByRole('main')).toHaveCount(1);
+      await expect(page.locator('[data-exercise-stage="true"]')).toBeVisible();
+      for (const region of ['Zadání', 'IDE', 'Náhled', 'Ověření']) {
+        await expect(page.getByRole('region', { name: region })).toBeVisible();
+      }
+      await expect(page.locator('.lesson-shell, [class*="portal-"]')).toHaveCount(0);
+      await page.setViewportSize({ width: 320, height: 720 });
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        ),
+      ).toBe(true);
+    });
+  }
+
   test('opening slides combine the lesson title with its contents', async ({ page }) => {
     await installDeterministicNetwork(page);
 
@@ -92,10 +138,10 @@ test.describe('F1 lesson composition and deep links', () => {
         'data-quiz-visual',
         quizRoute.visual,
       );
-      await expect(quiz.locator('[data-quiz-progress]')).toHaveText(/0 \/ \d+ zodpovězeno/);
+      await expect(quiz.locator('[data-quiz-progress]')).toHaveText(/0 (?:\/|z) \d+ zodpovězeno/);
 
       await quiz.locator('[data-quiz-option]').first().click();
-      await expect(quiz.locator('[data-quiz-progress]')).toHaveText(/1 \/ \d+ zodpovězeno/);
+      await expect(quiz.locator('[data-quiz-progress]')).toHaveText(/1 (?:\/|z) \d+ zodpovězeno/);
     }
   });
 

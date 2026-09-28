@@ -39,13 +39,18 @@ export default function KnowledgeCheck({
   }
 
   return (
-    <section className={styles.knowledge} data-knowledge-check="true" aria-label={`Kvíz: ${title}`}>
+    <section
+      className={styles.knowledge}
+      data-knowledge-check="true"
+      data-lesson-quiz="true"
+      aria-label={`Kvíz: ${title}`}
+    >
       <header>
         <div>
           <p className={styles.eyebrow}>Rychlá kontrola</p>
           <h3>{title}</h3>
           {subtitle ? <p>{subtitle}</p> : null}
-          <p className={styles.quizProgress} aria-live="polite">
+          <p className={styles.quizProgress} data-quiz-progress="true" aria-live="polite">
             {answered} z {total} zodpovězeno
           </p>
         </div>
@@ -74,7 +79,7 @@ export default function KnowledgeCheck({
                         ? 'selected'
                         : 'idle';
                   return (
-                    <label key={optionIndex} data-answer-state={state}>
+                    <label key={optionIndex} data-answer-state={state} data-quiz-option="true">
                       <input
                         type="radio"
                         name={`knowledge-${question.id}`}

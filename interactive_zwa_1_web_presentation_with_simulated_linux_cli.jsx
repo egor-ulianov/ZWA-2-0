@@ -3,15 +3,15 @@ import portraitImg from './src/interactive-zwa-1/assets/portrait.png';
 import discordLogo from './src/interactive-zwa-1/assets/discord-logo.png';
 import telegramQr from './src/interactive-zwa-1/assets/telegram-qr.png';
 import semestralMeme from './src/interactive-zwa-1/assets/semestral-meme.png';
-import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
-import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
-import Code from './src/components/lesson/Code.jsx';
 import { getLessonByNumber } from './src/config/lessons.js';
-import { clsx } from './src/components/lesson/classNames.js';
-import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
-import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
-import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
-import LessonQuiz from './src/components/lesson/LessonQuiz.jsx';
+import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
+import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
+import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
+import StudioTabs from './src/course-ui/exercises/StudioTabs.jsx';
+import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
+import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
+import { useLearningNavigation } from './src/course-ui/learning/useLearningNavigation.js';
 
 // Interactive ZWA-1 presentation with a built-in simulated Linux CLI (no external libs)
 // Tailwind is available in canvas preview. All code is self-contained.
@@ -384,7 +384,7 @@ const NETWORK_TASKS = [
   },
 ];
 
-const slides = [
+const sections = [
   {
     id: 'title',
     title: 'Základy webových aplikací – 3. cvičení',
@@ -503,18 +503,20 @@ const slides = [
   ...NETWORK_TASKS,
 ];
 
-function useLegacyTaskAlias(slideList, legacyId, firstTaskId) {
+function useNetworkNavigation(sectionList, legacyId, firstTaskId) {
   const aliasRequested =
     typeof window !== 'undefined' &&
     new URLSearchParams(window.location.search).get('slide') === legacyId;
-  const navigationSlides = useMemo(
+  const navigationSections = useMemo(
     () =>
       aliasRequested
-        ? slideList.map((slide) => (slide.id === firstTaskId ? { ...slide, id: legacyId } : slide))
-        : slideList,
-    [aliasRequested, firstTaskId, legacyId, slideList],
+        ? sectionList.map((section) =>
+            section.id === firstTaskId ? { ...section, id: legacyId } : section,
+          )
+        : sectionList,
+    [aliasRequested, firstTaskId, legacyId, sectionList],
   );
-  return { ...useSlideNavigation(navigationSlides), slides: navigationSlides };
+  return { ...useLearningNavigation(navigationSections), sections: navigationSections };
 }
 
 function LessonSlideContent({ slide, commandLog }) {
@@ -535,11 +537,11 @@ function LessonSlideContent({ slide, commandLog }) {
     <>
       {slide.body && !hasSections && (
         <div
-          className={clsx(
+          className={
             slide.id === 'about-me'
               ? 'grid grid-cols-1 sm:grid-cols-[1fr,180px] gap-4 items-start'
-              : '',
-          )}
+              : undefined
+          }
         >
           <pre className="whitespace-pre-wrap leading-relaxed">{slide.body}</pre>
           {slide.id === 'about-me' && (
@@ -603,10 +605,9 @@ function LessonSlideContent({ slide, commandLog }) {
               {Array.from({ length: totalSections }).map((_, i) => (
                 <button
                   key={i}
-                  className={clsx(
-                    'h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700',
-                    i === stepIndex ? 'bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800',
-                  )}
+                  className={`h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700 ${
+                    i === stepIndex ? 'bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800'
+                  }`}
                   onClick={() => setStepIndex(i)}
                   aria-label={`Přejít na krok ${i + 1}`}
                 />
@@ -658,10 +659,9 @@ function LessonSlideContent({ slide, commandLog }) {
               {Array.from({ length: totalSteps }).map((_, i) => (
                 <button
                   key={i}
-                  className={clsx(
-                    'h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700',
-                    i === stepIndex ? 'bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800',
-                  )}
+                  className={`h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700 ${
+                    i === stepIndex ? 'bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800'
+                  }`}
                   onClick={() => setStepIndex(i)}
                   aria-label={`Přejít na krok ${i + 1}`}
                 />
@@ -780,11 +780,20 @@ function QuizHtmlBasics() {
   ];
 
   return (
-    <LessonQuiz
+    <KnowledgeCheck
       title="HTML základy"
       subtitle="Ověřte si, že dokážete rozpoznat kostru dokumentu, sémantické elementy a formulářové atributy."
       questions={questions}
-      visualKey="html-structure"
+      visual={
+        <div
+          role="img"
+          aria-label="Schéma struktury HTML dokumentu"
+          data-quiz-visual="html-structure"
+        >
+          <strong>&lt;html&gt;</strong>
+          <span>&lt;head&gt; + &lt;body&gt;</span>
+        </div>
+      }
       resources={[
         {
           label: 'Cvičení 1 – HTML',
@@ -831,34 +840,24 @@ function TaskChecklist({ commandLog, checked = false, requirementIds }) {
   }));
   const allSatisfied = checks.every((check) => check.ok);
   return (
-    <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4 text-sm">
-      <div className="font-semibold mb-2">Kontrolní seznam</div>
+    <div aria-live="polite">
+      <h4>Kontrolní seznam</h4>
       {checked && (
-        <div className={clsx('mb-2', allSatisfied ? 'text-emerald-700' : 'text-rose-700')}>
-          {allSatisfied ? 'Kontrola úspěšná' : 'Kontrola neúspěšná'}
-        </div>
+        <p role="status">
+          <strong>{allSatisfied ? '✓ Splněno' : '× Nesplněno'}</strong> —{' '}
+          {allSatisfied ? 'kontrola úspěšná' : 'kontrola neúspěšná'}
+        </p>
       )}
-      <ul className="space-y-1">
+      <ul>
         {checks.map((check) => {
           return (
-            <li key={check.id} className="flex items-center gap-2">
-              <span
-                className={clsx(
-                  'h-2.5 w-2.5 rounded-full border',
-                  check.ok ? 'bg-emerald-500 border-emerald-500' : 'bg-zinc-300 border-zinc-400',
-                )}
-              />
-              <span>
-                {check.label}
-                {checked && !check.ok ? ' — nesplněn' : ''}
-              </span>
+            <li key={check.id} data-result-state={check.ok ? 'passed' : 'pending'}>
+              <strong>{check.ok ? '✓ Splněno' : '○ Čeká'}</strong> — {check.label}
             </li>
           );
         })}
       </ul>
-      <div className="mt-2 text-xs text-zinc-500">
-        Zaznamenané vstupy: {Math.min(commandLog.length, 50)}
-      </div>
+      <p>Zaznamenané vstupy: {Math.min(commandLog.length, 50)}</p>
     </div>
   );
 }
@@ -895,6 +894,67 @@ function TerminalPanel({ clearKey, onCommand }) {
   );
 }
 
+function NetworkTaskStage({ task, clearKey, commandLog, checked, onCommand, onVerify }) {
+  return (
+    <ExerciseStage
+      brief={
+        <>
+          <p>{task.body}</p>
+          <EditorialCode language="bash" label="Příklady příkazů">
+            {task.examples.join('\n')}
+          </EditorialCode>
+          <p>Spusťte příkazy v terminálu a poté jejich splnění ověřte.</p>
+        </>
+      }
+      onVerify={onVerify}
+      preview={
+        <div>
+          <h4>Průběh simulace</h4>
+          <p>Terminál je izolovaná výuková simulace. Neodesílá žádné skutečné síťové požadavky.</p>
+          {commandLog.length ? (
+            <EditorialCode language="bash" label="Zadané příkazy">
+              {commandLog.map((command) => `$ ${command}`).join('\n')}
+            </EditorialCode>
+          ) : (
+            <p>Zatím nebyl spuštěn žádný příkaz.</p>
+          )}
+        </div>
+      }
+      privateMarker="network-exercise"
+      studio={
+        <StudioTabs
+          files={[
+            {
+              id: 'terminal',
+              label: 'terminál',
+              panel: <TerminalPanel clearKey={clearKey} onCommand={onCommand} />,
+            },
+          ]}
+          solution={{
+            label: 'Řešení',
+            panel: (
+              <StudioEditor
+                value={task.solution}
+                language="bash"
+                label="Referenční přepis příkazů terminálu"
+                minHeight="300px"
+                readOnly
+              />
+            ),
+          }}
+        />
+      }
+      verification={
+        <TaskChecklist
+          commandLog={commandLog}
+          checked={checked}
+          requirementIds={[task.requirement]}
+        />
+      }
+    />
+  );
+}
+
 export default function App() {
   const { run } = useInterpreter();
   const [clearKeys, setClearKeys] = useState({});
@@ -919,94 +979,54 @@ export default function App() {
   }
 
   const {
-    activeSlide,
-    setActiveSlide,
-    slides: navigationSlides,
-  } = useLegacyTaskAlias(slides, 'tasks-net', NETWORK_TASKS[0].id);
-  const current = navigationSlides.find((s) => s.id === activeSlide) || navigationSlides[0];
+    activeSection,
+    setActiveSection,
+    sections: navigationSections,
+  } = useNetworkNavigation(sections, 'tasks-net', NETWORK_TASKS[0].id);
+  const current =
+    navigationSections.find((section) => section.id === activeSection) || navigationSections[0];
   const activeNetworkTask =
     NETWORK_TASKS.find((task) => task.id === current.id) ||
-    (activeSlide === 'tasks-net' ? NETWORK_TASKS[0] : null);
+    (activeSection === 'tasks-net' ? NETWORK_TASKS[0] : null);
 
-  function handleSlideChange(nextSlide) {
-    const nextTaskId = NETWORK_TASKS.find((task) => task.id === nextSlide)?.id || null;
+  function handleSectionChange(nextSection) {
+    const nextTaskId = NETWORK_TASKS.find((task) => task.id === nextSection)?.id || null;
     if (nextTaskId !== activeNetworkTask?.id) {
       setCommandLogs({});
       setChecklistChecked({});
     }
-    setActiveSlide(nextSlide);
+    setActiveSection(nextSection);
   }
 
+  const lesson = getLessonByNumber(3);
+
   return (
-    <LessonShell
-      lesson={getLessonByNumber(3)}
-      slides={navigationSlides}
-      activeSlide={activeSlide}
-      onChange={handleSlideChange}
+    <LearningExperience
+      lesson={lesson}
+      sections={navigationSections}
+      activeSection={activeSection}
+      onChange={handleSectionChange}
       title="ZWA-1: Interaktivní webová prezentace"
       objective="Vysvětlíte cestu požadavku od DNS přes TCP až po HTTP a procvičíte diagnostické příkazy v simulovaném terminálu."
-      subtitle="Simulovaná linuxová CLI vpravo →"
+      subtitle="Síťové základy a bezpečný simulovaný Linux terminál"
       footerText="© 2025 ZWA – Interaktivní výuková ukázka (Egor Ulianov)"
-      maxWidthClass="max-w-7xl"
     >
-      <SharedSlideCard slide={current} idPrefix="lesson-network">
+      <LearningSection section={current} idPrefix="lesson-network">
         <LessonSlideContent slide={current} commandLog={commandLogs[activeNetworkTask?.id] || []} />
         {activeNetworkTask && (
-          <div className="mt-6">
-            <LessonTaskWorkspace
-              key={activeNetworkTask.id}
-              privateMarker="network-exercise"
-              onRunTests={() =>
-                setChecklistChecked((checked) => ({ ...checked, [activeNetworkTask.id]: true }))
-              }
-              task={
-                <>
-                  <p>{activeNetworkTask.body}</p>
-                  <pre className="whitespace-pre-wrap rounded bg-zinc-100/70 p-2 text-xs dark:bg-zinc-800/70">
-                    {activeNetworkTask.examples.join('\n')}
-                  </pre>
-                  <p>Poté v části Náhled a testy spusťte kontrolní seznam.</p>
-                </>
-              }
-              ideTabs={
-                <WorkspaceIdeTabs
-                  files={[
-                    {
-                      id: 'terminal',
-                      label: 'terminál',
-                      panel: (
-                        <TerminalPanel
-                          clearKey={`${activeNetworkTask.id}-${clearKeys[activeNetworkTask.id] || 0}`}
-                          onCommand={(command) => handleCommand(command, activeNetworkTask.id)}
-                        />
-                      ),
-                    },
-                  ]}
-                  solution={{
-                    label: 'Řešení',
-                    panel: (
-                      <SyntaxCodeEditor
-                        value={activeNetworkTask.solution}
-                        language="text"
-                        label="Referenční přepis příkazů terminálu"
-                        minHeight="260px"
-                        readOnly
-                      />
-                    ),
-                  }}
-                />
-              }
-              preview={
-                <TaskChecklist
-                  commandLog={commandLogs[activeNetworkTask.id] || []}
-                  checked={checklistChecked[activeNetworkTask.id] || false}
-                  requirementIds={[activeNetworkTask.requirement]}
-                />
-              }
-            />
-          </div>
+          <NetworkTaskStage
+            key={activeNetworkTask.id}
+            task={activeNetworkTask}
+            clearKey={`${activeNetworkTask.id}-${clearKeys[activeNetworkTask.id] || 0}`}
+            commandLog={commandLogs[activeNetworkTask.id] || []}
+            checked={checklistChecked[activeNetworkTask.id] || false}
+            onCommand={(command) => handleCommand(command, activeNetworkTask.id)}
+            onVerify={() =>
+              setChecklistChecked((checked) => ({ ...checked, [activeNetworkTask.id]: true }))
+            }
+          />
         )}
-      </SharedSlideCard>
-    </LessonShell>
+      </LearningSection>
+    </LearningExperience>
   );
 }
