@@ -21,6 +21,59 @@ const earlyLessonCases = [
   },
 ];
 
+const editorialTheoryCases = [
+  {
+    route: '/interactive-zwa-1?slide=theory',
+    topics: [
+      'DNS – překládání jmen',
+      'IP adresy – jak se zařízení najdou',
+      'TCP – spolehlivý přenos',
+      'HTTP – jazyk webu',
+      'HTTPS – šifrované HTTP',
+      'Jak to souvisí s úlohami',
+    ],
+  },
+  {
+    route: '/interactive-zwa-2?slide=theory',
+    topics: ['Selektory a specifita', 'Kaskáda a dědičnost', 'Stavové selektory odkazů'],
+  },
+  {
+    route: '/interactive-zwa-5-css-ii?slide=theory',
+    topics: [
+      'Box model',
+      'Float & Clear',
+      'Position',
+      'Display',
+      'Flexbox',
+      'Media queries',
+      'Print',
+    ],
+  },
+  {
+    route: '/interactive-zwa-5-js?slide=theory',
+    topics: [
+      'Přehled jazyka',
+      'Proměnné a typy',
+      'Funkce a cykly',
+      'Pole a objekty',
+      'DOM a události',
+      'alert/confirm',
+    ],
+  },
+  {
+    route: '/interactive-zwa-8-php?slide=theory',
+    topics: [
+      'Co je PHP?',
+      'Proč se PHP stále používá',
+      'Hlavní koncepty jazyka',
+      'Moderní PHP (8.x)',
+      'Ekosystém a praxe',
+      'Bezpečnostní minimum',
+      'Verze a prostředí',
+    ],
+  },
+];
+
 async function openLessonOutline(page) {
   const trigger = page.getByRole('button', { name: 'Osnova lekce' });
   await trigger.click();
@@ -32,6 +85,47 @@ function outlineButton(outline, name) {
 }
 
 test.describe('early lesson theory and task outline', () => {
+  test('migrated theory lectures read as complete editorial chapters without nested steppers', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+
+    for (const testCase of editorialTheoryCases) {
+      await page.goto(testCase.route);
+      const theory = page.locator('[data-theory-flow="true"]');
+
+      await expect(theory).toBeVisible();
+      await expect(theory.locator('[data-theory-topic="true"]')).toHaveCount(
+        testCase.topics.length,
+      );
+      for (const topic of testCase.topics) {
+        const section = theory
+          .locator('[data-theory-topic="true"]')
+          .filter({ has: page.getByRole('heading', { level: 3, name: topic, exact: true }) });
+        await expect(section).toBeVisible();
+        expect(await section.locator('p').count()).toBeGreaterThanOrEqual(1);
+      }
+      await expect(theory.getByRole('button', { name: 'Předchozí', exact: true })).toHaveCount(0);
+      await expect(theory.getByRole('button', { name: 'Další', exact: true })).toHaveCount(0);
+      await expect(theory.getByText(/Krok \d+ \/ \d+/)).toHaveCount(0);
+    }
+  });
+
+  test('editorial theory remains readable without horizontal overflow at 320 pixels', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+    await page.setViewportSize({ width: 320, height: 720 });
+    await page.goto('/interactive-zwa-2?slide=theory');
+
+    await expect(page.locator('[data-theory-flow="true"]')).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      ),
+    ).toBe(true);
+  });
+
   test('lecture code examples use read-only syntax highlighting', async ({ page }) => {
     await installDeterministicNetwork(page);
     await page.goto('/interactive-zwa-7?slide=ajax-practice');

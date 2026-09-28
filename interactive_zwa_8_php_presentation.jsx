@@ -3,6 +3,7 @@ import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
+import contentStyles from './src/course-ui/content/content.module.css';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -866,202 +867,152 @@ export default function AppPhpLesson8() {
 }
 
 function PhpTheorySections() {
-  const sections = useMemo(
-    () => [
-      {
-        title: 'Co je PHP?',
-        content: (
-          <InfoBox type="info">
-            <div className="font-semibold mb-1">Co je PHP?</div>
-            <p className="text-sm text-zinc-700 dark:text-zinc-300">
-              PHP je skriptovací jazyk pro server‑side vykreslování webu. Běží na serveru, generuje
-              HTML/JSON a výsledek posílá klientovi. Je široce dostupný na hostinzích a pohání
-              populární systémy jako WordPress, MediaWiki či Moodle.
-            </p>
-          </InfoBox>
-        ),
-      },
-      {
-        title: 'Proč se PHP stále používá',
-        content: (
-          <InfoBox>
-            <div className="font-semibold mb-1">Proč se PHP stále používá</div>
-            <ul className="list-disc pl-5 space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
-              <li>Jednoduché nasazení – běží téměř všude (Apache/Nginx + PHP‑FPM).</li>
-              <li>Silný ekosystém – Composer, Packagist, frameworky (Laravel, Symfony).</li>
-              <li>Rychlý vývoj klasických webů a admin rozhraní.</li>
-              <li>Nízká bariéra vstupu, velká komunita a dokumentace.</li>
-            </ul>
-          </InfoBox>
-        ),
-      },
-      {
-        title: 'Hlavní koncepty jazyka',
-        content: (
-          <InfoBox>
-            <div className="font-semibold mb-1">Hlavní koncepty jazyka</div>
-            <ul className="list-disc pl-5 space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
-              <li>
-                Vkládání do HTML: <Code>&lt;?php ... ?&gt;</Code>, výstup přes <Code>echo</Code>.
-              </li>
-              <li>
-                Proměnné s <Code>$</Code>, pole indexová i asociativní: <Code>[]</Code>,{' '}
-                <Code>array()</Code>.
-              </li>
-              <li>
-                Funkce:{' '}
-                <Code>
-                  function f($x) {'{'} return $x; {'}'}
-                </Code>
-                , soubory: <Code>include</Code>/<Code>require</Code>.
-              </li>
-              <li>
-                Superglobály: <Code>$_GET</Code>, <Code>$_POST</Code>, <Code>$_SERVER</Code>,{' '}
-                <Code>$_SESSION</Code>.
-              </li>
-              <li>Životní cyklus: každý HTTP požadavek spustí skript od začátku do konce.</li>
-            </ul>
-          </InfoBox>
-        ),
-      },
-      {
-        title: 'Moderní PHP (8.x)',
-        content: (
-          <InfoBox>
-            <div className="font-semibold mb-1">Moderní PHP (8.x) – vybrané prvky</div>
-            <ul className="list-disc pl-5 space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
-              <li>
-                Typové deklarace (scalar/return), union typy (<Code>int|float</Code>),{' '}
-                <Code>mixed</Code>.
-              </li>
-              <li>
-                <Code>match</Code> výraz, nullsafe operátor <Code>?-&gt;</Code>, named arguments.
-              </li>
-              <li>Attributes (anotace), readonly vlastnosti, enums (8.1), JIT (8.0).</li>
-              <li>
-                Doporučení: <Code>declare(strict_types=1);</Code> na začátku souboru.
-              </li>
-            </ul>
-          </InfoBox>
-        ),
-      },
-      {
-        title: 'Ekosystém a praxe',
-        content: (
-          <InfoBox>
-            <div className="font-semibold mb-1">Ekosystém a praxe</div>
-            <ul className="list-disc pl-5 space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
-              <li>
-                Správa balíčků: <Code>Composer</Code> + <Code>autoload</Code> (PSR‑4).
-              </li>
-              <li>Frameworky: Laravel (rychlý vývoj), Symfony (enterprise, komponenty).</li>
-              <li>Databáze: PDO (prepared statements), ORM/DBAL podle frameworku.</li>
-            </ul>
-          </InfoBox>
-        ),
-      },
-      {
-        title: 'Bezpečnostní minimum',
-        content: (
-          <InfoBox>
-            <div className="font-semibold mb-1">Bezpečnostní minimum</div>
-            <ul className="list-disc pl-5 space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
-              <li>
-                Únik HTML: <Code>htmlspecialchars($v, ENT_QUOTES, &apos;UTF-8&apos;)</Code>.
-              </li>
-              <li>
-                Vstupy: <Code>filter_input()</Code>, validace/normalizace, nikdy ne‑důvěřovat{' '}
-                <Code>$_GET/$_POST</Code>.
-              </li>
-              <li>DB: vždy prepared statements (PDO), žádné stringové skládání SQL.</li>
-              <li>
-                Hesla: <Code>password_hash()</Code> / <Code>password_verify()</Code>, nikdy ne
-                ukládat v plaintextu.
-              </li>
-              <li>
-                CSRF: token ve formulářích; session: <Code>session_start()</Code> + bezpečná
-                konfigurace cookies.
-              </li>
-            </ul>
-          </InfoBox>
-        ),
-      },
-      {
-        title: 'Verze a prostředí',
-        content: (
-          <InfoBox>
-            <div className="font-semibold mb-1">Verze a prostředí</div>
-            <ul className="list-disc pl-5 space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
-              <li>
-                Aktuální řada je 8.x. Verzi na serveru zjistíte: <Code>php -v</Code> nebo{' '}
-                <Code>phpinfo()</Code>.
-              </li>
-              <li>
-                Serverový stack: Apache/Nginx + PHP‑FPM; konfigurace přes <Code>php.ini</Code>.
-              </li>
-            </ul>
-            <div className="mt-3 text-xs text-zinc-600 dark:text-zinc-400">
-              Zadání cvičení:{' '}
-              <a
-                className="underline"
-                href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/08/start"
-                target="_blank"
-                rel="noreferrer noopener"
-              >
-                Cvičení 8 – Jazyk PHP (Malý test #2)
-              </a>
-            </div>
-          </InfoBox>
-        ),
-      },
-    ],
-    [],
-  );
-
-  const [idx, setIdx] = useState(0);
-  const total = sections.length;
-  const cur = sections[idx];
+  const sections = [
+    {
+      title: 'Co je PHP?',
+      content: (
+        <>
+          <p>
+            PHP je serverový skriptovací jazyk. Kód se vykoná na serveru, vytvoří HTML, JSON nebo
+            jinou odpověď a teprve výsledek se odešle prohlížeči. Uživatel tedy nevidí zdrojový PHP
+            soubor, ale pouze data, která aplikace vrátí.
+          </p>
+          <p>
+            Tento model se hodí pro klasické weby, administrační rozhraní i API. PHP je široce
+            dostupné na hostinzích a stojí za systémy jako WordPress, MediaWiki nebo Moodle, takže
+            jeho principy potkáte v nových i dlouhodobě provozovaných aplikacích.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: 'Proč se PHP stále používá',
+      content: (
+        <>
+          <p>
+            Nasazení je přímočaré: webový server Apache nebo Nginx předá požadavek PHP-FPM a hotová
+            odpověď se vrátí klientovi. Díky této dostupnosti lze rychle vytvořit menší web, ale
+            stejný runtime zvládá i rozsáhlé aplikace.
+          </p>
+          <p>
+            Composer a Packagist zajišťují správu balíčků, zatímco Laravel a Symfony nabízejí
+            strukturu pro větší projekty. Důvodem dalšího používání tedy není jen nízká bariéra
+            vstupu, ale také vyspělý ekosystém, dokumentace a velká komunita.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: 'Hlavní koncepty jazyka',
+      content: (
+        <>
+          <p>
+            PHP lze vložit do šablony mezi <Code>&lt;?php ... ?&gt;</Code> a hodnoty vypsat pomocí{' '}
+            <Code>echo</Code>. Proměnné začínají znakem <Code>$</Code>, pole mohou být indexová i
+            asociativní a opakovanou logiku uzavíráme do funkcí. Soubory propojují{' '}
+            <Code>include</Code> a <Code>require</Code>.
+          </p>
+          <p>
+            Každý HTTP požadavek obvykle spustí skript od začátku do konce. Informace o požadavku
+            zpřístupňují superglobální pole <Code>$_GET</Code>, <Code>$_POST</Code>,{' '}
+            <Code>$_SERVER</Code> a po zahájení session také <Code>$_SESSION</Code>. Tato data jsou
+            vstupem zvenčí a aplikace je musí před použitím ověřit.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: 'Moderní PHP (8.x)',
+      content: (
+        <>
+          <p>
+            Současné PHP podporuje typy parametrů a návratových hodnot, union typy jako{' '}
+            <Code>int|float</Code>, pojmenované argumenty, výraz <Code>match</Code>, nullsafe
+            operátor i výčty. Tyto prvky pomáhají přesunout chyby blíž k místu, kde vznikají, a
+            zpřesňují veřejné rozhraní funkcí a tříd.
+          </p>
+          <p>
+            Pro výukový i produkční kód je vhodné začít soubor deklarací{' '}
+            <Code>declare(strict_types=1);</Code>. Striktní režim nenahrazuje validaci dat, ale
+            omezuje překvapivé automatické převody při volání typovaných funkcí.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: 'Ekosystém a praxe',
+      content: (
+        <>
+          <p>
+            Composer zapisuje závislosti projektu a autoloading podle PSR-4 zpřístupňuje třídy bez
+            ručního načítání každého souboru. Laravel nabízí rychlou cestu k běžným webovým funkcím,
+            zatímco Symfony poskytuje samostatné komponenty i základ pro rozsáhlejší aplikace.
+          </p>
+          <p>
+            Pro databáze lze použít PDO s připravenými dotazy nebo vyšší vrstvu ORM či DBAL. Volba
+            nástroje se mění podle projektu, ale oddělení doménové logiky, HTTP vrstvy a persistence
+            zůstává důležité v každém frameworku.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: 'Bezpečnostní minimum',
+      content: (
+        <>
+          <p>
+            Vstupům z <Code>$_GET</Code> a <Code>$_POST</Code> nikdy automaticky nedůvěřujte.
+            Nejprve je validujte a normalizujte, SQL posílejte přes připravené dotazy a text
+            vkládaný do HTML escapujte pomocí{' '}
+            <Code>htmlspecialchars($value, ENT_QUOTES, &apos;UTF-8&apos;)</Code>.
+          </p>
+          <p>
+            Hesla ukládejte pomocí <Code>password_hash()</Code> a ověřujte přes{' '}
+            <Code>password_verify()</Code>. Formuláře měnící stav chrání CSRF token a session
+            vyžaduje bezpečné nastavení cookies. Bezpečnost zde není jedna funkce, ale souvislý
+            řetěz rozhodnutí od přijetí vstupu po vytvoření odpovědi.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: 'Verze a prostředí',
+      content: (
+        <>
+          <p>
+            Aplikace běží v konkrétní verzi PHP a s konkrétní konfigurací. Verzi zjistíte příkazem{' '}
+            <Code>php -v</Code>, podrobnosti prostředí funkcí <Code>phpinfo()</Code> a nastavení se
+            načítá z <Code>php.ini</Code>. V běžném serverovém stacku požadavky obsluhuje Nginx nebo
+            Apache společně s PHP-FPM.
+          </p>
+          <p>
+            Při přesunu mezi lokálním prostředím a serverem vždy ověřte dostupná rozšíření, limity a
+            verzi runtime. Konkrétní postup pro tento kurz shrnuje{' '}
+            <a
+              href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/08/start"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              zadání cvičení 8
+            </a>
+            .
+          </p>
+        </>
+      ),
+    },
+  ];
 
   return (
-    <div>
-      <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
-            Krok {idx + 1} / {total}
-          </span>
-          <div className="font-semibold text-sm">{cur.title}</div>
-        </div>
-        <div>{cur.content}</div>
-      </div>
-      <div className="mt-3 flex items-center justify-between">
-        <button
-          className="px-3 py-1.5 text-sm rounded-lg border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 disabled:opacity-50"
-          onClick={() => setIdx((i) => Math.max(0, i - 1))}
-          disabled={idx === 0}
-        >
-          Předchozí
-        </button>
-        <div className="flex items-center gap-1">
-          {sections.map((_, i) => (
-            <button
-              key={i}
-              className={clsx(
-                'h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700',
-                i === idx ? 'bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800',
-              )}
-              onClick={() => setIdx(i)}
-              aria-label={`Přejít na krok ${i + 1}`}
-            />
-          ))}
-        </div>
-        <button
-          className="px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white disabled:opacity-50"
-          onClick={() => setIdx((i) => Math.min(total - 1, i + 1))}
-          disabled={idx === total - 1}
-        >
-          Další
-        </button>
-      </div>
+    <div className={contentStyles.theoryFlow} data-theory-flow="true">
+      {sections.map((section, index) => (
+        <section className={contentStyles.theoryTopic} data-theory-topic="true" key={section.title}>
+          <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
+          <div className={contentStyles.theoryBody}>
+            <h3>{section.title}</h3>
+            {section.content}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

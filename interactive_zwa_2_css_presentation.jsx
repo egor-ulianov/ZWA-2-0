@@ -12,6 +12,7 @@ import React, {
 import heroImg from './src/interactive-zwa-1/assets/semestral-meme.png';
 import memeImg from './src/interactive-zwa-2/assets/image.png';
 import { getLessonByNumber } from './src/config/lessons.js';
+import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
@@ -662,48 +663,27 @@ const slideDefinitions = [
     activityType: 'learn',
     sections: [
       {
-        icon: '🎯',
         title: 'Selektory a specifita',
-        points: [
-          'Základní selektory: element (h1), třída (.btn), id (#main)',
-          'Pseudo-třídy a pseudo-elementy: :hover, :visited, ::first-letter',
-          'Specifita: inline > id > třída/atribut/pseudo-třída > element',
-          'Kombinátory: potomci (A B), přímý potomek (A > B), sourozenci (A + B, A ~ B)',
-          'Atributové selektory: [type="email"], [data-role^="nav"]',
-          'Skupinové selektory: h1, h2, .lead (sdílení pravidel)',
-          'Specifita v číslech: inline (1000), id (100), třída/atribut/pseudo-třída (10), element/pseudo-element (1)',
-          'Vyhýbejte se !important; raději zvyšujte specifitu nebo upravte strukturu',
-          'Kdy použít id vs. třídu: id pro jedinečné háčky, třídy pro znovupoužití',
+        paragraphs: [
+          'Selektor propojuje pravidlo CSS s konkrétní částí dokumentu. Elementový selektor, například h1, zasáhne všechny prvky daného typu; třída .btn popisuje opakovatelnou roli a id #main má označovat jediný prvek. Kombinátory A B, A > B, A + B a A ~ B pak zpřesňují vztah mezi prvky.',
+          'Když na jeden prvek míří více pravidel, prohlížeč porovnává jejich specifitu. Inline styl má nejvyšší běžnou váhu, po něm následuje id, třída nebo atribut a nakonec element. Toto pořadí je důležitější než mechanické počítání bodů: cílem je psát selektory, jejichž priorita je čitelná a předvídatelná.',
+          'Pseudo-třídy jako :hover nebo :visited popisují stav, zatímco pseudo-element ::first-letter vybírá virtuální část prvku. Atributové selektory pomáhají pracovat s významem HTML bez dalších tříd. !important používejte jen výjimečně; obvykle je lepší upravit strukturu pravidel a znovupoužitelné styly stavět na třídách.',
         ],
       },
       {
-        icon: '🧱',
         title: 'Kaskáda a dědičnost',
-        points: [
-          'Pozdější pravidla a vyšší specifita přepisují dřívější',
-          'Některé vlastnosti se dědí (font, color), jiné ne (margin, padding)',
-          '!important překoná kaskádu (používat střídmě)',
-          'Pořadí zdrojů: uživatelský agent < autor < inline < !important',
-          'Dědičnost vynutíte inherit; potlačíte initial, unset, nebo revert',
-          'Kontext dědičnosti: barva a písmo tečou do potomků, box model nikoli',
-          'Kaskádové vrstvy (@layer): řízení priority modulů stylů',
-          'Pište od obecného ke specifickému; snižujte zbytečnou specifitu',
-          'Resety/normalizace sjednotí výchozí styly napříč prohlížeči',
+        paragraphs: [
+          'Kaskáda rozhoduje, které z platných pravidel se nakonec použije. Zohledňuje původ stylu, důležitost deklarace, specifitu selektoru a při shodě také pořadí zápisu. Proto pozdější pravidlo nepřebíjí vše automaticky — musí nejprve projít předchozími úrovněmi rozhodování.',
+          'Dědičnost je jiný mechanismus. Barva a písmo obvykle přecházejí z rodiče na potomky, zatímco margin, padding a další části box modelu nikoli. Hodnotami inherit, initial, unset a revert lze chování řídit explicitně, ale dobře navržený stylopis většinou spoléhá na přirozenou dědičnost typografie.',
+          'Pište pravidla od obecných ke konkrétním a udržujte jejich specifitu nízkou. Normalizace sjednotí výchozí styly prohlížečů a kaskádové vrstvy @layer mohou vyjádřit prioritu celých skupin pravidel bez řetězení stále složitějších selektorů.',
         ],
       },
       {
-        icon: '🔗',
         title: 'Stavové selektory odkazů',
-        points: [
-          ':link, :visited, :hover, :active – často pořadí LVHA',
-          'Bezpečnost: pro :visited je prohlížeč omezený (např. ne layout)',
-          'Barva navštíveného může být stejná jako default, aby se neměnila',
-          'Přístupnost: navštívené odkazy by měly být rozlišitelné alespoň barvou',
-          ':focus a :focus-visible zlepšují klávesovou navigaci',
-          ':hover není spolehlivý na dotykových zařízeních – přidejte i focus/active',
-          'Pořadí stavů pište konzistentně: :link, :visited, :hover, :focus, :active',
-          'U :visited lze měnit hlavně barvy (např. color, outline-color), ne rozvržení',
-          'Zvětšujte klikací plochu pomocí paddingu; margin neovlivní hit-area',
+        paragraphs: [
+          'Odkaz může být nenavštívený, navštívený, aktivovaný ukazatelem, zaměřený klávesnicí nebo právě stisknutý. Pravidla :link, :visited, :hover, :focus-visible a :active proto zapisujte v konzistentním pořadí, aby pozdější stav nepřepsal dřívější nečekaným způsobem.',
+          'Hover není na dotykových zařízeních spolehlivý a nesmí být jediným signálem interakce. Stejnou pozornost věnujte focusu a aktivnímu stavu. Klikací plochu zvětšujte paddingem, protože margin pouze oddaluje okolní obsah a nestává se součástí odkazu.',
+          'Prohlížeče z bezpečnostních důvodů omezují vlastnosti dostupné pro :visited, takže navštívený odkaz nemůže měnit rozvržení stránky. Odlišení barvou je naopak vhodné, pokud zůstává dostatečně kontrastní a dává uživateli užitečnou informaci o historii navigace.',
         ],
       },
     ],
@@ -802,6 +782,24 @@ const slides = slideDefinitions.flatMap((slide) => {
   }));
 });
 
+function CssTheory({ sections }) {
+  return (
+    <div className={contentStyles.theoryFlow} data-theory-flow="true">
+      {sections.map((section, index) => (
+        <section className={contentStyles.theoryTopic} data-theory-topic="true" key={section.title}>
+          <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
+          <div className={contentStyles.theoryBody}>
+            <h3>{section.title}</h3>
+            {section.paragraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 function CssSlideContent({ slide, stepIndex: controlledIndex, onStepIndexChange }) {
   const hasSteps = Array.isArray(slide.steps) && slide.steps.length > 0;
   const hasSections = Array.isArray(slide.sections) && slide.sections.length > 0;
@@ -818,8 +816,6 @@ function CssSlideContent({ slide, stepIndex: controlledIndex, onStepIndexChange 
   const setStepIndex = isControlled ? onStepIndexChange : setInternalIndex;
   const totalSteps = hasSteps ? slide.steps.length : 0;
   const currentStep = hasSteps ? slide.steps[stepIndex] : null;
-  const totalSections = hasSections ? slide.sections.length : 0;
-  const currentSection = hasSections ? slide.sections[stepIndex] : null;
   return (
     <>
       {slide.body && !hasSections && !hasSteps && (
@@ -839,59 +835,7 @@ function CssSlideContent({ slide, stepIndex: controlledIndex, onStepIndexChange 
           ))}
         </ul>
       )}
-      {hasSections && currentSection && (
-        <div className="mt-4">
-          <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
-                Krok {stepIndex + 1} / {totalSections}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl" aria-hidden>
-                {currentSection.icon}
-              </span>
-              <div className="font-semibold">{currentSection.title}</div>
-            </div>
-            {Array.isArray(currentSection.points) && (
-              <ul className="list-disc pl-5 space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
-                {currentSection.points.map((p, i) => (
-                  <li key={i}>{p}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="mt-3 flex items-center justify-between">
-            <button
-              className="px-3 py-1.5 text-sm rounded-lg border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 disabled:opacity-50"
-              onClick={() => setStepIndex((i) => Math.max(0, i - 1))}
-              disabled={stepIndex === 0}
-            >
-              Předchozí
-            </button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalSections }).map((_, i) => (
-                <button
-                  key={i}
-                  className={clsx(
-                    'h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700',
-                    i === stepIndex ? 'bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800',
-                  )}
-                  onClick={() => setStepIndex(i)}
-                  aria-label={`Přejít na krok ${i + 1}`}
-                />
-              ))}
-            </div>
-            <button
-              className="px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white disabled:opacity-50"
-              onClick={() => setStepIndex((i) => Math.min(totalSections - 1, i + 1))}
-              disabled={stepIndex === totalSections - 1}
-            >
-              Další
-            </button>
-          </div>
-        </div>
-      )}
+      {hasSections && <CssTheory sections={slide.sections} />}
       {hasSteps && currentStep && (
         <div className="mt-4">
           <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4">

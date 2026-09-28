@@ -10,6 +10,7 @@ import React, {
   useState,
 } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
+import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
@@ -571,66 +572,52 @@ const slideDefinitions = [
     presenterNotes: 'Ukažte rozdíl mezi flow, flexboxem a media query na jednom layoutu.',
     sections: [
       {
-        icon: '📦',
         title: 'Box model',
-        points: [
-          'Každý element má content, padding, border a margin.',
-          'box-sizing:border-box zahrne padding+border do šířky/výšky.',
-          'Svislé marginy se mohou sčítat (margin collapsing).',
+        paragraphs: [
+          'Každý vykreslený prvek zabírá obdélníkový prostor složený z obsahu, vnitřního odsazení, rámečku a vnějšího okraje. Výchozí content-box počítá zadanou šířku pouze pro obsah, zatímco box-sizing: border-box do ní zahrne také padding a border. Druhá varianta proto obvykle vede k předvídatelnějšímu rozvržení.',
+          'Svislé marginy sousedních bloků se mohou sloučit do jedné hodnoty. Nejde o chybu prohlížeče, ale o pravidlo normálního toku dokumentu. Při ladění rozměrů proto sledujte nejen vypočtenou šířku a výšku, ale také to, zda se okraje neslučují s rodičem nebo sousedem.',
         ],
       },
       {
-        icon: '🧭',
         title: 'Float & Clear',
-        points: [
-          'float odsunuje element vlevo/vpravo a text jej obtéká.',
-          'clearfix (např. ::after s clear:both) zabrání kolapsu výšky rodiče.',
-          'Float se dnes používá výjimečně (historický layout).',
+        paragraphs: [
+          'Float původně vznikl pro obtékání obrázků textem: prvek se přesune k levému nebo pravému okraji a následující inline obsah kolem něj pokračuje. Plovoucí potomci mohou přestat určovat výšku rodiče, což se tradičně řeší prvkem s clear nebo pseudo-elementem clearfix.',
+          'Pro celkové rozvržení stránky dnes použijte Grid nebo Flexbox. Float zůstává vhodný hlavně tam, kde skutečně chcete obtékání obsahu, nikoli jako univerzální náhrada sloupcového layoutu.',
         ],
       },
       {
-        icon: '📍',
         title: 'Position',
-        points: [
-          'static (výchozí), relative (posun bez vlivu na flow), absolute (vyjme z flow, kotvený k nejbližšímu positioned rodiči)',
-          'fixed (kotvení k viewportu), sticky (hybrid mezi relative a fixed).',
-          'Zvažte z-index a stacking contexty.',
+        paragraphs: [
+          'Static ponechává prvek v běžném toku. Relative zachová jeho původní místo, ale dovolí vizuální posun a vytvoří referenční rámec pro absolutně pozicované potomky. Absolute naopak prvek z běžného toku vyjme a ukotví jej k nejbližšímu pozicovanému předkovi.',
+          'Fixed používá jako rámec viewport, zatímco sticky se pohybuje s dokumentem jen do určené hranice. Jakmile začnete vrstvit prvky přes sebe, sledujte také z-index a vznik nových stacking contexts; vysoké číslo samo o sobě nezaručí, že prvek překryje obsah v jiné vrstvě.',
         ],
       },
       {
-        icon: '🧱',
         title: 'Display',
-        points: [
-          'inline vs. block vs. inline-block – vliv na tok a box model.',
-          'display:none odstraní z flow i accessibility stromu (pozor na ARIA).',
-          'Moderní layout řešte Flexbox/Grid, ne tabulkami.',
+        paragraphs: [
+          'Display určuje, jak se prvek účastní rozvržení. Inline pokračuje v řádku textu, block vytváří samostatný blok a inline-block kombinuje řádkové umístění s rozměry boxu. Hodnoty flex a grid navíc mění způsob rozvržení přímých potomků.',
+          'Display: none odstraní prvek nejen z vizuálního toku, ale také z accessibility stromu. Je proto vhodný pro skutečně skrytý obsah, nikoli pro informace, které mají zůstat dostupné čtečkám obrazovky. Tabulkové hodnoty ponechte tabulkovým datům; aplikační layout stavte na Gridu a Flexboxu.',
         ],
       },
       {
-        icon: '🧰',
         title: 'Flexbox',
-        points: [
-          'Parent: display:flex; children: flex properties (flex, order, align).',
-          'Zarovnání: justify-content (hlavní osa), align-items (příčná osa).',
-          'margin-left:auto rychle odsune prvek na konec řádku.',
+        paragraphs: [
+          'Flexbox řeší jednorozměrné uspořádání položek v řádku nebo sloupci. Rodič s display: flex určuje hlavní osu, mezery a zarovnání; jeho děti mohou pomocí flex-grow, flex-shrink a flex-basis popsat, jak využijí dostupný prostor.',
+          'Justify-content pracuje s hlavní osou a align-items s osou příčnou. Automatický margin na jedné straně spotřebuje volné místo, takže například margin-left: auto jednoduše odsune tlačítko na konec řádku bez absolutního pozicování.',
         ],
       },
       {
-        icon: '📱',
         title: 'Media queries',
-        points: [
-          '@media (min-width: ...) pro mobile-first přístup.',
-          'Používejte promyšlené breakpoints dle obsahu, ne zařízení.',
-          'Preferujte relativní jednotky (em/rem/vw/vh).',
+        paragraphs: [
+          'Media query mění pravidla podle vlastností zobrazovacího prostředí. Mobile-first přístup začíná jednoduchým rozvržením pro úzkou plochu a pomocí @media (min-width: ...) přidává složitější uspořádání teprve tam, kde pro něj existuje dost prostoru.',
+          'Breakpoint vybírejte podle okamžiku, kdy se konkrétní obsah přestává dobře číst, nikoli podle názvu zařízení. Relativní jednotky rem a em respektují velikost písma, zatímco vw a vh mohou pomoci s rozměry navázanými na viewport — vždy ale ověřte čitelnost při zvětšení textu.',
         ],
       },
       {
-        icon: '🖨️',
         title: 'Print',
-        points: [
-          'Samostatný stylesheet přes <link media="print">.',
-          'Skryjte navigaci, barevné pozadí a zvyšte kontrast textu.',
-          'Zajistěte čitelnost: font-size, margins, page-break.',
+        paragraphs: [
+          'Tisková verze může být součástí stejného stylopisu v bloku @media print nebo v samostatném souboru připojeném přes link s media="print". Jejím úkolem není kopírovat obrazovku, ale převést obsah do podoby vhodné pro papír nebo PDF.',
+          'Odstraňte navigaci a ovládací prvky, omezte barevná pozadí a zachovejte vysoký kontrast. Nastavte čitelnou velikost písma, rozumné okraje a pravidla pro zalomení stránky, aby nadpis nezůstal osamocený na konci listu a důležitý blok se zbytečně nerozdělil.',
         ],
       },
     ],
@@ -699,7 +686,7 @@ function Css2SlideContent({ slide }) {
       )}
       {hasSections && (
         <div className="mt-4">
-          <TheorySections sections={slide.sections} />
+          <CssLayoutTheory sections={slide.sections} />
         </div>
       )}
       {slide.id === 'quiz-css' && (
@@ -711,59 +698,20 @@ function Css2SlideContent({ slide }) {
   );
 }
 
-function TheorySections({ sections }) {
-  const [idx, setIdx] = useState(0);
-  const total = sections.length;
-  const cur = sections[idx];
+function CssLayoutTheory({ sections }) {
   return (
-    <div>
-      <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
-            Krok {idx + 1} / {total}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xl" aria-hidden>
-            {cur.icon}
-          </span>
-          <div className="font-semibold">{cur.title}</div>
-        </div>
-        <ul className="list-disc pl-5 space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
-          {cur.points.map((p, i) => (
-            <li key={i}>{p}</li>
-          ))}
-        </ul>
-      </div>
-      <div className="mt-3 flex items-center justify-between">
-        <button
-          className="px-3 py-1.5 text-sm rounded-lg border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 disabled:opacity-50"
-          onClick={() => setIdx((i) => Math.max(0, i - 1))}
-          disabled={idx === 0}
-        >
-          Předchozí
-        </button>
-        <div className="flex items-center gap-1">
-          {sections.map((_, i) => (
-            <button
-              key={i}
-              className={clsx(
-                'h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700',
-                i === idx ? 'bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800',
-              )}
-              onClick={() => setIdx(i)}
-              aria-label={`Přejít na krok ${i + 1}`}
-            />
-          ))}
-        </div>
-        <button
-          className="px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white disabled:opacity-50"
-          onClick={() => setIdx((i) => Math.min(total - 1, i + 1))}
-          disabled={idx === total - 1}
-        >
-          Další
-        </button>
-      </div>
+    <div className={contentStyles.theoryFlow} data-theory-flow="true">
+      {sections.map((section, index) => (
+        <section className={contentStyles.theoryTopic} data-theory-topic="true" key={section.title}>
+          <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
+          <div className={contentStyles.theoryBody}>
+            <h3>{section.title}</h3>
+            {section.paragraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

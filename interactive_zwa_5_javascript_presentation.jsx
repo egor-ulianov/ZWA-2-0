@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import memeImg from './src/interactive-zwa-6/image.png';
 import { getLessonByNumber } from './src/config/lessons.js';
 import Code from './src/course-ui/content/InlineCode.jsx';
+import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
@@ -431,7 +432,7 @@ function JsSlideContent({ slide, stepIndex, onStepIndexChange }) {
       )}
       {hasSections && (
         <div className="mt-4">
-          <TheorySections sections={slide.sections} />
+          <JavaScriptTheory sections={slide.sections} />
         </div>
       )}
       {slide.id === 'meme' && (
@@ -493,64 +494,21 @@ function JsSlideContent({ slide, stepIndex, onStepIndexChange }) {
   );
 }
 
-function TheorySections({ sections }) {
-  const [idx, setIdx] = useState(0);
-  const total = sections.length;
-  const cur = sections[idx];
+function JavaScriptTheory({ sections }) {
   return (
-    <div>
-      <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
-            Krok {idx + 1} / {total}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xl" aria-hidden>
-            {cur.icon}
-          </span>
-          <div className="font-semibold">{cur.title}</div>
-        </div>
-        {cur.body && (
-          <p className="leading-relaxed text-sm text-zinc-700 dark:text-zinc-300 mb-2">
-            {cur.body}
-          </p>
-        )}
-        <ul className="list-disc pl-5 space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
-          {cur.points.map((p, i) => (
-            <li key={i}>{p}</li>
-          ))}
-        </ul>
-      </div>
-      <div className="mt-3 flex items-center justify-between">
-        <button
-          className="px-3 py-1.5 text-sm rounded-lg border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 disabled:opacity-50"
-          onClick={() => setIdx((i) => Math.max(0, i - 1))}
-          disabled={idx === 0}
-        >
-          Předchozí
-        </button>
-        <div className="flex items-center gap-1">
-          {sections.map((_, i) => (
-            <button
-              key={i}
-              className={clsx(
-                'h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700',
-                i === idx ? 'bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800',
-              )}
-              onClick={() => setIdx(i)}
-              aria-label={`Přejít na krok ${i + 1}`}
-            />
-          ))}
-        </div>
-        <button
-          className="px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white disabled:opacity-50"
-          onClick={() => setIdx((i) => Math.min(total - 1, i + 1))}
-          disabled={idx === total - 1}
-        >
-          Další
-        </button>
-      </div>
+    <div className={contentStyles.theoryFlow} data-theory-flow="true">
+      {sections.map((section, index) => (
+        <section className={contentStyles.theoryTopic} data-theory-topic="true" key={section.title}>
+          <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
+          <div className={contentStyles.theoryBody}>
+            <h3>{section.title}</h3>
+            <p>{section.body}</p>
+            {section.points.map((point) => (
+              <p key={point}>{point}</p>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

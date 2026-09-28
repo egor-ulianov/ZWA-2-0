@@ -5,6 +5,7 @@ import telegramQr from './src/interactive-zwa-1/assets/telegram-qr.png';
 import semestralMeme from './src/interactive-zwa-1/assets/semestral-meme.png';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
@@ -519,6 +520,24 @@ function useNetworkNavigation(sectionList, legacyId, firstTaskId) {
   return { ...useLearningNavigation(navigationSections), sections: navigationSections };
 }
 
+function NetworkTheory({ sections }) {
+  return (
+    <div className={contentStyles.theoryFlow} data-theory-flow="true">
+      {sections.map((section, index) => (
+        <section className={contentStyles.theoryTopic} data-theory-topic="true" key={section.title}>
+          <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
+          <div className={contentStyles.theoryBody}>
+            <h3>{section.title}</h3>
+            {section.points.map((point) => (
+              <p key={point}>{point}</p>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 function LessonSlideContent({ slide, commandLog }) {
   const hasSteps = Array.isArray(slide.steps) && slide.steps.length > 0;
   const hasSections = Array.isArray(slide.sections) && slide.sections.length > 0;
@@ -531,8 +550,6 @@ function LessonSlideContent({ slide, commandLog }) {
   /* eslint-enable react-hooks/set-state-in-effect */
   const totalSteps = hasSteps ? slide.steps.length : 0;
   const currentStep = hasSteps ? slide.steps[stepIndex] : null;
-  const totalSections = hasSections ? slide.sections.length : 0;
-  const currentSection = hasSections ? slide.sections[stepIndex] : null;
   return (
     <>
       {slide.body && !hasSections && (
@@ -571,58 +588,7 @@ function LessonSlideContent({ slide, commandLog }) {
           </p>
         </div>
       )}
-      {hasSections && currentSection && (
-        <div className="mt-4">
-          <div className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 p-4">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
-                Krok {stepIndex + 1} / {totalSections}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl" aria-hidden>
-                {currentSection.icon}
-              </span>
-              <div className="font-semibold">{currentSection.title}</div>
-            </div>
-            {Array.isArray(currentSection.points) && (
-              <ul className="list-disc pl-5 space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
-                {currentSection.points.map((p, i) => (
-                  <li key={i}>{p}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="mt-3 flex items-center justify-between">
-            <button
-              className="px-3 py-1.5 text-sm rounded-lg border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 disabled:opacity-50"
-              onClick={() => setStepIndex((i) => Math.max(0, i - 1))}
-              disabled={stepIndex === 0}
-            >
-              Předchozí
-            </button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalSections }).map((_, i) => (
-                <button
-                  key={i}
-                  className={`h-2.5 w-2.5 rounded-full border border-zinc-300/60 dark:border-zinc-700 ${
-                    i === stepIndex ? 'bg-sky-500' : 'bg-zinc-200 dark:bg-zinc-800'
-                  }`}
-                  onClick={() => setStepIndex(i)}
-                  aria-label={`Přejít na krok ${i + 1}`}
-                />
-              ))}
-            </div>
-            <button
-              className="px-3 py-1.5 text-sm rounded-lg border border-sky-500/30 bg-sky-600 text-white disabled:opacity-50"
-              onClick={() => setStepIndex((i) => Math.min(totalSections - 1, i + 1))}
-              disabled={stepIndex === totalSections - 1}
-            >
-              Další
-            </button>
-          </div>
-        </div>
-      )}
+      {hasSections && <NetworkTheory sections={slide.sections} />}
       {slide.bullets && !hasSteps && (
         <ul className="list-disc pl-6 space-y-1 mt-2">
           {slide.bullets.map((b, i) => (
