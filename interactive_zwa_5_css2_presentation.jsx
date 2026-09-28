@@ -531,6 +531,29 @@ const VsPlayground = forwardRef(function VsPlayground({ stepIndex }, ref) {
 
 void VsPlayground;
 
+const CSS2_REFERENCE_LINKS = [
+  {
+    label: 'Cvičení 5 – CSS II (cw.fel)',
+    href: 'https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/05/start',
+  },
+  {
+    label: 'MDN: Box model',
+    href: 'https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/The_box_model',
+  },
+  { label: 'MDN: float', href: 'https://developer.mozilla.org/en-US/docs/Web/CSS/float' },
+  { label: 'MDN: position', href: 'https://developer.mozilla.org/en-US/docs/Web/CSS/position' },
+  { label: 'MDN: display', href: 'https://developer.mozilla.org/en-US/docs/Web/CSS/display' },
+  {
+    label: 'MDN: Flexbox',
+    href: 'https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Flexbox',
+  },
+  { label: 'MDN: @media', href: 'https://developer.mozilla.org/en-US/docs/Web/CSS/@media' },
+  {
+    label: 'MDN: print styles',
+    href: 'https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries/Using_media_queries#printing',
+  },
+];
+
 const slideDefinitions = [
   {
     id: 'title',
@@ -623,16 +646,7 @@ const slideDefinitions = [
     id: 'links',
     title: 'Odkazy',
     activityType: 'learn',
-    bullets: [
-      'Cvičení 5 – CSS II (cw.fel) — https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/05/start',
-      'MDN: Box model — https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/The_box_model',
-      'MDN: float — https://developer.mozilla.org/en-US/docs/Web/CSS/float',
-      'MDN: position — https://developer.mozilla.org/en-US/docs/Web/CSS/position',
-      'MDN: display — https://developer.mozilla.org/en-US/docs/Web/CSS/display',
-      'MDN: Flexbox — https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Flexbox',
-      'MDN: @media — https://developer.mozilla.org/en-US/docs/Web/CSS/@media',
-      'MDN: print styles — https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries/Using_media_queries#printing',
-    ],
+    links: CSS2_REFERENCE_LINKS,
   },
   {
     id: 'quiz-css',
@@ -671,6 +685,22 @@ function Css2SlideContent({ slide }) {
         <ul className="list-disc pl-6 space-y-1 mt-2">
           {slide.bullets.map((b, i) => (
             <li key={i}>{b}</li>
+          ))}
+        </ul>
+      )}
+      {slide.links && (
+        <ul className="list-disc pl-6 space-y-2 mt-2">
+          {slide.links.map((link) => (
+            <li key={link.href}>
+              <a
+                className="text-sky-700 underline underline-offset-2 hover:text-sky-900 dark:text-sky-400 dark:hover:text-sky-300"
+                href={link.href}
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                {link.label}
+              </a>
+            </li>
           ))}
         </ul>
       )}

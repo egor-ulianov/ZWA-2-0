@@ -54,6 +54,22 @@ test.describe('F1 lesson composition and deep links', () => {
     }
   });
 
+  test('CSS II references are rendered as usable hyperlinks', async ({ page }) => {
+    await installDeterministicNetwork(page);
+    await page.goto('/interactive-zwa-5-css-ii?slide=links');
+
+    const links = page.getByRole('region', { name: 'Odkazy' }).getByRole('link');
+    await expect(links).toHaveCount(8);
+    await expect(links.first()).toHaveAttribute(
+      'href',
+      'https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/05/start',
+    );
+    await expect(links.nth(1)).toHaveAttribute(
+      'href',
+      'https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/The_box_model',
+    );
+  });
+
   test('HTML5 lesson keeps its task deep link and learning objective', async ({ page }) => {
     await installDeterministicNetwork(page);
 
