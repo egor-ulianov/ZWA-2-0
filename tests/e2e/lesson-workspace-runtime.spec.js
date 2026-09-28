@@ -24,7 +24,10 @@ function usesNewExerciseStage(route) {
   return (
     route.includes('interactive-zwa-1-html5') ||
     route.includes('interactive-zwa-2-forms') ||
-    route.includes('interactive-zwa-1?')
+    route.includes('interactive-zwa-1?') ||
+    route.includes('interactive-zwa-2?') ||
+    route.includes('interactive-zwa-5-css-ii') ||
+    route.includes('interactive-zwa-5-js')
   );
 }
 
@@ -54,7 +57,7 @@ test.describe('runtime lesson task workspaces', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-5-js?slide=tasks');
-    const runTests = page.getByRole('button', { name: 'Spustit testy' });
+    const runTests = page.getByRole('button', { name: 'Spustit ověření' });
     await runTests.click();
 
     const results = page.getByRole('group', { name: 'Výsledky testů' });
@@ -109,10 +112,7 @@ test.describe('runtime lesson task workspaces', () => {
       if (testCase.iframeTitle.startsWith('Náhled HTML')) {
         await expect(verification.getByText(/Chyba validace:/)).toBeVisible();
       } else {
-        await expect(preview.getByRole('status')).toContainText(/Úloha|#site-header/);
-      }
-      if (!migratedHtml) {
-        await expect(preview.getByRole('group', { name: 'Výsledky testů' })).toBeVisible();
+        await expect(verification.getByRole('status')).toContainText(/Úloha|#site-header/);
       }
     }
   });
@@ -125,12 +125,13 @@ test.describe('runtime lesson task workspaces', () => {
 
     const assignment = page.getByRole('region', { name: 'Zadání' });
     const ide = page.getByRole('region', { name: 'IDE' });
-    const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
+    await page.getByRole('button', { name: 'Osnova lekce' }).click();
+    const outline = page.getByRole('dialog', { name: 'Osnova lekce' });
 
     await expect(
       page.getByRole('heading', { level: 1, name: 'ZWA-4: CSS – interaktivní prezentace' }),
     ).toBeVisible();
-    await expect(outline.getByRole('button', { name: '1) Nadpis', exact: true })).toBeVisible();
+    await expect(outline.getByRole('button').filter({ hasText: '1) Nadpis' })).toBeVisible();
     await expect(ide.getByRole('tablist', { name: 'Kroky úlohy CSS' })).toHaveCount(0);
     await expect(ide.getByRole('tablist', { name: 'Soubory IDE' })).toBeVisible();
     await expect(ide.locator('.cm-editor')).toBeVisible();
@@ -139,7 +140,7 @@ test.describe('runtime lesson task workspaces', () => {
     await expect(page.getByRole('button', { name: 'Předchozí', exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Další', exact: true })).toHaveCount(0);
 
-    await outline.getByRole('button', { name: '2) Odkazy ve footeru', exact: true }).click();
+    await outline.getByRole('button').filter({ hasText: '2) Odkazy ve footeru' }).click();
     await expect(assignment).toContainText('Georgia');
   });
 
@@ -165,19 +166,20 @@ test.describe('runtime lesson task workspaces', () => {
 
     const assignment = page.getByRole('region', { name: 'Zadání' });
     const ide = page.getByRole('region', { name: 'IDE' });
-    const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
+    await page.getByRole('button', { name: 'Osnova lekce' }).click();
+    const outline = page.getByRole('dialog', { name: 'Osnova lekce' });
 
-    await expect(outline.getByRole('button', { name: 'Box model', exact: true })).toBeVisible();
+    await expect(outline.getByRole('button').filter({ hasText: 'Box model' })).toBeVisible();
     await expect(ide.getByRole('tablist', { name: 'Kroky úlohy CSS II' })).toHaveCount(0);
     await expect(ide.getByRole('tablist', { name: 'Soubory IDE' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Předchozí', exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Další', exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /Přejít na úlohu/ })).toHaveCount(0);
 
-    await outline.getByRole('button', { name: 'Float/Clear', exact: true }).click();
+    await outline.getByRole('button').filter({ hasText: 'Float/Clear' }).click();
     await expect(assignment).toContainText('Vložte obrázek do textu');
     await expect(ide).toBeVisible();
-    await expect(page.getByRole('region', { name: 'Náhled a testy' })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Náhled' })).toBeVisible();
   });
 
   test('IDE file and solution tab arrow keys stay on the task slide', async ({ page }) => {

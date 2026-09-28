@@ -9,20 +9,24 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import SandboxedPreview from './src/components/playground/SandboxedPreview';
 import { getLessonByNumber } from './src/config/lessons.js';
-import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
-import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
-import { clsx } from './src/components/lesson/classNames.js';
-import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
-import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
-import LessonQuiz from './src/components/lesson/LessonQuiz.jsx';
-import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
+import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
+import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
+import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
+import StudioTabs from './src/course-ui/exercises/StudioTabs.jsx';
+import SandboxFrame from './src/course-ui/exercises/runtime/SandboxFrame.jsx';
+import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
+import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
+import { useLearningNavigation } from './src/course-ui/learning/useLearningNavigation.js';
 
 import {
   CSS_LAYOUT_INSPECTION,
   validateCssLayout,
-} from './src/components/playground/validators.js';
+} from './src/course-ui/exercises/runtime/validators.js';
+
+function clsx(...values) {
+  return values.filter(Boolean).join(' ');
+}
 
 function getBaseHtml() {
   return [
@@ -271,7 +275,7 @@ function Css2ReferencePanel({ solution }) {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
           index.html
         </p>
-        <SyntaxCodeEditor
+        <StudioEditor
           value={solution.html}
           language="html"
           label="Řešení index.html"
@@ -284,7 +288,7 @@ function Css2ReferencePanel({ solution }) {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
           style.css
         </p>
-        <SyntaxCodeEditor
+        <StudioEditor
           value={solution.css}
           language="css"
           label="Řešení style.css"
@@ -302,7 +306,7 @@ function Css2TaskIde({ stepIndex }) {
     useContext(Css2TaskContext);
   const solution = getTaskSolution(stepIndex);
   return (
-    <WorkspaceIdeTabs
+    <StudioTabs
       activeFileId={activeFileId}
       onActiveFileChange={setActiveFileId}
       files={[
@@ -310,7 +314,7 @@ function Css2TaskIde({ stepIndex }) {
           id: 'index.html',
           label: 'index.html',
           panel: (
-            <SyntaxCodeEditor
+            <StudioEditor
               value={htmlCode}
               onChange={setHtmlCode}
               language="html"
@@ -322,12 +326,7 @@ function Css2TaskIde({ stepIndex }) {
           id: 'style.css',
           label: 'style.css',
           panel: (
-            <SyntaxCodeEditor
-              value={cssCode}
-              onChange={setCssCode}
-              language="css"
-              label="style.css"
-            />
+            <StudioEditor value={cssCode} onChange={setCssCode} language="css" label="style.css" />
           ),
         },
       ]}
@@ -337,11 +336,11 @@ function Css2TaskIde({ stepIndex }) {
 }
 
 function Css2TaskPreview() {
-  const { applyVersion, validationVersion, htmlCode, cssCode, results, handleInspection } =
+  const { applyVersion, validationVersion, htmlCode, cssCode, handleInspection } =
     useContext(Css2TaskContext);
   return (
     <div className="space-y-3">
-      <SandboxedPreview
+      <SandboxFrame
         key={applyVersion}
         html={htmlCode}
         css={cssCode}
@@ -354,7 +353,7 @@ function Css2TaskPreview() {
           className="fixed -left-[10000px] top-0 h-[768px] w-[1024px] overflow-hidden"
           aria-hidden="true"
         >
-          <SandboxedPreview
+          <SandboxFrame
             key={validationVersion}
             html={htmlCode}
             css={cssCode}
@@ -366,28 +365,21 @@ function Css2TaskPreview() {
           />
         </div>
       )}
-      <div
-        className="rounded-xl border border-zinc-200/70 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/60"
-        role="status"
-        aria-live="polite"
-      >
-        <h3 className="text-sm font-semibold">Výsledky testů CSS II</h3>
-        {results.length === 0 ? (
-          <p className="mt-1 text-sm text-zinc-500">Spusťte testy a ověřte požadavek.</p>
-        ) : (
-          <ul className="mt-2 space-y-1 text-sm">
-            {results.map((result, index) => (
-              <li
-                key={`${result.text}-${index}`}
-                className={result.ok ? 'text-emerald-700' : 'text-rose-700'}
-              >
-                {result.ok ? '✓' : '×'} {result.text}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
     </div>
+  );
+}
+
+function Css2TaskVerification() {
+  const { results } = useContext(Css2TaskContext);
+  if (results.length === 0) return <p>Spusťte ověření a zkontrolujte požadavek.</p>;
+  return (
+    <ul role="status" aria-live="polite">
+      {results.map((result, index) => (
+        <li key={`${result.text}-${index}`}>
+          <strong>{result.ok ? '✓ Splněno' : '× Nesplněno'}</strong> — {result.text}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -499,7 +491,7 @@ const VsPlayground = forwardRef(function VsPlayground({ stepIndex }, ref) {
         </div>
         <div className="p-3">
           <div className="font-semibold text-sm mb-2">Náhled</div>
-          <SandboxedPreview
+          <SandboxFrame
             key={applyVersion}
             html={htmlCode}
             css={cssCode}
@@ -512,7 +504,7 @@ const VsPlayground = forwardRef(function VsPlayground({ stepIndex }, ref) {
               className="fixed -left-[10000px] top-0 h-[768px] w-[1024px] overflow-hidden"
               aria-hidden="true"
             >
-              <SandboxedPreview
+              <SandboxFrame
                 key={validationVersion}
                 html={htmlCode}
                 css={cssCode}
@@ -681,7 +673,7 @@ function Css2SlideContent({ slide }) {
   const hasSections = Array.isArray(slide.sections) && slide.sections.length > 0;
 
   return (
-    <SharedSlideCard slide={slide} idPrefix="lesson-css-ii">
+    <>
       {slide.bullets && (
         <ul className="list-disc pl-6 space-y-1 mt-2">
           {slide.bullets.map((b, i) => (
@@ -715,7 +707,7 @@ function Css2SlideContent({ slide }) {
           <QuizCssBasics />
         </div>
       )}
-    </SharedSlideCard>
+    </>
   );
 }
 
@@ -837,27 +829,31 @@ function QuizCssBasics() {
     },
   ];
   return (
-    <LessonQuiz
+    <KnowledgeCheck
       title="CSS II: layout a responzivita"
       subtitle="Ověřte si box model, flexbox, media queries, display a práci s odkazy."
       questions={questions}
-      visualKey="css-layout"
+      visual={
+        <div role="img" aria-label="Schéma CSS layoutu" data-quiz-visual="css-layout">
+          <strong>flex</strong> · grid · @media
+        </div>
+      }
     />
   );
 }
 
 export default function AppCss2Lesson() {
-  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const { activeSection, setActiveSection } = useLearningNavigation(slides);
   const cssTaskRef = useRef(null);
-  const current = slides.find((s) => s.id === activeSlide) || slides[0];
+  const current = slides.find((section) => section.id === activeSection) || slides[0];
   const hasTasks = typeof current.taskIndex === 'number';
   const taskTemplates = getTaskTemplates(current.taskIndex || 0);
   return (
-    <LessonShell
+    <LearningExperience
       lesson={getLessonByNumber(5)}
-      slides={slides}
-      activeSlide={activeSlide}
-      onChange={setActiveSlide}
+      sections={slides}
+      activeSection={activeSection}
+      onChange={setActiveSection}
       title="ZWA-5: Interaktivní prezentace CSS II"
       objective="Vytvoříte a ověříte responzivní CSS layout pomocí box modelu, flexboxu, media queries a tisku."
       subtitle={
@@ -875,43 +871,42 @@ export default function AppCss2Lesson() {
         </>
       }
       footerText="© 2025 ZWA – Interaktivní lekce CSS II"
-      maxWidthClass="max-w-7xl"
     >
-      {hasTasks ? (
-        <Css2TaskProvider ref={cssTaskRef} stepIndex={current.taskIndex}>
-          <LessonTaskWorkspace
-            privateMarker="css-exercise"
-            onRunTests={() => cssTaskRef.current?.runValidation()}
-            task={
-              <>
-                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Úloha</p>
-                <p className="font-medium">{taskTemplates.step.title}</p>
-                <p>{taskTemplates.step.desc}</p>
-                <p>
-                  Odkaz:{' '}
-                  <a
-                    className="underline"
-                    href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/05/start"
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  >
-                    Cvičení 5 – CSS II
-                  </a>
-                </p>
-              </>
-            }
-            ideTabs={<Css2TaskIde stepIndex={current.taskIndex} />}
-            preview={<Css2TaskPreview />}
-          />
-          <div className="mt-3 text-xs text-zinc-500">
-            Pozn.: Validace je zjednodušená (heuristiky pomocí computed styles a regex).
-          </div>
-        </Css2TaskProvider>
-      ) : (
-        <div className="max-w-4xl">
+      <LearningSection section={current} idPrefix="lesson-css-ii">
+        {hasTasks ? (
+          <Css2TaskProvider ref={cssTaskRef} stepIndex={current.taskIndex}>
+            <ExerciseStage
+              privateMarker="css-exercise"
+              onVerify={() => cssTaskRef.current?.runValidation()}
+              brief={
+                <>
+                  <p>
+                    <strong>{taskTemplates.step.title}</strong>
+                  </p>
+                  <p>{taskTemplates.step.desc}</p>
+                  <p>
+                    Odkaz:{' '}
+                    <a
+                      className="underline"
+                      href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/05/start"
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      Cvičení 5 – CSS II
+                    </a>
+                  </p>
+                </>
+              }
+              studio={<Css2TaskIde stepIndex={current.taskIndex} />}
+              preview={<Css2TaskPreview />}
+              verification={<Css2TaskVerification />}
+            />
+            <p>Validace je zjednodušená pomocí computed styles a regulárních výrazů.</p>
+          </Css2TaskProvider>
+        ) : (
           <Css2SlideContent slide={current} />
-        </div>
-      )}
-    </LessonShell>
+        )}
+      </LearningSection>
+    </LearningExperience>
   );
 }

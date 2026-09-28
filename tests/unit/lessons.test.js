@@ -108,7 +108,7 @@ test('every catalog lesson uses the shared shell and navigation contract', () =>
     const sourcePath = lessonSourcePath(lesson);
     assert.ok(existsSync(sourcePath), `${lesson.componentKey} source must exist`);
     const source = readFileSync(sourcePath, 'utf8');
-    if (lesson.number <= 3) {
+    if (lesson.number <= 6) {
       assert.match(source, /LearningExperience/, lesson.componentKey);
       assert.match(source, /useLearningNavigation/, lesson.componentKey);
       assert.match(source, /<LearningExperience\b/, lesson.componentKey);
@@ -135,10 +135,19 @@ test('playground lessons keep their isolated execution adapters', () => {
   for (const componentKey of playgroundComponents) {
     const source = readFileSync(join(root, `${componentKey}.jsx`), 'utf8');
     if (
-      componentKey === 'interactive_zwa_1_html5_presentation' ||
-      componentKey === 'interactive_zwa_2_forms_presentation'
+      [
+        'interactive_zwa_1_html5_presentation',
+        'interactive_zwa_2_forms_presentation',
+        'interactive_zwa_2_css_presentation',
+        'interactive_zwa_5_css2_presentation',
+        'interactive_zwa_5_javascript_presentation',
+      ].includes(componentKey)
     ) {
-      assert.match(source, /src\/course-ui\/exercises\/runtime\/SandboxFrame/, componentKey);
+      assert.match(
+        source,
+        /src\/course-ui\/exercises\/runtime\/(?:SandboxFrame|JavaScriptRunner)/,
+        componentKey,
+      );
       assert.doesNotMatch(source, /src\/components\/playground/, componentKey);
     } else {
       assert.match(

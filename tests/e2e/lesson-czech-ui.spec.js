@@ -22,7 +22,10 @@ function usesNewExerciseStage(route) {
   return (
     route.includes('interactive-zwa-1-html5') ||
     route.includes('interactive-zwa-2-forms') ||
-    route.includes('interactive-zwa-1?')
+    route.includes('interactive-zwa-1?') ||
+    route.includes('interactive-zwa-2?') ||
+    route.includes('interactive-zwa-5-css-ii') ||
+    route.includes('interactive-zwa-5-js')
   );
 }
 
@@ -101,7 +104,7 @@ test.describe('Czech unified lesson task workspace integration', () => {
     await page.setViewportSize({ width: 320, height: 720 });
 
     await page.goto('/interactive-zwa-5-js?slide=tasks');
-    await expect(page.getByRole('region', { name: 'Náhled a testy' })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Náhled' })).toBeVisible();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
@@ -194,7 +197,6 @@ test.describe('Czech unified lesson task workspace integration', () => {
       await installDeterministicNetwork(page);
       await page.goto(testCase.route);
 
-      const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
       const ide = page.getByRole('region', { name: 'IDE' });
       await expect(ide.getByRole('tablist', { name: 'Soubory IDE' })).toBeVisible();
       await expect(ide.getByRole('tab', { name: 'Řešení', exact: true })).toBeVisible();
@@ -212,8 +214,10 @@ test.describe('Czech unified lesson task workspace integration', () => {
         await expect(ide.getByRole('tab', { name: file, exact: true })).toBeVisible();
       }
       await expect(page.getByRole('tablist', { name: testCase.legacyTablist })).toHaveCount(0);
+      await page.getByRole('button', { name: 'Osnova lekce' }).click();
+      const outline = page.getByRole('dialog', { name: 'Osnova lekce' });
       for (const task of testCase.tasks) {
-        await expect(outline.getByRole('button', { name: task, exact: true })).toBeVisible();
+        await expect(outline.getByRole('button').filter({ hasText: task })).toBeVisible();
       }
     }
   });

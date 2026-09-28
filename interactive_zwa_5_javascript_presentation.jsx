@@ -1,16 +1,21 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import memeImg from './src/interactive-zwa-6/image.png';
-import JsSandbox from './src/components/playground/JsSandbox';
-import { getJavaScriptDefinition } from './src/components/exercises/testDefinitions.js';
-import { runExerciseTests } from './src/components/exercises/testRunner.js';
-import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
 import { getLessonByNumber } from './src/config/lessons.js';
-import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
-import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
-import Code from './src/components/lesson/Code.jsx';
-import { clsx } from './src/components/lesson/classNames.js';
-import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
-import LessonQuiz from './src/components/lesson/LessonQuiz.jsx';
+import Code from './src/course-ui/content/InlineCode.jsx';
+import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
+import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
+import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
+import StudioTabs from './src/course-ui/exercises/StudioTabs.jsx';
+import { getJavaScriptDefinition } from './src/course-ui/exercises/behavior/testDefinitions.js';
+import { runExerciseTests } from './src/course-ui/exercises/behavior/testRunner.js';
+import JavaScriptRunner from './src/course-ui/exercises/runtime/JavaScriptRunner.jsx';
+import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
+import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
+import { useLearningNavigation } from './src/course-ui/learning/useLearningNavigation.js';
+
+function clsx(...values) {
+  return values.filter(Boolean).join(' ');
+}
 
 function getJsTemplates(stepIndex) {
   const steps = [
@@ -143,7 +148,7 @@ function getJsTemplates(stepIndex) {
 
 function JsCodeEditor({ source, onChange }) {
   return (
-    <SyntaxCodeEditor
+    <StudioEditor
       value={source}
       minHeight="320px"
       onChange={onChange}
@@ -157,7 +162,7 @@ function JsReferencePanel({ source, dom }) {
   return (
     <div className="space-y-3" data-reference-solution="true">
       <p className="text-xs text-zinc-500">Kompletní referenční řešení pouze pro čtení.</p>
-      <SyntaxCodeEditor
+      <StudioEditor
         value={source}
         language="javascript"
         label="Řešení main.js"
@@ -212,131 +217,78 @@ function JsTaskWorkspace({ steps, stepIndex }) {
   }
 
   return (
-    <div
-      data-projector-private="exercise-workspace"
-      className="overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
-    >
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200/70 px-4 py-3 dark:border-zinc-800">
-        <div>
-          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Plocha úkolu</p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            JavaScript v tomto okně prohlížeče
+    <ExerciseStage
+      brief={
+        <>
+          <p>
+            <strong>{template.title}</strong>
           </p>
-        </div>
-        <span className="text-xs text-zinc-500 dark:text-zinc-400">
-          Úpravy platí jen pro tuto relaci.
-        </span>
-      </header>
-
-      <section
-        role="region"
-        aria-label="Zadání"
-        className="border-b border-zinc-200/70 px-4 py-4 dark:border-zinc-800"
-      >
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Zadání</h2>
-        <div className="mt-2 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <p className="font-semibold">{template.title}</p>
           <p>{template.desc}</p>
-        </div>
-      </section>
-
-      <section
-        role="region"
-        aria-label="IDE"
-        className="border-b border-zinc-200/70 px-4 py-4 dark:border-zinc-800"
-      >
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">IDE — JavaScript</h2>
-        <div className="mt-3">
-          <WorkspaceIdeTabs
-            activeFileId={activeFileId}
-            onActiveFileChange={setActiveFileId}
-            files={[
-              {
-                id: 'main.js',
-                label: 'main.js',
-                panel: <JsCodeEditor source={source} onChange={handleSourceChange} />,
-              },
-              ...(template.dom && !String(template.dom).includes('Tento krok DOM nevyužívá')
-                ? [
-                    {
-                      id: 'dom.html',
-                      label: 'dom.html',
-                      panel: (
-                        <div className="rounded-lg border border-zinc-200/70 p-3 dark:border-zinc-800">
-                          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                            DOM fixture (pouze pro čtení)
-                          </p>
-                          {template.dom}
-                        </div>
-                      ),
-                    },
-                  ]
-                : []),
-            ]}
-            solution={{
-              label: 'Řešení',
-              panel: <JsReferencePanel source={template.solution} dom={template.dom} />,
-            }}
-          />
-        </div>
-      </section>
-
-      <section role="region" aria-label="Náhled a testy" className="min-w-0 p-4">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Náhled a testy</h2>
-          <button
-            type="button"
-            className="rounded-lg bg-indigo-700 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            onClick={runTests}
-          >
-            Spustit testy
-          </button>
-        </div>
-        <div className="min-w-0">
-          <h3 className="mb-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Náhled</h3>
-          <JsSandbox
-            key={`javascript-run-${runNumber}`}
-            code={hasRun ? source : null}
-            dom={template.dom}
-            stepIndex={stepIndex}
-            onResult={handleResult}
-            title="Izolovaný JavaScript DOM sandbox"
-            className="w-full min-h-[160px] rounded-xl border bg-white"
-          />
-        </div>
-        <div
-          className="mt-4 rounded-xl border border-zinc-200/70 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/60"
-          role="group"
-          aria-label="Výsledky testů"
-          aria-live="polite"
-        >
-          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Výsledky testů</h3>
+        </>
+      }
+      studio={
+        <StudioTabs
+          activeFileId={activeFileId}
+          onActiveFileChange={setActiveFileId}
+          files={[
+            {
+              id: 'main.js',
+              label: 'main.js',
+              panel: <JsCodeEditor source={source} onChange={handleSourceChange} />,
+            },
+            ...(template.dom && !String(template.dom).includes('Tento krok DOM nevyužívá')
+              ? [
+                  {
+                    id: 'dom.html',
+                    label: 'dom.html',
+                    panel: (
+                      <div>
+                        <p>
+                          <strong>DOM fixture (pouze pro čtení)</strong>
+                        </p>
+                        <code>{template.dom}</code>
+                      </div>
+                    ),
+                  },
+                ]
+              : []),
+          ]}
+          solution={{
+            label: 'Řešení',
+            panel: <JsReferencePanel source={template.solution} dom={template.dom} />,
+          }}
+        />
+      }
+      preview={
+        <JavaScriptRunner
+          key={`javascript-run-${runNumber}`}
+          code={hasRun ? source : null}
+          dom={template.dom}
+          stepIndex={stepIndex}
+          onResult={handleResult}
+          title="Izolovaný JavaScript DOM sandbox"
+        />
+      }
+      verification={
+        <div role="group" aria-label="Výsledky testů" aria-live="polite">
           {results.length === 0 ? (
-            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-              Spusťte testy a ověřte požadavek.
-            </p>
+            <p>Spusťte ověření a zkontrolujte požadavek.</p>
           ) : (
-            <ul className="mt-2 space-y-1.5 text-sm">
+            <ul>
               {results.map((result, index) => (
-                <li
-                  key={`${result.id}-${index}`}
-                  className={
-                    result.ok
-                      ? 'text-emerald-700 dark:text-emerald-400'
-                      : 'text-rose-700 dark:text-rose-400'
-                  }
-                >
-                  <span aria-hidden="true">{result.ok ? '✓' : '×'}</span> <span>{result.text}</span>
-                  {result.hint && (
-                    <span className="ml-1 text-xs text-zinc-500">({result.hint})</span>
-                  )}
+                <li key={`${result.id}-${index}`}>
+                  <strong>{result.ok ? '✓ Splněno' : '× Nesplněno'}</strong> —{' '}
+                  <span>{result.text}</span>
+                  {result.hint ? <small> ({result.hint})</small> : null}
                 </li>
               ))}
             </ul>
           )}
         </div>
-      </section>
-    </div>
+      }
+      onVerify={runTests}
+      privateMarker="javascript-exercise"
+    />
   );
 }
 
@@ -464,7 +416,7 @@ function JsSlideContent({ slide, stepIndex, onStepIndexChange }) {
   const totalSteps = internalSteps.length;
   const currentStep = internalSteps[stepIndex];
   return (
-    <SharedSlideCard slide={slide} idPrefix="lesson-javascript">
+    <>
       {slide.id === 'quiz-css' && (
         <div className="mt-2">
           <QuizCssBasics />
@@ -537,7 +489,7 @@ function JsSlideContent({ slide, stepIndex, onStepIndexChange }) {
           </div>
         </div>
       )}
-    </SharedSlideCard>
+    </>
   );
 }
 
@@ -665,34 +617,42 @@ function QuizCssBasics() {
   ];
 
   return (
-    <LessonQuiz
+    <KnowledgeCheck
       title="JavaScript základy"
       subtitle="Procvičte typy, deklarace, cykly, DOM selektory a práci s událostmi."
       questions={questions}
-      visualKey="javascript-event-loop"
+      visual={
+        <div
+          role="img"
+          aria-label="Schéma JavaScript event loop"
+          data-quiz-visual="javascript-event-loop"
+        >
+          call stack → queue → event loop
+        </div>
+      }
     />
   );
 }
 
 export default function AppJsLesson5() {
-  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const { activeSection, setActiveSection } = useLearningNavigation(slides);
   const [stepIndex, setStepIndex] = useState(0);
-  const current = slides.find((s) => s.id === activeSlide) || slides[0];
+  const current = slides.find((section) => section.id === activeSection) || slides[0];
   const hasTasks = typeof current.taskIndex === 'number';
 
   // A new slide starts at its first task.
   /* eslint-disable react-hooks/set-state-in-effect -- reset is the slide transition boundary. */
   useEffect(() => {
     setStepIndex(0);
-  }, [activeSlide]);
+  }, [activeSection]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   return (
-    <LessonShell
+    <LearningExperience
       lesson={getLessonByNumber(6)}
-      slides={slides}
-      activeSlide={activeSlide}
-      onChange={setActiveSlide}
+      sections={slides}
+      activeSection={activeSection}
+      onChange={setActiveSection}
       title="ZWA-6: Interaktivní prezentace JavaScriptu"
       objective="Procvičíte proměnné, funkce, DOM a události v JavaScriptu v bezpečném interaktivním playgroundu."
       subtitle={
@@ -701,24 +661,15 @@ export default function AppJsLesson5() {
         </>
       }
       footerText="© 2025 ZWA – Interaktivní lekce JavaScriptu"
-      maxWidthClass="max-w-7xl"
     >
-      <div className={hasTasks ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : ''}>
+      <LearningSection section={current} idPrefix="lesson-javascript">
         {hasTasks && (
-          <div className="lg:col-span-2">
-            <JsTaskWorkspace steps={getJsTemplates(0).all} stepIndex={current.taskIndex} />
-          </div>
+          <JsTaskWorkspace steps={getJsTemplates(0).all} stepIndex={current.taskIndex} />
         )}
         {!hasTasks && (
-          <div className="max-w-4xl">
-            <JsSlideContent
-              slide={current}
-              stepIndex={stepIndex}
-              onStepIndexChange={setStepIndex}
-            />
-          </div>
+          <JsSlideContent slide={current} stepIndex={stepIndex} onStepIndexChange={setStepIndex} />
         )}
-      </div>
-    </LessonShell>
+      </LearningSection>
+    </LearningExperience>
   );
 }

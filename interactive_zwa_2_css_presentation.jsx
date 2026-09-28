@@ -11,20 +11,24 @@ import React, {
 } from 'react';
 import heroImg from './src/interactive-zwa-1/assets/semestral-meme.png';
 import memeImg from './src/interactive-zwa-2/assets/image.png';
-import SandboxedPreview from './src/components/playground/SandboxedPreview';
 import { getLessonByNumber } from './src/config/lessons.js';
-import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
-import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
-import { clsx } from './src/components/lesson/classNames.js';
-import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
-import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
-import LessonQuiz from './src/components/lesson/LessonQuiz.jsx';
-import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
+import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
+import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
+import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
+import StudioTabs from './src/course-ui/exercises/StudioTabs.jsx';
+import SandboxFrame from './src/course-ui/exercises/runtime/SandboxFrame.jsx';
+import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
+import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
+import { useLearningNavigation } from './src/course-ui/learning/useLearningNavigation.js';
 
 import {
   CSS_BASICS_INSPECTION,
   validateCssBasics,
-} from './src/components/playground/validators.js';
+} from './src/course-ui/exercises/runtime/validators.js';
+
+function clsx(...values) {
+  return values.filter(Boolean).join(' ');
+}
 
 // Small React-token based highlighters. Student text stays text; React escapes it.
 function tokenizeCode(source, pattern, getClassName) {
@@ -291,7 +295,7 @@ function CssReferencePanel({ solution }) {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
           index.html
         </p>
-        <SyntaxCodeEditor
+        <StudioEditor
           value={solution.html}
           language="html"
           label="Řešení index.html"
@@ -304,7 +308,7 @@ function CssReferencePanel({ solution }) {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
           style.css
         </p>
-        <SyntaxCodeEditor
+        <StudioEditor
           value={solution.css}
           language="css"
           label="Řešení style.css"
@@ -323,7 +327,7 @@ function CssTaskIde({ slideId, stepIndex }) {
   const solution = getTaskSolution(slideId, stepIndex);
   const cssFileId = slideId === 'linking' ? 'styles.css' : 'style.css';
   return (
-    <WorkspaceIdeTabs
+    <StudioTabs
       activeFileId={activeFileId}
       onActiveFileChange={setActiveFileId}
       files={[
@@ -331,7 +335,7 @@ function CssTaskIde({ slideId, stepIndex }) {
           id: 'index.html',
           label: 'index.html',
           panel: (
-            <SyntaxCodeEditor
+            <StudioEditor
               value={htmlCode}
               onChange={onHtmlChange}
               language="html"
@@ -343,12 +347,7 @@ function CssTaskIde({ slideId, stepIndex }) {
           id: cssFileId,
           label: cssFileId,
           panel: (
-            <SyntaxCodeEditor
-              value={cssCode}
-              onChange={onCssChange}
-              language="css"
-              label={cssFileId}
-            />
+            <StudioEditor value={cssCode} onChange={onCssChange} language="css" label={cssFileId} />
           ),
         },
       ]}
@@ -381,11 +380,11 @@ function CssTaskInstructions({ steps, stepIndex }) {
 }
 
 function CssTaskPreview() {
-  const { applyVersion, validationVersion, htmlCode, previewCss, results, handleInspection } =
+  const { applyVersion, validationVersion, htmlCode, previewCss, handleInspection } =
     useContext(CssTaskContext);
   return (
     <div className="space-y-3">
-      <SandboxedPreview
+      <SandboxFrame
         key={applyVersion}
         html={htmlCode}
         css={previewCss}
@@ -398,7 +397,7 @@ function CssTaskPreview() {
           className="fixed -left-[10000px] top-0 h-[768px] w-[1024px] overflow-hidden"
           aria-hidden="true"
         >
-          <SandboxedPreview
+          <SandboxFrame
             key={validationVersion}
             html={htmlCode}
             css={previewCss}
@@ -410,28 +409,21 @@ function CssTaskPreview() {
           />
         </div>
       )}
-      <div
-        className="rounded-xl border border-zinc-200/70 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/60"
-        role="status"
-        aria-live="polite"
-      >
-        <h3 className="text-sm font-semibold">Výsledky testů CSS</h3>
-        {results.length === 0 ? (
-          <p className="mt-1 text-sm text-zinc-500">Spusťte testy a ověřte požadavek.</p>
-        ) : (
-          <ul className="mt-2 space-y-1 text-sm">
-            {results.map((result, index) => (
-              <li
-                key={`${result.text}-${index}`}
-                className={result.ok ? 'text-emerald-700' : 'text-rose-700'}
-              >
-                {result.ok ? '✓' : '×'} {result.text}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
     </div>
+  );
+}
+
+function CssTaskVerification() {
+  const { results } = useContext(CssTaskContext);
+  if (results.length === 0) return <p>Spusťte ověření a zkontrolujte požadavek.</p>;
+  return (
+    <ul role="status" aria-live="polite">
+      {results.map((result, index) => (
+        <li key={`${result.text}-${index}`}>
+          <strong>{result.ok ? '✓ Splněno' : '× Nesplněno'}</strong> — {result.text}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -615,7 +607,7 @@ const VsPlayground = forwardRef(function VsPlayground({ slideId, stepIndex }, re
         </div>
         <div className="p-3">
           <div className="font-semibold text-sm mb-2">Náhled</div>
-          <SandboxedPreview
+          <SandboxFrame
             html={htmlCode}
             css={previewCss}
             mode="static"
@@ -627,7 +619,7 @@ const VsPlayground = forwardRef(function VsPlayground({ slideId, stepIndex }, re
               className="fixed -left-[10000px] top-0 h-[768px] w-[1024px] overflow-hidden"
               aria-hidden="true"
             >
-              <SandboxedPreview
+              <SandboxFrame
                 key={validationVersion}
                 html={htmlCode}
                 css={previewCss}
@@ -829,7 +821,7 @@ function CssSlideContent({ slide, stepIndex: controlledIndex, onStepIndexChange 
   const totalSections = hasSections ? slide.sections.length : 0;
   const currentSection = hasSections ? slide.sections[stepIndex] : null;
   return (
-    <SharedSlideCard slide={slide} idPrefix="lesson-css">
+    <>
       {slide.body && !hasSections && !hasSteps && (
         <div>
           <p className="leading-relaxed">{slide.body}</p>
@@ -972,58 +964,64 @@ function CssSlideContent({ slide, stepIndex: controlledIndex, onStepIndexChange 
           </a>
         </div>
       )}
-    </SharedSlideCard>
+    </>
   );
 }
 
 // (old CSS and linking playgrounds consolidated into VsPlayground)
 export default function App() {
-  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
+  const { activeSection, setActiveSection } = useLearningNavigation(slides);
   const cssTaskRef = useRef(null);
   const [stepIndex, setStepIndex] = useState(0);
-  const current = slides.find((s) => s.id === activeSlide) || slides[0];
+  const current = slides.find((section) => section.id === activeSection) || slides[0];
 
   // A new slide starts at its first task.
   /* eslint-disable react-hooks/set-state-in-effect -- reset is the slide transition boundary. */
   useEffect(() => {
     setStepIndex(0);
-  }, [activeSlide]);
+  }, [activeSection]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   return (
-    <LessonShell
+    <LearningExperience
       lesson={getLessonByNumber(4)}
-      slides={slides}
-      activeSlide={activeSlide}
-      onChange={setActiveSlide}
+      sections={slides}
+      activeSection={activeSection}
+      onChange={setActiveSection}
       title="ZWA-4: CSS – interaktivní prezentace"
       objective="Použijete základní CSS selektory, pseudo-elementy a propojení stylopisu v praktickém playgroundu."
       subtitle="Vyberte úlohu, upravte kód v IDE a ověřte výsledek v náhledu."
       footerText="© 2025 ZWA – CSS interaktivní výuková ukázka"
-      maxWidthClass="max-w-7xl"
     >
-      {current.taskGroup ? (
-        <CssTaskProvider ref={cssTaskRef} slideId={current.taskGroup} stepIndex={current.taskIndex}>
-          <LessonTaskWorkspace
-            privateMarker="css-exercise"
-            onRunTests={() => cssTaskRef.current?.runValidation()}
-            task={<CssTaskInstructions steps={current.steps} stepIndex={0} />}
-            ideTabs={<CssTaskIde slideId={current.taskGroup} stepIndex={current.taskIndex} />}
-            preview={<CssTaskPreview />}
+      <LearningSection section={current} idPrefix="lesson-css">
+        {current.taskGroup ? (
+          <CssTaskProvider
+            ref={cssTaskRef}
+            slideId={current.taskGroup}
+            stepIndex={current.taskIndex}
+          >
+            <ExerciseStage
+              brief={<CssTaskInstructions steps={current.steps} stepIndex={0} />}
+              studio={<CssTaskIde slideId={current.taskGroup} stepIndex={current.taskIndex} />}
+              preview={<CssTaskPreview />}
+              verification={<CssTaskVerification />}
+              onVerify={() => cssTaskRef.current?.runValidation()}
+              privateMarker="css-exercise"
+            />
+          </CssTaskProvider>
+        ) : (
+          <CssSlideContent
+            slide={current}
+            stepIndex={Array.isArray(current.sections) ? stepIndex : undefined}
+            onStepIndexChange={setStepIndex}
           />
-        </CssTaskProvider>
-      ) : (
-        <CssSlideContent
-          slide={current}
-          stepIndex={Array.isArray(current.sections) ? stepIndex : undefined}
-          onStepIndexChange={setStepIndex}
-        />
-      )}
-      <div className="mt-3 text-xs text-zinc-500">
-        Pozn.: Toto je výuková simulace pro procvičení CSS. Výsledky jsou zjednodušené kvůli
-        spolehlivému automatickému vyhodnocení.
-      </div>
-    </LessonShell>
+        )}
+        <p>
+          Toto je výuková simulace pro procvičení CSS. Výsledky jsou zjednodušené kvůli spolehlivému
+          automatickému vyhodnocení.
+        </p>
+      </LearningSection>
+    </LearningExperience>
   );
 }
 
@@ -1073,11 +1071,15 @@ function QuizCssBasics() {
     },
   ];
   return (
-    <LessonQuiz
+    <KnowledgeCheck
       title="CSS základy"
       subtitle="Procvičte selektory, specifitu, stavové pseudo-třídy a typické CSS vlastnosti."
       questions={questions}
-      visualKey="css-specificity"
+      visual={
+        <div role="img" aria-label="Schéma specificity CSS" data-quiz-visual="css-specificity">
+          <strong>#id</strong> &gt; .třída &gt; element
+        </div>
+      }
     />
   );
 }

@@ -37,6 +37,18 @@ test.describe('F1 lesson composition and deep links', () => {
       route: '/interactive-zwa-1?slide=tasks-net',
       artwork: '[data-module="web-foundations"]',
     },
+    {
+      route: '/interactive-zwa-2?slide=tasks',
+      artwork: '[data-module="presentation-interaction"]',
+    },
+    {
+      route: '/interactive-zwa-5-css-ii?slide=tasks',
+      artwork: '[data-module="presentation-interaction"]',
+    },
+    {
+      route: '/interactive-zwa-5-js?slide=tasks',
+      artwork: '[data-module="presentation-interaction"]',
+    },
   ]) {
     test(`${lesson.route} uses the new learning and exercise architecture`, async ({ page }) => {
       await installDeterministicNetwork(page);
@@ -259,7 +271,7 @@ test.describe('F2 lesson composition and deep links', () => {
     await expect(page.getByTitle('Izolovaný JavaScript DOM sandbox')).toHaveCount(0);
 
     await page.goto('/interactive-zwa-5-js?slide=tasks');
-    const workspace = page.locator('[data-projector-private="exercise-workspace"]');
+    const workspace = page.locator('[data-projector-private="javascript-exercise"]');
     await expect(workspace).toBeVisible();
     await expect(workspace.getByRole('textbox')).toBeVisible();
     await expect(workspace.getByTitle('Izolovaný JavaScript DOM sandbox')).toBeVisible();
