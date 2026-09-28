@@ -1,19 +1,28 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
-import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
-import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
-import Code from './src/components/lesson/Code.jsx';
-import InfoBox from './src/components/lesson/InfoBox.jsx';
-import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
-import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
-import TheoryCodeBlock from './src/components/lesson/TheoryCodeBlock.jsx';
-import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
-import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
-import { clsx } from './src/components/lesson/classNames.js';
+import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
+import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import Code from './src/course-ui/content/InlineCode.jsx';
+import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
+import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
+import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
+import { useLearningNavigation } from './src/course-ui/learning/useLearningNavigation.js';
+
+function InfoBox({ children, type }) {
+  const tone = type === 'warning' ? 'warning' : type === 'tip' ? 'tip' : 'note';
+  return <EditorialCallout tone={tone}>{children}</EditorialCallout>;
+}
+
+function TheoryCodeBlock({ children }) {
+  const value = React.isValidElement(children) ? children.props.children : children;
+  const className = React.isValidElement(children) ? children.props.className : '';
+  const language = /language-([\w-]+)/.exec(className || '')?.[1];
+  return <EditorialCode language={language}>{value}</EditorialCode>;
+}
 
 function LessonSlideContent({ slide }) {
   return (
-    <SharedSlideCard slide={slide} idPrefix="lesson-auth">
+    <>
       {slide.id === 'title' && (
         <div className="mt-2 text-zinc-600 dark:text-zinc-400">
           <div>Autor: Bc. Egor Ulianov</div>
@@ -33,78 +42,12 @@ function LessonSlideContent({ slide }) {
         <AuthTaskSlide task={LESSON12_TASKS.find((task) => task.id === slide.id)} />
       )}
       {slide.id === 'summary' && <SummarySlide />}
-    </SharedSlideCard>
+    </>
   );
 }
 
-function StaticLessonTask({ id, task, draft, required, expected, solution = draft }) {
-  const [source, setSource] = useState(draft);
-  const fileName = 'auth.php';
-  const studentPanel = (
-    <div className="space-y-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-        Soubor: {fileName}
-      </p>
-      <SyntaxCodeEditor
-        value={source}
-        onChange={setSource}
-        language="php"
-        label="Editor – zdrojový kód"
-        minHeight="320px"
-      />
-    </div>
-  );
-
-  return (
-    <LessonTaskWorkspace
-      privateMarker={`static-${id}`}
-      task={
-        <div className="space-y-3">
-          <p>{task}</p>
-          <p>
-            <strong>Konkrétní vstup studenta:</strong> upravte PHP zdrojový kód pro přihlášení,
-            session a ochranu formulářů.
-          </p>
-        </div>
-      }
-      editor={{
-        source: draft,
-        label: 'Editor – zdrojový kód',
-        language: 'php',
-        fileName,
-      }}
-      ideTabs={
-        <WorkspaceIdeTabs
-          files={[{ id: 'student-file', label: fileName, panel: studentPanel }]}
-          solution={{
-            label: 'Řešení',
-            panel: (
-              <SyntaxCodeEditor
-                value={solution}
-                language="php"
-                label={`Řešení — ${fileName}`}
-                editable={false}
-                readOnly
-                minHeight="320px"
-              />
-            ),
-          }}
-        />
-      }
-      staticCheck={() => runStaticTaskChecks({ id, required }, source)}
-      preview={
-        <div className="space-y-4">
-          <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            <strong>Očekávaný výsledek:</strong> {expected}
-          </p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Náhled je pouze statické vysvětlení; PHP ani serverový kód se v tomto prohlížeči
-            nespouští.
-          </p>
-        </div>
-      }
-    />
-  );
+function StaticLessonTask(props) {
+  return <StaticExercise {...props} fileName="auth.php" language="php" />;
 }
 
 function TableOfContents() {
@@ -560,25 +503,27 @@ export default function AppPhpLesson12() {
     ],
     [],
   );
-  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
-  const current = slides.find((s) => s.id === activeSlide) || slides[0];
+  const { activeSection, setActiveSection } = useLearningNavigation(slides);
+  const current = slides.find((section) => section.id === activeSection) || slides[0];
 
   useEffect(() => {
-    if (legacyTasksRequested) setActiveSlide('task1');
-  }, [legacyTasksRequested, setActiveSlide]);
+    if (legacyTasksRequested) setActiveSection('task1');
+  }, [legacyTasksRequested, setActiveSection]);
 
   return (
-    <LessonShell
+    <LearningExperience
       lesson={getLessonByNumber(12)}
-      slides={slides}
-      activeSlide={activeSlide}
-      onChange={setActiveSlide}
+      sections={slides}
+      activeSection={activeSection}
+      onChange={setActiveSection}
       title="ZWA-12: Autentizace a autorizace"
       objective="Rozlišíte autentizaci a autorizaci, bezpečně uložíte hesla a ochráníte session po přihlášení."
       subtitle="Interaktivní prezentace podle cvičení 12"
       footerText="© 2025 ZWA – Cvičení 12: Autentizace a autorizace"
     >
-      <LessonSlideContent slide={current} />
-    </LessonShell>
+      <LearningSection section={current} idPrefix="lesson-auth">
+        <LessonSlideContent slide={current} />
+      </LearningSection>
+    </LearningExperience>
   );
 }

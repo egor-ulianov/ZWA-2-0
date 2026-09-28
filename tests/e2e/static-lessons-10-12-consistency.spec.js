@@ -32,15 +32,18 @@ test.describe('student task workspace consistency for lessons 10–12', () => {
 
       const assignment = page.getByRole('region', { name: 'Zadání' });
       const ide = page.getByRole('region', { name: 'IDE' });
-      const preview = page.getByRole('region', { name: 'Náhled a testy' });
+      const preview = page.getByRole('region', { name: 'Náhled' });
+      const verification = page.getByRole('region', { name: 'Ověření' });
 
+      await expect(page.locator('[data-learning-experience="student"]')).toBeVisible();
+      await expect(page.locator('[data-module="state-data"]').first()).toBeVisible();
       await expect(assignment).toContainText(testCase.assignment);
-      await expect(assignment).toContainText('Konkrétní vstup studenta:');
       await expect(ide.getByRole('tab', { name: testCase.sourceFile })).toBeVisible();
       await expect(ide.locator('.cm-editor')).toBeVisible();
       await expect(preview).toContainText(testCase.expected);
-      await expect(preview).toContainText('Statická kontrola');
+      await expect(verification).toContainText('Statická kontrola');
       await expect(preview).not.toContainText(testCase.assignment);
+      await expect(page.locator('.lesson-shell, [class*="portal-"]')).toHaveCount(0);
     });
   }
 });

@@ -21,12 +21,10 @@ const earlyLessonCases = [
   },
 ];
 
-async function openLessonOutline(page, route) {
-  if (route.includes('interactive-zwa-1-html5')) {
-    await page.getByRole('button', { name: 'Osnova lekce' }).click();
-    return page.getByRole('dialog', { name: 'Osnova lekce' });
-  }
-  return page.getByRole('navigation', { name: 'Osnova kurzu' });
+async function openLessonOutline(page) {
+  const trigger = page.getByRole('button', { name: 'Osnova lekce' });
+  await trigger.click();
+  return page.getByRole('dialog', { name: 'Osnova lekce' });
 }
 
 function outlineButton(outline, name) {
@@ -38,11 +36,10 @@ test.describe('early lesson theory and task outline', () => {
     await installDeterministicNetwork(page);
     await page.goto('/interactive-zwa-7?slide=ajax-practice');
 
-    const codeBlock = page.locator('[data-theory-code-block]').first();
+    const codeBlock = page.locator('figure[data-language]').first();
     await expect(codeBlock).toBeVisible();
     await expect(codeBlock).toHaveAttribute('data-language', 'js');
-    await expect(codeBlock.locator('.cm-editor')).toBeVisible();
-    await expect(codeBlock.locator('.cm-content')).toHaveAttribute('contenteditable', 'false');
+    await expect(codeBlock.locator('pre code')).toContainText('function loadDoc()');
 
     await page.goto('/interactive-zwa-7?mode=projector&slide=ajax-practice');
     await expect(page.getByText('function loadDoc()', { exact: false })).toBeVisible();
@@ -52,14 +49,14 @@ test.describe('early lesson theory and task outline', () => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-9?slide=theory-lifecycle');
-    const phpBlock = page.locator('[data-theory-code-block]').first();
+    const phpBlock = page.locator('figure[data-language]').first();
     await expect(phpBlock).toHaveAttribute('data-language', 'php');
-    await expect(phpBlock.locator('.cm-editor')).toBeVisible();
+    await expect(phpBlock.locator('pre code')).toBeVisible();
 
     await page.goto('/interactive-zwa-8-php?slide=ssh');
-    const shellBlock = page.locator('[data-theory-code-block]').first();
+    const shellBlock = page.locator('figure[data-language]').first();
     await expect(shellBlock).toHaveAttribute('data-language', 'bash');
-    await expect(shellBlock.locator('.cm-editor')).toBeVisible();
+    await expect(shellBlock.locator('pre code')).toBeVisible();
   });
 
   for (const testCase of earlyLessonCases) {
@@ -165,10 +162,11 @@ test.describe('early lesson theory and task outline', () => {
     await expect(page.getByRole('region', { name: 'IDE' }).locator('.cm-content')).toContainText(
       '<meter',
     );
-    await page
-      .getByRole('navigation', { name: 'Osnova kurzu' })
-      .getByRole('button', { name: 'Datalist', exact: true })
-      .click();
+    const outline = await openLessonOutline(
+      page,
+      '/interactive-zwa-2-forms?slide=forms-task-meter',
+    );
+    await outline.getByRole('button', { name: /Datalist/ }).click();
     await expect(page.getByRole('region', { name: 'IDE' }).locator('.cm-content')).toContainText(
       '<datalist',
     );
@@ -180,7 +178,7 @@ test.describe('early lesson theory and task outline', () => {
     await installDeterministicNetwork(page);
     await page.goto('/interactive-zwa-1?slide=tasks-net');
 
-    const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
+    const outline = await openLessonOutline(page, '/interactive-zwa-1?slide=tasks-net');
     for (const task of [
       'DNS: host / nslookup',
       'Lokální síť a konektivita: ifconfig / ping',
@@ -195,6 +193,7 @@ test.describe('early lesson theory and task outline', () => {
     await expect(page.getByRole('tab', { name: 'terminál', exact: true })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Řešení', exact: true })).toBeVisible();
 
+    await page.keyboard.press('Escape');
     await page.getByRole('tab', { name: 'Řešení', exact: true }).click();
     await expect(page.getByRole('region', { name: 'IDE' })).toContainText('host cvut.cz');
     await expect(
@@ -211,7 +210,8 @@ test.describe('early lesson theory and task outline', () => {
     const slide = page.getByRole('region', { name: 'DNS: host / nslookup' });
     await expect(slide.getByRole('region', { name: 'Zadání' })).toHaveCount(1);
     await expect(slide.getByRole('region', { name: 'IDE' })).toHaveCount(1);
-    await expect(slide.getByRole('region', { name: 'Náhled a testy' })).toHaveCount(1);
+    await expect(slide.getByRole('region', { name: 'Náhled' })).toHaveCount(1);
+    await expect(slide.getByRole('region', { name: 'Ověření' })).toHaveCount(1);
   });
 
   test('network theory does not render a terminal outside a task workspace', async ({ page }) => {
@@ -233,9 +233,9 @@ test.describe('early lesson theory and task outline', () => {
     await solutionTab.click();
     await expect(ide.locator('[data-solution-panel]')).toContainText('nslookup -type=txt cvut.cz');
 
-    await page
-      .getByRole('navigation', { name: 'Osnova kurzu' })
-      .getByRole('button', { name: 'Lokální síť a konektivita: ifconfig / ping', exact: true })
+    const outline = await openLessonOutline(page, '/interactive-zwa-1?slide=network-task-dns');
+    await outline
+      .getByRole('button', { name: /Lokální síť a konektivita: ifconfig \/ ping/ })
       .click();
     await solutionTab.click();
     await expect(ide.locator('[data-solution-panel]')).toContainText(

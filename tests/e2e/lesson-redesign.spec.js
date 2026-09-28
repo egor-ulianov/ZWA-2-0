@@ -49,6 +49,30 @@ test.describe('F1 lesson composition and deep links', () => {
       route: '/interactive-zwa-5-js?slide=tasks',
       artwork: '[data-module="presentation-interaction"]',
     },
+    {
+      route: '/interactive-zwa-7?slide=task1',
+      artwork: '[data-module="server-foundations"]',
+    },
+    {
+      route: '/interactive-zwa-8-php?slide=t1',
+      artwork: '[data-module="server-foundations"]',
+    },
+    {
+      route: '/interactive-zwa-9?slide=tasks',
+      artwork: '[data-module="server-foundations"]',
+    },
+    {
+      route: '/interactive-zwa-10-sessions-cookies?slide=tasks',
+      artwork: '[data-module="state-data"]',
+    },
+    {
+      route: '/interactive-zwa-11-files-json?slide=tasks',
+      artwork: '[data-module="state-data"]',
+    },
+    {
+      route: '/interactive-zwa-12-auth?slide=tasks',
+      artwork: '[data-module="state-data"]',
+    },
   ]) {
     test(`${lesson.route} uses the new learning and exercise architecture`, async ({ page }) => {
       await installDeterministicNetwork(page);

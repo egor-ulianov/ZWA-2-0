@@ -1,19 +1,32 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import lenin1 from './src/interactive-zwa-7/lenin1.png';
 import lenin2 from './src/interactive-zwa-7/lenin2.png';
 import lenin3 from './src/interactive-zwa-7/lenin3.png';
 import { getLessonByNumber } from './src/config/lessons.js';
-import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
-import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
-import Code from './src/components/lesson/Code.jsx';
-import InfoBox from './src/components/lesson/InfoBox.jsx';
-import { clsx } from './src/components/lesson/classNames.js';
-import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
-import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
-import TheoryCodeBlock from './src/components/lesson/TheoryCodeBlock.jsx';
-import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
-import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
-import LessonQuiz from './src/components/lesson/LessonQuiz.jsx';
+import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
+import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import Code from './src/course-ui/content/InlineCode.jsx';
+import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
+import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
+import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
+import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
+import { useLearningNavigation } from './src/course-ui/learning/useLearningNavigation.js';
+
+function clsx(...values) {
+  return values.filter(Boolean).join(' ');
+}
+
+function InfoBox({ children, type }) {
+  const tone = type === 'warning' ? 'warning' : type === 'tip' ? 'tip' : 'note';
+  return <EditorialCallout tone={tone}>{children}</EditorialCallout>;
+}
+
+function TheoryCodeBlock({ children }) {
+  const value = React.isValidElement(children) ? children.props.children : children;
+  const className = React.isValidElement(children) ? children.props.className : '';
+  const language = /language-([\w-]+)/.exec(className || '')?.[1];
+  return <EditorialCode language={language}>{value}</EditorialCode>;
+}
 
 function QuizSection() {
   const questions = [
@@ -90,11 +103,15 @@ function QuizSection() {
   ];
 
   return (
-    <LessonQuiz
+    <KnowledgeCheck
       title="JavaScript: třídy a AJAX"
       subtitle="Zopakujte si typování, DOM, události a práci s daty před třídami a AJAXem."
       questions={questions}
-      visualKey="javascript-dom-ajax"
+      visual={
+        <div role="img" aria-label="Schéma DOM a AJAX" data-quiz-visual="javascript-dom-ajax">
+          DOM ↔ fetch ↔ server
+        </div>
+      }
       resultMessage={(score) => {
         if (score <= 2) return 'Je čas se na to ještě podívat 🙂';
         if (score <= 4) return 'Dobrá práce, ale ještě je co zlepšovat.';
@@ -164,80 +181,13 @@ function ChallengeReveal({ children }) {
   );
 }
 
-function StaticLessonTask({
-  id,
-  task,
-  draft,
-  required,
-  expected,
-  children,
-  language = 'js',
-  fileName = 'script.js',
-  solution = draft,
-}) {
-  const [source, setSource] = useState(draft);
-  const studentPanel = (
-    <div className="space-y-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-        Soubor: {fileName}
-      </p>
-      <SyntaxCodeEditor
-        value={source}
-        onChange={setSource}
-        language={language}
-        label="Editor – zdrojový kód"
-        minHeight="320px"
-      />
-    </div>
-  );
-
-  return (
-    <LessonTaskWorkspace
-      privateMarker={`static-${id}`}
-      task={task}
-      editor={{
-        source: draft,
-        label: 'Editor – zdrojový kód',
-        language,
-        fileName,
-      }}
-      ideTabs={
-        <WorkspaceIdeTabs
-          files={[{ id: 'student-file', label: fileName, panel: studentPanel }]}
-          solution={{
-            label: 'Řešení',
-            panel: (
-              <SyntaxCodeEditor
-                value={solution}
-                language={language}
-                label={`Řešení — ${fileName}`}
-                editable={false}
-                readOnly
-                minHeight="320px"
-              />
-            ),
-          }}
-        />
-      }
-      staticCheck={() => runStaticTaskChecks({ id, required }, source)}
-      preview={
-        <div className="space-y-4">
-          <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            <strong>Očekávaný výsledek:</strong> {expected}
-          </p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Náhled je pouze statické vysvětlení; JavaScript ani serverový kód se v tomto prohlížeči
-            nespouští.
-          </p>
-        </div>
-      }
-    />
-  );
+function StaticLessonTask(props) {
+  return <StaticExercise {...props} />;
 }
 
 function LessonSlideContent({ slide, password, setPassword, isWeakPassword }) {
   return (
-    <SharedSlideCard slide={slide} idPrefix="lesson-classes-ajax">
+    <>
       {slide.id === 'title' && (
         <div className="mt-6 text-zinc-600 dark:text-zinc-400">
           <div>Autor: Bc. Egor Ulianov</div>
@@ -266,7 +216,7 @@ function LessonSlideContent({ slide, password, setPassword, isWeakPassword }) {
       )}
 
       {slide.id === 'summary' && <SummarySlide />}
-    </SharedSlideCard>
+    </>
   );
 }
 
@@ -1370,28 +1320,30 @@ export default function AppJsLesson7() {
     [],
   );
 
-  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
-  const currentSlide = slides.find((s) => s.id === activeSlide) || slides[0];
+  const { activeSection, setActiveSection } = useLearningNavigation(slides);
+  const currentSlide = slides.find((section) => section.id === activeSection) || slides[0];
   const demoWeakPasswords = ['password', '123456', 'qwerty'];
   const isWeakPassword = password.length > 0 && demoWeakPasswords.includes(password);
 
   return (
-    <LessonShell
+    <LearningExperience
       lesson={getLessonByNumber(7)}
-      slides={slides}
-      activeSlide={activeSlide}
-      onChange={setActiveSlide}
+      sections={slides}
+      activeSection={activeSection}
+      onChange={setActiveSection}
       title="ZWA-7: Třídy a AJAX"
       objective="Vysvětlíte základy tříd v JavaScriptu a AJAXu a procvičíte práci s asynchronními požadavky."
       subtitle="Interaktivní prezentace s příklady kódu a úkoly"
       footerText="© 2025 ZWA – Cvičení 7: Třídy a AJAX"
     >
-      <LessonSlideContent
-        slide={currentSlide}
-        password={password}
-        setPassword={setPassword}
-        isWeakPassword={isWeakPassword}
-      />
-    </LessonShell>
+      <LearningSection section={currentSlide} idPrefix="lesson-classes-ajax">
+        <LessonSlideContent
+          slide={currentSlide}
+          password={password}
+          setPassword={setPassword}
+          isWeakPassword={isWeakPassword}
+        />
+      </LearningSection>
+    </LearningExperience>
   );
 }

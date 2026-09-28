@@ -19,14 +19,7 @@ const taskRoutes = [
 ];
 
 function usesNewExerciseStage(route) {
-  return (
-    route.includes('interactive-zwa-1-html5') ||
-    route.includes('interactive-zwa-2-forms') ||
-    route.includes('interactive-zwa-1?') ||
-    route.includes('interactive-zwa-2?') ||
-    route.includes('interactive-zwa-5-css-ii') ||
-    route.includes('interactive-zwa-5-js')
-  );
+  return taskRoutes.includes(route);
 }
 
 async function expectTaskWorkspace(page, route) {

@@ -1,19 +1,32 @@
 import React, { useMemo, useState } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
-import LessonShell, { useSlideNavigation } from './src/components/lesson/LessonShell.jsx';
-import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
-import Code from './src/components/lesson/Code.jsx';
-import InfoBox from './src/components/lesson/InfoBox.jsx';
-import { clsx } from './src/components/lesson/classNames.js';
-import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
-import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
-import TheoryCodeBlock from './src/components/lesson/TheoryCodeBlock.jsx';
-import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
-import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
+import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
+import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
+import Code from './src/course-ui/content/InlineCode.jsx';
+import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
+import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
+import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
+import { useLearningNavigation } from './src/course-ui/learning/useLearningNavigation.js';
+
+function clsx(...values) {
+  return values.filter(Boolean).join(' ');
+}
+
+function InfoBox({ children, type }) {
+  const tone = type === 'warning' ? 'warning' : type === 'tip' ? 'tip' : 'note';
+  return <EditorialCallout tone={tone}>{children}</EditorialCallout>;
+}
+
+function TheoryCodeBlock({ children }) {
+  const value = React.isValidElement(children) ? children.props.children : children;
+  const className = React.isValidElement(children) ? children.props.className : '';
+  const language = /language-([\w-]+)/.exec(className || '')?.[1];
+  return <EditorialCode language={language}>{value}</EditorialCode>;
+}
 
 function LessonSlideContent({ slide }) {
   return (
-    <SharedSlideCard slide={slide} idPrefix="lesson-php">
+    <>
       {slide.id === 'title' && (
         <div className="mt-6 text-zinc-600 dark:text-zinc-400">
           <div>Autor: Bc. Egor Ulianov</div>
@@ -72,78 +85,12 @@ function LessonSlideContent({ slide }) {
           </p>
         </div>
       )}
-    </SharedSlideCard>
+    </>
   );
 }
 
-function StaticLessonTask({
-  id,
-  task,
-  draft,
-  required,
-  expected,
-  children,
-  fileName = 'cviceni.php',
-  solution = draft,
-}) {
-  const [source, setSource] = useState(draft);
-  const studentPanel = (
-    <div className="space-y-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-        Soubor: {fileName}
-      </p>
-      <SyntaxCodeEditor
-        value={source}
-        onChange={setSource}
-        language="php"
-        label="Editor – zdrojový kód"
-        minHeight="320px"
-      />
-    </div>
-  );
-
-  return (
-    <LessonTaskWorkspace
-      privateMarker={`static-${id}`}
-      task={task}
-      editor={{
-        source: draft,
-        label: 'Editor – zdrojový kód',
-        language: 'php',
-        fileName,
-      }}
-      ideTabs={
-        <WorkspaceIdeTabs
-          files={[{ id: 'student-file', label: fileName, panel: studentPanel }]}
-          solution={{
-            label: 'Řešení',
-            panel: (
-              <SyntaxCodeEditor
-                value={solution}
-                language="php"
-                label={`Řešení — ${fileName}`}
-                editable={false}
-                readOnly
-                minHeight="320px"
-              />
-            ),
-          }}
-        />
-      }
-      staticCheck={() => runStaticTaskChecks({ id, required }, source)}
-      preview={
-        <div className="space-y-4">
-          <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            <strong>Očekávaný výsledek:</strong> {expected}
-          </p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Náhled je pouze statické vysvětlení; PHP ani jiný serverový kód se v tomto prohlížeči
-            nespouští.
-          </p>
-        </div>
-      }
-    />
-  );
+function StaticLessonTask(props) {
+  return <StaticExercise {...props} language="php" />;
 }
 
 function TaskReferenceSource() {
@@ -895,24 +842,26 @@ export default function AppPhpLesson8() {
     ],
     [],
   );
-  const { activeSlide, setActiveSlide } = useSlideNavigation(slides);
-  const current = slides.find((s) => s.id === activeSlide) || slides[0];
+  const { activeSection, setActiveSection } = useLearningNavigation(slides);
+  const current = slides.find((section) => section.id === activeSection) || slides[0];
 
   return (
-    <LessonShell
+    <LearningExperience
       lesson={getLessonByNumber(8)}
-      slides={slides}
-      activeSlide={activeSlide}
-      onChange={setActiveSlide}
+      sections={slides}
+      activeSection={activeSection}
+      onChange={setActiveSection}
       title="ZWA-8: Základy PHP – Malý test č. 2"
       objective="Použijete základní PHP syntaxi pro práci s datem, funkcemi, poli a parametry."
       subtitle="Interaktivní prezentace s ukázkami kódu pro PHP základy"
       footerText="© 2025 ZWA – Cvičení 8: Základy PHP"
     >
-      <LessonSlideContent slide={current} />
-      {current.id === 'ssh' && <SshTutorial />}
-      {current.id === 'filezilla' && <FileZillaTutorial />}
-    </LessonShell>
+      <LearningSection section={current} idPrefix="lesson-php">
+        <LessonSlideContent slide={current} />
+        {current.id === 'ssh' && <SshTutorial />}
+        {current.id === 'filezilla' && <FileZillaTutorial />}
+      </LearningSection>
+    </LearningExperience>
   );
 }
 

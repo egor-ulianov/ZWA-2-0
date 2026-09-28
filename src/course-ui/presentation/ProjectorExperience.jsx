@@ -1,6 +1,10 @@
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+
 import { LectureIllustration } from '../art/LectureIllustration.jsx';
-import { projectReactChildren } from './projectorContent.js';
+import { projectDomChildren, projectReactChildren } from './projectorContent.js';
 import styles from './presentation.module.css';
+
+const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 export function ProjectorExperience({ lesson, sections = [], activeSection, onChange, children }) {
   const activeIndex = Math.max(
@@ -10,7 +14,18 @@ export function ProjectorExperience({ lesson, sections = [], activeSection, onCh
   const active = sections[activeIndex] || sections[0] || null;
   const previous = sections[activeIndex - 1];
   const next = sections[activeIndex + 1];
-  const projectedContent = projectReactChildren(children);
+  const reactProjection = projectReactChildren(children);
+  const [domProjection, setDomProjection] = useState([]);
+  const [capturedSection, setCapturedSection] = useState(null);
+  const sourceRef = useRef(null);
+  const needsDomProjection = reactProjection.length === 0 && capturedSection !== active?.id;
+  const projectedContent = reactProjection.length > 0 ? reactProjection : domProjection;
+
+  useClientLayoutEffect(() => {
+    if (!needsDomProjection || !sourceRef.current) return;
+    setDomProjection(projectDomChildren(sourceRef.current));
+    setCapturedSection(active?.id || null);
+  }, [active?.id, needsDomProjection]);
 
   return (
     <main
@@ -18,6 +33,11 @@ export function ProjectorExperience({ lesson, sections = [], activeSection, onCh
       className={styles.projector}
       data-presentation-mode="projector"
     >
+      {needsDomProjection ? (
+        <div aria-hidden="true" hidden ref={sourceRef}>
+          {children}
+        </div>
+      ) : null}
       <header className={styles.projectorHeader}>
         <p>{lesson?.number ? `Lekce ${String(lesson.number).padStart(2, '0')}` : 'Lekce'}</p>
         <span aria-label="Pozice snímku">

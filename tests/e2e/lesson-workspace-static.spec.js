@@ -61,6 +61,12 @@ const splitTaskCases = [
   },
 ];
 
+async function openLessonOutline(page) {
+  const trigger = page.getByRole('button', { name: 'Osnova lekce' });
+  await trigger.click();
+  return page.getByRole('dialog', { name: 'Osnova lekce' });
+}
+
 test.describe('static lesson task workspaces', () => {
   test('splits lessons 9–12 into outline tasks with IDE solutions', async ({ page }) => {
     await installDeterministicNetwork(page);
@@ -69,7 +75,7 @@ test.describe('static lesson task workspaces', () => {
       await page.goto(testCase.aggregateRoute);
       await expect.poll(() => new URL(page.url()).searchParams.get('slide')).toBe('task1');
 
-      const outline = page.getByRole('navigation', { name: 'Osnova kurzu' });
+      const outline = await openLessonOutline(page);
       for (const title of testCase.titles) {
         await expect(outline.getByRole('button', { name: title, exact: true })).toBeVisible();
       }
@@ -97,11 +103,10 @@ test.describe('static lesson task workspaces', () => {
 
     const editor = page.getByRole('textbox', { name: 'Editor – zdrojový kód' });
     await editor.fill('CHANGED TASK 1');
-    await page
-      .getByRole('navigation', { name: 'Osnova kurzu' })
+    const outline = await openLessonOutline(page);
+    await outline
       .getByRole('button', {
-        name: 'Úkol 2: Spam – pouze jedna možnost (radio) + rekurze pro pole',
-        exact: true,
+        name: /Úkol 2: Spam – pouze jedna možnost/,
       })
       .click();
 
@@ -117,9 +122,9 @@ test.describe('static lesson task workspaces', () => {
     await page.goto('/interactive-zwa-7?slide=task1');
 
     const editorRegion = page.getByRole('region', { name: 'IDE' });
-    const editor = editorRegion.locator('[data-code-editor="syntax"][data-language="html"]');
+    const editor = editorRegion.locator('[data-studio-editor="true"][data-language="html"]');
 
-    await expect(editorRegion).toContainText('Soubor: index.html');
+    await expect(editorRegion.getByRole('tab', { name: 'index.html', exact: true })).toBeVisible();
     await expect(editor).toHaveCount(1);
     await expect(editor.locator('.cm-editor')).toHaveCount(1);
     await expect(editor.locator('.cm-line span').first()).toBeVisible();
@@ -135,9 +140,9 @@ test.describe('static lesson task workspaces', () => {
       await page.goto(route);
 
       const editorRegion = page.getByRole('region', { name: 'IDE' });
-      const editor = editorRegion.locator('[data-code-editor="syntax"][data-language="php"]');
+      const editor = editorRegion.locator('[data-studio-editor="true"][data-language="php"]');
 
-      await expect(editorRegion).toContainText('Soubor:');
+      await expect(editorRegion.getByRole('tab').first()).toHaveText(/\.php$/);
       await expect(editor).toHaveCount(1);
       await expect(editor.locator('.cm-editor')).toHaveCount(1);
       await expect(editor.locator('.cm-line span').first()).toBeVisible();
@@ -187,13 +192,23 @@ test.describe('static lesson task workspaces', () => {
 
       const taskRegion = page.getByRole('region', { name: 'Zadání' });
       const editorRegion = page.getByRole('region', { name: 'IDE' });
-      const previewRegion = page.getByRole('region', { name: 'Náhled a testy' });
-      const editor = editorRegion.getByRole('textbox', { name: 'Editor – zdrojový kód' });
-      const runTests = previewRegion.getByRole('button', { name: 'Spustit testy', exact: true });
-      const results = previewRegion.getByRole('group', { name: 'Výsledky testů' });
-
       await expect(taskRegion).toBeVisible();
       await expect(editorRegion).toBeVisible();
+
+      const newVerification = page.getByRole('region', { name: 'Ověření' });
+      const migrated = (await newVerification.count()) > 0;
+      const previewRegion = migrated
+        ? newVerification
+        : page.getByRole('region', { name: 'Náhled a testy' });
+      const editor = editorRegion.getByRole('textbox', { name: 'Editor – zdrojový kód' });
+      const runTests = previewRegion.getByRole('button', {
+        name: migrated ? 'Spustit ověření' : 'Spustit testy',
+        exact: true,
+      });
+      const results = migrated
+        ? previewRegion.locator('[aria-live="polite"]')
+        : previewRegion.getByRole('group', { name: 'Výsledky testů' });
+
       await expect(previewRegion).toContainText('Statická kontrola');
       await expect(editor).toBeVisible();
 
@@ -222,6 +237,8 @@ test.describe('static lesson task workspaces', () => {
       await expect(page.getByRole('region', { name: 'Zadání' })).toHaveCount(0);
       await expect(page.getByRole('region', { name: 'IDE' })).toHaveCount(0);
       await expect(page.getByRole('region', { name: 'Náhled a testy' })).toHaveCount(0);
+      await expect(page.getByRole('region', { name: 'Náhled' })).toHaveCount(0);
+      await expect(page.getByRole('region', { name: 'Ověření' })).toHaveCount(0);
       await expect(page.locator('textarea')).toHaveCount(0);
       await expect(page.getByText('Statická kontrola', { exact: false })).toHaveCount(0);
     });
