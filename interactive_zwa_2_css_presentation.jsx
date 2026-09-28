@@ -18,6 +18,7 @@ import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import LessonQuiz from './src/components/lesson/LessonQuiz.jsx';
 import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 
 import {
@@ -1027,8 +1028,6 @@ export default function App() {
 }
 
 function QuizCssBasics() {
-  const [answers, setAnswers] = useState({});
-  const [submitted, setSubmitted] = useState(false);
   const questions = [
     {
       id: 'q1',
@@ -1073,84 +1072,12 @@ function QuizCssBasics() {
       hint: 'list-style-type',
     },
   ];
-  const total = questions.length;
-  const score = questions.reduce((acc, q) => acc + (answers[q.id] === q.correctIndex ? 1 : 0), 0);
-  function selectAnswer(qid, idx) {
-    if (!submitted) setAnswers((a) => ({ ...a, [qid]: idx }));
-  }
-  function submit() {
-    setSubmitted(true);
-  }
-  function reset() {
-    setAnswers({});
-    setSubmitted(false);
-  }
   return (
-    <div className="mt-4 space-y-4">
-      {questions.map((q, qi) => {
-        const selected = answers[q.id];
-        const isCorrect = selected === q.correctIndex;
-        return (
-          <div
-            key={q.id}
-            className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-4"
-          >
-            <div className="font-medium mb-2">
-              {qi + 1}. {q.text}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {q.options.map((opt, idx) => {
-                const active = selected === idx;
-                const correct = submitted && idx === q.correctIndex;
-                const wrong = submitted && active && !correct;
-                return (
-                  <button
-                    key={idx}
-                    className={clsx(
-                      'text-left px-3 py-2 rounded-lg border text-sm',
-                      active
-                        ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/30'
-                        : 'border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60',
-                      correct ? 'ring-2 ring-emerald-400' : '',
-                      wrong ? 'ring-2 ring-rose-400' : '',
-                    )}
-                    onClick={() => selectAnswer(q.id, idx)}
-                  >
-                    {opt}
-                  </button>
-                );
-              })}
-            </div>
-            {submitted && (
-              <div
-                className={clsx('mt-2 text-xs', isCorrect ? 'text-emerald-600' : 'text-rose-600')}
-              >
-                {isCorrect ? 'Správně!' : `Nesprávně. Správná volba je ${q.correctIndex + 1}.`}{' '}
-                <span className="text-zinc-500">({q.hint})</span>
-              </div>
-            )}
-          </div>
-        );
-      })}
-      <div className="flex items-center gap-2">
-        {!submitted ? (
-          <button className="px-4 py-2 rounded-lg bg-sky-600 text-white" onClick={submit}>
-            Vyhodnotit
-          </button>
-        ) : (
-          <>
-            <div className="text-sm text-zinc-700 dark:text-zinc-300">
-              Skóre: {score} / {total}
-            </div>
-            <button
-              className="px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700"
-              onClick={reset}
-            >
-              Reset
-            </button>
-          </>
-        )}
-      </div>
-    </div>
+    <LessonQuiz
+      title="CSS základy"
+      subtitle="Procvičte selektory, specifitu, stavové pseudo-třídy a typické CSS vlastnosti."
+      questions={questions}
+      visualKey="css-specificity"
+    />
   );
 }

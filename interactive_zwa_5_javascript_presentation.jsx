@@ -10,6 +10,7 @@ import SharedSlideCard from './src/components/lesson/SlideCard.jsx';
 import Code from './src/components/lesson/Code.jsx';
 import { clsx } from './src/components/lesson/classNames.js';
 import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
+import LessonQuiz from './src/components/lesson/LessonQuiz.jsx';
 
 function getJsTemplates(stepIndex) {
   const steps = [
@@ -357,9 +358,10 @@ const slideDefinitions = [
   },
   {
     id: 'quiz-css',
-    title: 'KVÍZ: CSS základy',
+    title: 'KVÍZ: JavaScript základy',
     activityType: 'quick-check',
-    presenterNotes: 'Nechte studenty vysvětlit volbu selektoru před vyhodnocením odpovědí.',
+    presenterNotes:
+      'Nechte studenty vysvětlit volbu typu, deklarace nebo DOM API před vyhodnocením odpovědí.',
   },
   { id: 'meme', title: 'Meme', activityType: 'learn' },
   {
@@ -602,131 +604,73 @@ function TheorySections({ sections }) {
 }
 
 function QuizCssBasics() {
-  const [answers, setAnswers] = useState({});
-  const [submitted, setSubmitted] = useState(false);
   const questions = [
     {
       id: 'q1',
-      text: 'Který selektor cílí na element s id="title"?',
-      options: ['.title', '#title', 'title'],
-      correctIndex: 1,
-      hint: 'id selektor',
+      text: 'Co vrátí výraz typeof 42?',
+      options: ['number', 'string', 'object'],
+      correctIndex: 0,
+      hint: 'typeof vrací řetězec s typem hodnoty.',
     },
     {
       id: 'q2',
-      text: 'Co je vyšší specifita?',
-      options: ['.nav a', '#nav a', 'a.nav'],
-      correctIndex: 1,
-      hint: 'id > třída > element',
+      text: 'Kterou deklaraci nelze znovu přiřadit?',
+      options: ['var', 'let', 'const'],
+      correctIndex: 2,
+      hint: 'const chrání vazbu proměnné před novým přiřazením.',
     },
     {
       id: 'q3',
-      text: 'Jak nastavíte font na Georgia a fallback serif?',
-      options: ['font: Georgia;', 'font-family: Georgia, serif;', 'font-style: Georgia, serif;'],
-      correctIndex: 1,
-      hint: 'font-family',
+      text: 'Který operátor porovnává hodnotu i typ bez přetypování?',
+      options: ['==', '=', '==='],
+      correctIndex: 2,
+      hint: 'Striktní rovnost je v JavaScriptu ===.',
     },
     {
       id: 'q4',
-      text: 'Jak stylovat navštívený odkaz?',
-      options: ['a:hover', 'a:visited', 'a:active'],
+      text: 'Co pro pole typicky prochází cyklus for...of?',
+      options: ['indexy', 'hodnoty', 'vlastnosti prototypu'],
       correctIndex: 1,
-      hint: ':visited',
+      hint: 'for...of iteruje přes hodnoty iterovatelného objektu.',
     },
     {
       id: 'q5',
-      text: 'Jak vyberete první písmeno odstavce .excerpt?',
-      options: ['p.excerpt:first-letter', 'p.excerpt::first-letter', 'p:first-letter.excerpt'],
-      correctIndex: 1,
-      hint: '::first-letter',
+      text: 'Který zápis vybere první prvek odpovídající CSS selektoru?',
+      options: [
+        'document.querySelector(selector)',
+        'document.querySelectorAll(selector)',
+        'document.getElements(selector)',
+      ],
+      correctIndex: 0,
+      hint: 'querySelector vrací první odpovídající prvek.',
     },
     {
       id: 'q6',
-      text: 'Která vlastnost nastaví číslování na lower-alpha?',
-      options: ['list-style', 'list-style-type', 'counter-style'],
-      correctIndex: 1,
-      hint: 'list-style-type',
+      text: 'Který zápis správně připojí handler na kliknutí?',
+      options: [
+        "button.addEventListener('click', handler)",
+        'button.click(handler)',
+        "listen(button, 'click', handler)",
+      ],
+      correctIndex: 0,
+      hint: 'Události se připojují metodou addEventListener.',
+    },
+    {
+      id: 'q7',
+      text: 'Co udělá event.preventDefault() ve formuláři?',
+      options: ['zastaví výchozí akci prohlížeče', 'odstraní handler', 'ukončí celý JavaScript'],
+      correctIndex: 0,
+      hint: 'Například zabrání odeslání formuláře a reloadu stránky.',
     },
   ];
-  const total = questions.length;
-  const score = questions.reduce((acc, q) => acc + (answers[q.id] === q.correctIndex ? 1 : 0), 0);
-  function selectAnswer(qid, idx) {
-    if (!submitted) setAnswers((a) => ({ ...a, [qid]: idx }));
-  }
-  function submit() {
-    setSubmitted(true);
-  }
-  function reset() {
-    setAnswers({});
-    setSubmitted(false);
-  }
+
   return (
-    <div className="mt-4 space-y-4">
-      {questions.map((q, qi) => {
-        const selected = answers[q.id];
-        const isCorrect = selected === q.correctIndex;
-        return (
-          <div
-            key={q.id}
-            className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-4"
-          >
-            <div className="font-medium mb-2">
-              {qi + 1}. {q.text}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {q.options.map((opt, idx) => {
-                const active = selected === idx;
-                const correct = submitted && idx === q.correctIndex;
-                const wrong = submitted && active && !correct;
-                return (
-                  <button
-                    key={idx}
-                    className={clsx(
-                      'text-left px-3 py-2 rounded-lg border text-sm',
-                      active
-                        ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/30'
-                        : 'border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60',
-                      correct ? 'ring-2 ring-emerald-400' : '',
-                      wrong ? 'ring-2 ring-rose-400' : '',
-                    )}
-                    onClick={() => selectAnswer(q.id, idx)}
-                  >
-                    {opt}
-                  </button>
-                );
-              })}
-            </div>
-            {submitted && (
-              <div
-                className={clsx('mt-2 text-xs', isCorrect ? 'text-emerald-600' : 'text-rose-600')}
-              >
-                {isCorrect ? 'Správně!' : `Nesprávně. Správná volba je ${q.correctIndex + 1}.`}{' '}
-                <span className="text-zinc-500">({q.hint})</span>
-              </div>
-            )}
-          </div>
-        );
-      })}
-      <div className="flex items-center gap-2">
-        {!submitted ? (
-          <button className="px-4 py-2 rounded-lg bg-sky-600 text-white" onClick={submit}>
-            Vyhodnotit
-          </button>
-        ) : (
-          <>
-            <div className="text-sm text-zinc-700 dark:text-zinc-300">
-              Skóre: {score} / {total}
-            </div>
-            <button
-              className="px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700"
-              onClick={reset}
-            >
-              Reset
-            </button>
-          </>
-        )}
-      </div>
-    </div>
+    <LessonQuiz
+      title="JavaScript základy"
+      subtitle="Procvičte typy, deklarace, cykly, DOM selektory a práci s událostmi."
+      questions={questions}
+      visualKey="javascript-event-loop"
+    />
   );
 }
 

@@ -13,11 +13,9 @@ import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
 import TheoryCodeBlock from './src/components/lesson/TheoryCodeBlock.jsx';
 import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import { runStaticTaskChecks } from './src/components/exercises/staticTaskChecks.js';
+import LessonQuiz from './src/components/lesson/LessonQuiz.jsx';
 
 function QuizSection() {
-  const [answers, setAnswers] = useState({});
-  const [submitted, setSubmitted] = useState(false);
-
   const questions = [
     {
       id: 'q1',
@@ -91,110 +89,18 @@ function QuizSection() {
     },
   ];
 
-  const score = questions.reduce((acc, q) => acc + (answers[q.id] === q.correctIndex ? 1 : 0), 0);
-
-  function selectAnswer(qid, idx) {
-    if (!submitted) setAnswers((a) => ({ ...a, [qid]: idx }));
-  }
-
-  function submit() {
-    setSubmitted(true);
-  }
-
-  function reset() {
-    setAnswers({});
-    setSubmitted(false);
-  }
-
-  let resultMessage = '';
-  if (submitted) {
-    if (score <= 2) {
-      resultMessage = 'Je čas se na to ještě podívat 🙂';
-    } else if (score <= 4) {
-      resultMessage = 'Dobrá práce, ale ještě je co zlepšovat.';
-    } else {
-      resultMessage = 'Skvělé, máte to v malíku! 🎉';
-    }
-  }
-
   return (
-    <div className="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-gradient-to-br from-amber-50/80 to-orange-50/80 dark:from-zinc-900/80 dark:to-zinc-800/80 p-6 shadow-lg">
-      <h2 className="text-2xl font-bold mb-3">Kvíz z minulého cvičení</h2>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-        Zopakujte si základy z Cvičení 6 – Úvod do JavaScriptu
-      </p>
-      <div className="space-y-4">
-        {questions.map((q, qi) => {
-          const selected = answers[q.id];
-          const isCorrect = selected === q.correctIndex;
-          const showFeedback = submitted && selected !== undefined;
-          return (
-            <div
-              key={q.id}
-              className={clsx(
-                'rounded-xl border p-4 bg-white/70 dark:bg-zinc-900/60',
-                showFeedback
-                  ? isCorrect
-                    ? 'border-emerald-400 dark:border-emerald-600'
-                    : 'border-rose-400 dark:border-rose-600'
-                  : 'border-zinc-200/60 dark:border-zinc-800',
-              )}
-            >
-              <div className="font-medium mb-3">
-                {qi + 1}. {q.text}
-              </div>
-              <div className="space-y-2">
-                {q.options.map((opt, idx) => {
-                  const active = selected === idx;
-                  const correct = submitted && idx === q.correctIndex;
-                  const wrong = submitted && active && !correct;
-                  return (
-                    <button
-                      key={idx}
-                      className={clsx(
-                        'w-full text-left px-3 py-2 rounded-lg border text-sm transition-all',
-                        active
-                          ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/30'
-                          : 'border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 hover:bg-zinc-50 dark:hover:bg-zinc-800/60',
-                        correct ? 'ring-2 ring-emerald-400' : '',
-                        wrong ? 'ring-2 ring-rose-400' : '',
-                      )}
-                      onClick={() => selectAnswer(q.id, idx)}
-                      disabled={submitted}
-                    >
-                      {opt}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-6 flex items-center gap-4">
-        {!submitted ? (
-          <button
-            className="px-6 py-2.5 rounded-lg bg-sky-600 text-white font-medium hover:bg-sky-700 transition-colors"
-            onClick={submit}
-          >
-            Vyhodnotit kvíz
-          </button>
-        ) : (
-          <>
-            <div className="text-lg font-semibold">
-              Skóre: {score} / {questions.length}
-            </div>
-            <div className="text-zinc-700 dark:text-zinc-300">{resultMessage}</div>
-            <button
-              className="px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-              onClick={reset}
-            >
-              Zkusit znovu
-            </button>
-          </>
-        )}
-      </div>
-    </div>
+    <LessonQuiz
+      title="JavaScript: třídy a AJAX"
+      subtitle="Zopakujte si typování, DOM, události a práci s daty před třídami a AJAXem."
+      questions={questions}
+      visualKey="javascript-dom-ajax"
+      resultMessage={(score) => {
+        if (score <= 2) return 'Je čas se na to ještě podívat 🙂';
+        if (score <= 4) return 'Dobrá práce, ale ještě je co zlepšovat.';
+        return 'Skvělé, máte to v malíku! 🎉';
+      }}
+    />
   );
 }
 
@@ -1427,7 +1333,7 @@ export default function AppJsLesson7() {
       },
       {
         id: 'quiz',
-        title: 'Kvíz z minulého cvičení',
+        title: 'KVÍZ: JavaScript, třídy a AJAX',
         activityType: 'quick-check',
         presenterNotes: 'Nechte studenty zdůvodnit odpověď na rozdíl mezi for...in a for...of.',
       },

@@ -11,6 +11,7 @@ import { clsx } from './src/components/lesson/classNames.js';
 import LessonTaskWorkspace from './src/components/exercises/LessonTaskWorkspace.jsx';
 import WorkspaceIdeTabs from './src/components/exercises/WorkspaceIdeTabs.jsx';
 import SyntaxCodeEditor from './src/components/exercises/SyntaxCodeEditor.jsx';
+import LessonQuiz from './src/components/lesson/LessonQuiz.jsx';
 
 // Interactive ZWA-1 presentation with a built-in simulated Linux CLI (no external libs)
 // Tailwind is available in canvas preview. All code is self-contained.
@@ -722,8 +723,6 @@ function LessonSlideContent({ slide, commandLog }) {
 }
 
 function QuizHtmlBasics() {
-  const [answers, setAnswers] = useState({});
-  const [submitted, setSubmitted] = useState(false);
   const questions = [
     {
       id: 'q1',
@@ -780,116 +779,23 @@ function QuizHtmlBasics() {
     },
   ];
 
-  const total = questions.length;
-  const score = questions.reduce((acc, q) => {
-    const selected = answers[q.id];
-    return acc + (selected === q.correctIndex ? 1 : 0);
-  }, 0);
-
-  function selectAnswer(qid, idx) {
-    if (submitted) return;
-    setAnswers((a) => ({ ...a, [qid]: idx }));
-  }
-
-  function submit() {
-    setSubmitted(true);
-  }
-
-  function reset() {
-    setAnswers({});
-    setSubmitted(false);
-  }
-
   return (
-    <div className="mt-4 space-y-4">
-      {questions.map((q, qi) => {
-        const selected = answers[q.id];
-        const isCorrect = selected === q.correctIndex;
-        return (
-          <div
-            key={q.id}
-            className="rounded-xl border border-zinc-200/60 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-4"
-          >
-            <div className="font-medium mb-2">
-              {qi + 1}. {q.text}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {q.options.map((opt, idx) => {
-                const active = selected === idx;
-                const correct = submitted && idx === q.correctIndex;
-                const wrong = submitted && active && !correct;
-                return (
-                  <button
-                    key={idx}
-                    className={clsx(
-                      'text-left px-3 py-2 rounded-lg border text-sm',
-                      active
-                        ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/30'
-                        : 'border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60',
-                      correct ? 'ring-2 ring-emerald-400' : '',
-                      wrong ? 'ring-2 ring-rose-400' : '',
-                    )}
-                    onClick={() => selectAnswer(q.id, idx)}
-                  >
-                    {opt}
-                  </button>
-                );
-              })}
-            </div>
-            {submitted && (
-              <div
-                className={clsx('mt-2 text-xs', isCorrect ? 'text-emerald-600' : 'text-rose-600')}
-              >
-                {isCorrect ? 'Správně!' : `Nesprávně. Správná volba je ${q.correctIndex + 1}.`}{' '}
-                <span className="text-zinc-500">({q.hint})</span>
-              </div>
-            )}
-          </div>
-        );
-      })}
-
-      <div className="flex items-center gap-2">
-        {!submitted ? (
-          <button className="px-4 py-2 rounded-lg bg-sky-600 text-white" onClick={submit}>
-            Vyhodnotit
-          </button>
-        ) : (
-          <>
-            <div className="text-sm text-zinc-700 dark:text-zinc-300">
-              Skóre: {score} / {total}
-            </div>
-            <button
-              className="px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700"
-              onClick={reset}
-            >
-              Reset
-            </button>
-          </>
-        )}
-      </div>
-
-      <div className="text-xs text-zinc-500">
-        Doporučené zdroje:
-        <a
-          className="underline ml-1"
-          href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/01/start"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          Cvičení 1 – HTML
-        </a>
-        ,
-        <a
-          className="underline ml-1"
-          href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/02/start"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          Cvičení 2 – Formuláře
-        </a>
-        .
-      </div>
-    </div>
+    <LessonQuiz
+      title="HTML základy"
+      subtitle="Ověřte si, že dokážete rozpoznat kostru dokumentu, sémantické elementy a formulářové atributy."
+      questions={questions}
+      visualKey="html-structure"
+      resources={[
+        {
+          label: 'Cvičení 1 – HTML',
+          href: 'https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/01/start',
+        },
+        {
+          label: 'Cvičení 2 – Formuláře',
+          href: 'https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/02/start',
+        },
+      ]}
+    />
   );
 }
 

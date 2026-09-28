@@ -70,6 +70,35 @@ test.describe('F1 lesson composition and deep links', () => {
     );
   });
 
+  test('lecture quizzes share a rich shell while keeping individual teaching visuals', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+
+    const quizRoutes = [
+      { route: '/interactive-zwa-1?slide=quiz-html', visual: 'html-structure' },
+      { route: '/interactive-zwa-2?slide=quiz-css', visual: 'css-specificity' },
+      { route: '/interactive-zwa-5-css-ii?slide=quiz-css', visual: 'css-layout' },
+      { route: '/interactive-zwa-5-js?slide=quiz-css', visual: 'javascript-event-loop' },
+      { route: '/interactive-zwa-7?slide=quiz', visual: 'javascript-dom-ajax' },
+    ];
+
+    for (const quizRoute of quizRoutes) {
+      await page.goto(quizRoute.route);
+      const quiz = page.locator('[data-lesson-quiz]');
+      await expect(quiz).toBeVisible();
+      await expect(quiz.getByText('Rychlá kontrola', { exact: true })).toBeVisible();
+      await expect(quiz.locator('[data-quiz-visual]')).toHaveAttribute(
+        'data-quiz-visual',
+        quizRoute.visual,
+      );
+      await expect(quiz.locator('[data-quiz-progress]')).toHaveText(/0 \/ \d+ zodpovězeno/);
+
+      await quiz.locator('[data-quiz-option]').first().click();
+      await expect(quiz.locator('[data-quiz-progress]')).toHaveText(/1 \/ \d+ zodpovězeno/);
+    }
+  });
+
   test('HTML5 lesson keeps its task deep link and learning objective', async ({ page }) => {
     await installDeterministicNetwork(page);
 
