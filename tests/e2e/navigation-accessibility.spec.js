@@ -11,16 +11,17 @@ test.describe('public catalog and lesson navigation', () => {
     const response = await page.goto('/');
     expect(response).not.toBeNull();
     expect(response.ok()).toBe(true);
-    await expect(page.getByText('ZWA · Webové aplikace', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Jak funguje moderní web' })).toBeVisible();
 
-    await expect(page.getByRole('main').getByRole('link')).toHaveCount(12);
-    await expect(
-      page.getByRole('link', { name: /Webová prezentace se simulovanou linuxovou CLI/ }),
-    ).toHaveAttribute('href', '/interactive-zwa-1');
+    const modules = page.locator('article[data-course-module]');
+    await expect(modules).toHaveCount(4);
+    for (const moduleCard of await modules.all()) {
+      await expect(moduleCard.getByRole('link')).toHaveCount(3);
+    }
+    const networkLesson = page.getByRole('link', { name: /Jak putuje požadavek/ });
+    await expect(networkLesson).toHaveAttribute('href', '/interactive-zwa-1');
 
-    await page
-      .getByRole('link', { name: /Webová prezentace se simulovanou linuxovou CLI/ })
-      .click();
+    await networkLesson.click();
     await expect(page).toHaveURL(/\/interactive-zwa-1\/?(?:\?slide=title)?$/);
     await expect(page.locator('h1').first()).toBeVisible();
   });
