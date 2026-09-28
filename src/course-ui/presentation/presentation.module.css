@@ -1,0 +1,281 @@
+.presenter {
+  display: grid;
+  min-height: calc(100vh - 4.5rem);
+  grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
+  background: var(--course-canvas);
+}
+
+.presenterOutline {
+  padding: 2rem 1.25rem;
+  border-right: 1px solid var(--course-line);
+  background: var(--course-paper);
+}
+
+.presenterOutline > p,
+.presenterHeader p,
+.timer > p,
+.presenterNotes > p {
+  margin: 0 0 0.35rem;
+  color: var(--course-blue-deep);
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.presenterOutline > strong {
+  display: block;
+  margin-bottom: 1.5rem;
+  line-height: 1.45;
+}
+
+.presenterOutline ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.presenterOutline button {
+  display: grid;
+  width: 100%;
+  min-height: 3.25rem;
+  grid-template-columns: 1.8rem minmax(0, 1fr);
+  gap: 0.55rem;
+  padding: 0.75rem 0.45rem;
+  border: 0;
+  border-bottom: 1px solid var(--course-line);
+  background: transparent;
+  color: var(--course-ink-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.presenterOutline button[aria-current='step'] {
+  background: var(--course-blue-soft);
+  color: var(--course-ink);
+  font-weight: 750;
+}
+
+.presenterOutline button span {
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.presenterWorkspace {
+  min-width: 0;
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+.presenterHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.presenterHeader h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.projectorButton,
+.timer button {
+  min-height: 2.75rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--course-blue);
+  border-radius: 0.2rem;
+  background: var(--course-blue);
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.presenterContent {
+  min-height: 18rem;
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+  border: 1px solid var(--course-line);
+  background: var(--course-paper);
+}
+
+.presenterTools {
+  display: grid;
+  grid-template-columns: minmax(14rem, 0.7fr) minmax(0, 1.3fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.timer,
+.presenterNotes {
+  padding: 1.25rem;
+  border-top: 4px solid var(--course-yellow);
+  background: var(--course-paper);
+}
+
+.timer > strong {
+  display: block;
+  margin: 0.35rem 0 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 2.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.timer button:last-child {
+  border-color: var(--course-line);
+  background: transparent;
+  color: var(--course-ink);
+}
+
+.presenterNotes > div {
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.popupFallback {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--course-blue-deep);
+  font-weight: 750;
+}
+
+.projector {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  padding: clamp(1.25rem, 4vw, 3rem);
+  background: var(--course-canvas);
+  color: var(--course-ink);
+}
+
+.projectorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--course-ink-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.projectorHeader p {
+  margin: 0;
+  color: var(--course-blue-deep);
+}
+
+.projectorHeader span {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.projectorStage {
+  display: grid;
+  width: min(100%, 84rem);
+  flex: 1;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: center;
+  gap: clamp(2rem, 6vw, 6rem);
+  margin: 2rem auto;
+}
+
+.projectorArtwork {
+  border: 2px solid var(--course-ink);
+}
+
+.projectorCopy {
+  grid-column: -2 / -1;
+}
+
+.projectorCopy:first-child {
+  grid-column: 1 / -1;
+  max-width: 70rem;
+}
+
+.projectorCopy h1 {
+  margin: 0;
+  font-size: clamp(3rem, 7vw, 7rem);
+  font-weight: 850;
+  letter-spacing: -0.065em;
+  line-height: 0.95;
+}
+
+.projectorCopy > p {
+  margin: 1.5rem 0 0;
+  color: var(--course-ink-muted);
+  font-size: clamp(1.25rem, 2.5vw, 2rem);
+  line-height: 1.5;
+}
+
+.projectedContent {
+  margin-top: 2rem;
+  font-size: clamp(1.05rem, 2vw, 1.55rem);
+  line-height: 1.65;
+}
+
+.projectorNavigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.projectorNavigation button {
+  min-height: 3rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--course-line);
+  border-radius: 0.2rem;
+  background: var(--course-paper);
+  color: var(--course-ink);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+}
+
+.projectorNavigation button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+@media (max-width: 56rem) {
+  .presenter {
+    grid-template-columns: 1fr;
+  }
+
+  .presenterOutline {
+    border-right: 0;
+    border-bottom: 1px solid var(--course-line);
+  }
+
+  .presenterTools,
+  .projectorStage {
+    grid-template-columns: 1fr;
+  }
+
+  .projectorCopy {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 34rem) {
+  .presenterHeader,
+  .projectorNavigation {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .projectorNavigation button {
+    width: 100%;
+  }
+}

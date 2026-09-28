@@ -1,0 +1,359 @@
+.progress {
+  position: relative;
+  height: 0.5rem;
+  overflow: hidden;
+  background: var(--course-blue-soft);
+}
+
+.progress > span:first-child {
+  display: block;
+  height: 100%;
+  background: var(--course-yellow);
+  transition: width 180ms ease;
+}
+
+.progressLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.learningPage {
+  min-height: calc(100vh - 5rem);
+  padding-bottom: 2rem;
+  background: var(--course-canvas);
+}
+
+.hero {
+  padding: clamp(1rem, 3vw, 2.5rem) 1rem 0;
+}
+
+.heroArtwork {
+  width: min(100%, 75rem);
+  max-height: min(56vw, 38rem);
+  margin-inline: auto;
+  border: 2px solid var(--course-ink);
+  border-radius: 0.2rem;
+}
+
+.editorialHeader {
+  width: min(100%, 45rem);
+  margin: clamp(2.75rem, 7vw, 5rem) auto 0;
+}
+
+.lessonNumber {
+  margin: 0;
+  color: var(--course-blue-deep);
+  font-size: 0.75rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.editorialHeader h1 {
+  margin: 0.65rem 0 1rem;
+  font-size: clamp(2.6rem, 7vw, 5.5rem);
+  font-weight: 850;
+  letter-spacing: -0.06em;
+  line-height: 0.98;
+}
+
+.subtitle {
+  color: var(--course-ink-muted);
+  font-size: clamp(1.05rem, 2.5vw, 1.35rem);
+  line-height: 1.65;
+}
+
+.objective {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  gap: 1.25rem;
+  margin-top: 2rem;
+  padding: 1.5rem 0;
+  border-block: 2px solid var(--course-yellow);
+}
+
+.objective span {
+  color: var(--course-blue-deep);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.objective p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.65;
+}
+
+.article {
+  width: min(100% - 2rem, 45rem);
+  margin: clamp(3.5rem, 8vw, 6rem) auto 0;
+}
+
+.learningSection {
+  min-width: 0;
+}
+
+.learningSection > h2 {
+  margin: 0 0 1.25rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 820;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.sectionSubtitle {
+  margin: -0.5rem 0 2rem;
+  color: var(--course-ink-muted);
+  font-size: 1.15rem;
+  line-height: 1.7;
+}
+
+.sectionContent {
+  color: var(--course-ink);
+  font-size: 1rem;
+  line-height: 1.78;
+}
+
+.sectionContent :where(p, ul, ol, pre, blockquote, table) {
+  margin-block: 1.25rem;
+}
+
+.sectionContent :where(h3, h4) {
+  margin: 2.5rem 0 0.8rem;
+  font-weight: 780;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.pager {
+  display: grid;
+  width: min(100% - 2rem, 58rem);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: clamp(4rem, 9vw, 7rem) auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--course-line);
+}
+
+.pager button {
+  display: flex;
+  min-height: 4.5rem;
+  align-items: center;
+  gap: 1rem;
+  justify-self: start;
+  padding: 0.65rem 0.8rem;
+  border: 0;
+  background: transparent;
+  color: var(--course-ink);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+  text-align: left;
+}
+
+.pager button:last-of-type {
+  justify-self: end;
+  text-align: right;
+}
+
+.pager button > span:first-child:last-child,
+.pager button > span[aria-hidden='true'] {
+  color: var(--course-blue);
+  font-size: 1.5rem;
+}
+
+.pager small {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--course-ink-muted);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lessonFooter {
+  display: flex;
+  width: min(100% - 2rem, 75rem);
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 4rem auto 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--course-line);
+  color: var(--course-ink-muted);
+  font-size: 0.75rem;
+}
+
+.outlineTrigger {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border: 0;
+  background: transparent;
+  color: var(--course-ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 750;
+}
+
+.menuIcon {
+  display: grid;
+  width: 1.15rem;
+  gap: 0.2rem;
+}
+
+.menuIcon i {
+  display: block;
+  height: 2px;
+  background: currentColor;
+}
+
+.drawerLayer {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+}
+
+.drawerBackdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: rgb(8 16 31 / 0.62);
+  cursor: default;
+}
+
+.drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(100%, 28rem);
+  height: 100%;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background: var(--course-paper);
+  color: var(--course-ink);
+}
+
+.drawer > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--course-line);
+}
+
+.drawer header p {
+  margin: 0 0 0.3rem;
+  color: var(--course-blue-deep);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.drawer header strong {
+  font-size: 1.25rem;
+}
+
+.drawerClose {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid var(--course-line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--course-ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.7rem;
+}
+
+.drawer ol {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.drawer li button {
+  display: grid;
+  width: 100%;
+  min-height: 3.75rem;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.75rem;
+  padding: 0.9rem 0.5rem;
+  border: 0;
+  border-bottom: 1px solid var(--course-line);
+  background: transparent;
+  color: var(--course-ink);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.drawer li button[aria-current='step'] {
+  background: var(--course-blue-soft);
+}
+
+.drawer li button > span {
+  color: var(--course-ink-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+@media (max-width: 34rem) {
+  .hero {
+    padding-inline: 0.625rem;
+  }
+
+  .editorialHeader {
+    padding-inline: 0.4rem;
+  }
+
+  .objective {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .article {
+    width: min(100% - 1.25rem, 45rem);
+  }
+
+  .pager {
+    width: min(100% - 1.25rem, 58rem);
+    grid-template-columns: 1fr;
+  }
+
+  .pager button,
+  .pager button:last-of-type {
+    width: 100%;
+    justify-content: space-between;
+    justify-self: stretch;
+  }
+
+  .lessonFooter {
+    width: min(100% - 1.25rem, 75rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress > span:first-child {
+    transition: none;
+  }
+}
