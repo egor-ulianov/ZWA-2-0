@@ -538,11 +538,6 @@ const slideDefinitions = [
     activityType: 'learn',
     subtitle: 'ZWA-5 • Box model, float, position, display, flex, @media, print',
     presenterNotes: 'Začněte otázkou: kde se v layoutu projeví velikost boxu?',
-  },
-  {
-    id: 'toc',
-    title: 'Obsah',
-    activityType: 'learn',
     bullets: [
       'Box model (padding/border/margin)',
       'Float a clear',

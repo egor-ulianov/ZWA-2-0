@@ -655,11 +655,6 @@ const slideDefinitions = [
     activityType: 'learn',
     subtitle: 'ZWA-4 • Selektory, třídy, odkazy',
     body: 'Krátká praktická hřiště pro procvičení základních selektorů, pseudo-elementů a jednoduchých efektů.',
-  },
-  {
-    id: 'toc',
-    title: 'Obsah',
-    activityType: 'learn',
     bullets: ['Selektory a specifita', 'Třídy a znovupoužitelnost', 'Pseudo-elementy a odkazy'],
   },
   {
@@ -963,7 +958,7 @@ function CssSlideContent({ slide, stepIndex: controlledIndex, onStepIndexChange 
           />
         </div>
       )}
-      {slide.id === 'toc' && (
+      {slide.id === 'title' && (
         <div className="text-xs text-zinc-500 mt-3">
           Studijní materiály:{' '}
           <a

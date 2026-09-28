@@ -21,7 +21,7 @@ function LessonSlideContent({ slide }) {
         </div>
       )}
 
-      {slide.id === 'toc' && <TableOfContents />}
+      {slide.id === 'title' && <TableOfContents />}
       {slide.id === 'theory-terms' && <TheoryTerms />}
       {slide.id === 'theory-methods' && <TheoryMethods />}
       {slide.id === 'theory-passwords' && <TheoryPasswords />}
@@ -541,7 +541,6 @@ export default function AppPhpLesson12() {
         subtitle: 'Autentizace a autorizace v PHP',
         activityType: 'learn',
       },
-      { id: 'toc', title: 'Obsah', activityType: 'learn' },
       { id: 'theory-terms', title: 'Teorie – Pojmy (authn vs authz)', activityType: 'learn' },
       { id: 'theory-methods', title: 'Teorie – Způsoby autentikace', activityType: 'learn' },
       { id: 'theory-passwords', title: 'Teorie – Ukládání hesel', activityType: 'learn' },

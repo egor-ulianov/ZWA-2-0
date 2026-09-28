@@ -34,7 +34,7 @@ function LessonSlideContent({ slide }) {
         </div>
       )}
 
-      {slide.id === 'toc' && (
+      {slide.id === 'title' && (
         <ul className="list-disc pl-6 space-y-2 text-lg">
           <li>1 – Životní cyklus formuláře na serveru</li>
           <li>
@@ -982,7 +982,6 @@ export default function AppPhpLesson9() {
         subtitle: 'Obsluha formulářů, seznam, detail, CRUD',
         activityType: 'learn',
       },
-      { id: 'toc', title: 'Obsah', activityType: 'learn' },
       { id: 'theory-lifecycle', title: 'Teorie – Životní cyklus formuláře', activityType: 'learn' },
       {
         id: 'theory-methods',

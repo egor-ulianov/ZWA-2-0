@@ -21,7 +21,7 @@ function LessonSlideContent({ slide }) {
         </div>
       )}
 
-      {slide.id === 'toc' && (
+      {slide.id === 'title' && (
         <ul className="list-disc pl-6 space-y-2 text-lg">
           <li>1 – Výpis aktuálního data</li>
           <li>2 – Práce s datem (den.měsíc.rok → timestamp → den v týdnu)</li>
@@ -865,7 +865,6 @@ export default function AppPhpLesson8() {
         presenterNotes:
           'Začněte krátkým příkladem data a nechte studenty pojmenovat jednotlivé kroky.',
       },
-      { id: 'toc', title: 'Obsah', activityType: 'learn' },
       {
         id: 'theory',
         title: 'Teorie – PHP rychlý přehled',

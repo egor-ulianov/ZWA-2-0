@@ -21,7 +21,7 @@ function LessonSlideContent({ slide }) {
         </div>
       )}
 
-      {slide.id === 'toc' && <TableOfContents />}
+      {slide.id === 'title' && <TableOfContents />}
       {slide.id === 'theory-basics' && <TheoryBasics />}
       {slide.id === 'theory-cookies-api' && <TheoryCookiesAPI />}
       {slide.id === 'theory-session-lifecycle' && <TheorySessionLifecycle />}
@@ -676,7 +676,6 @@ export default function AppPhpLesson10() {
         subtitle: 'Session a cookies v PHP',
         activityType: 'learn',
       },
-      { id: 'toc', title: 'Obsah', activityType: 'learn' },
       {
         id: 'theory-basics',
         title: 'Teorie – Cookies vs Session, superglobály',

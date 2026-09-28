@@ -21,7 +21,7 @@ function LessonSlideContent({ slide }) {
         </div>
       )}
 
-      {slide.id === 'toc' && <TableOfContents />}
+      {slide.id === 'title' && <TableOfContents />}
       {slide.id === 'theory-files' && <TheoryFilesBasics />}
       {slide.id === 'theory-json' && <TheoryJsonBasics />}
       {slide.id === 'theory-library' && <TheoryUsersLibrary />}
@@ -555,7 +555,6 @@ export default function AppPhpLesson11() {
         subtitle: 'Soubory a JSON v PHP',
         activityType: 'learn',
       },
-      { id: 'toc', title: 'Obsah', activityType: 'learn' },
       { id: 'theory-files', title: 'Teorie – Práce se soubory', activityType: 'learn' },
       { id: 'theory-json', title: 'Teorie – JSON (encode/decode)', activityType: 'learn' },
       {

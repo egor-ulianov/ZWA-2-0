@@ -346,18 +346,6 @@ const slideDefinitions = [
     activityType: 'learn',
     subtitle: 'ZWA-6 • JS: Proměnné, funkce, DOM',
     presenterNotes: 'Začněte krátkou ukázkou události a nechte studenty popsat očekávaný stav DOM.',
-  },
-  {
-    id: 'quiz-css',
-    title: 'KVÍZ: CSS základy',
-    activityType: 'quick-check',
-    presenterNotes: 'Nechte studenty vysvětlit volbu selektoru před vyhodnocením odpovědí.',
-  },
-  { id: 'meme', title: 'Meme', activityType: 'learn' },
-  {
-    id: 'toc',
-    title: 'Obsah',
-    activityType: 'learn',
     bullets: [
       'Přehled jazyka a prostředí',
       'Proměnné, typy a operátory',
@@ -367,6 +355,13 @@ const slideDefinitions = [
       'alert / confirm',
     ],
   },
+  {
+    id: 'quiz-css',
+    title: 'KVÍZ: CSS základy',
+    activityType: 'quick-check',
+    presenterNotes: 'Nechte studenty vysvětlit volbu selektoru před vyhodnocením odpovědí.',
+  },
+  { id: 'meme', title: 'Meme', activityType: 'learn' },
   {
     id: 'theory',
     title: 'Teorie – JS základy',

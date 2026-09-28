@@ -13,6 +13,47 @@ async function expectSelectedOutlineSlide(page, name) {
 }
 
 test.describe('F1 lesson composition and deep links', () => {
+  test('opening slides combine the lesson title with its contents', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    const openingSlides = [
+      { route: '/interactive-zwa-2?slide=title', content: 'Selektory a specifita' },
+      {
+        route: '/interactive-zwa-5-css-ii?slide=title',
+        content: 'Box model (padding/border/margin)',
+      },
+      { route: '/interactive-zwa-5-js?slide=title', content: 'Přehled jazyka a prostředí' },
+      { route: '/interactive-zwa-8-php?slide=title', content: '1 – Výpis aktuálního data' },
+      {
+        route: '/interactive-zwa-9?slide=title',
+        content: '1 – Životní cyklus formuláře na serveru',
+      },
+      {
+        route: '/interactive-zwa-10-sessions-cookies?slide=title',
+        content: '1 – Co jsou cookies a session, superglobály',
+      },
+      {
+        route: '/interactive-zwa-11-files-json?slide=title',
+        content: '1 – Práce se soubory v PHP:',
+      },
+      {
+        route: '/interactive-zwa-12-auth?slide=title',
+        content: '1 – Pojmy: Autentikace vs Autorizace',
+      },
+    ];
+
+    for (const openingSlide of openingSlides) {
+      await page.goto(openingSlide.route);
+      await expect(
+        page.getByRole('navigation', { name: 'Osnova kurzu' }).getByRole('button', {
+          name: 'Obsah',
+          exact: true,
+        }),
+      ).toHaveCount(0);
+      await expect(page.getByText(openingSlide.content, { exact: false })).toBeVisible();
+    }
+  });
+
   test('HTML5 lesson keeps its task deep link and learning objective', async ({ page }) => {
     await installDeterministicNetwork(page);
 
