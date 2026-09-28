@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { projectDomNode } from '../../src/components/lesson/projectorContent.js';
+import { projectDomNode } from '../../src/course-ui/presentation/projectorContent.js';
 
 function text(value) {
   return { nodeType: 3, nodeValue: value };

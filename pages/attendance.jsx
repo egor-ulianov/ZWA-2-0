@@ -1,3 +1,3 @@
-import AttendancePage from '../src/components/teacher/AttendancePage.jsx';
+import AttendanceWorkspace from '../src/course-ui/operations/AttendanceWorkspace.jsx';
 
-export default AttendancePage;
+export default AttendanceWorkspace;

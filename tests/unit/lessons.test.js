@@ -5,11 +5,11 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import * as catalog from '../../src/config/lessons.js';
-import * as navigation from '../../src/components/lesson/navigation.js';
+import * as navigation from '../../src/course-ui/learning/navigation.js';
 
 const root = join(fileURLToPath(new URL('../..', import.meta.url)));
 const catalogPath = join(root, 'src', 'config', 'lessons.js');
-const navigationPath = join(root, 'src', 'components', 'lesson', 'navigation.js');
+const navigationPath = join(root, 'src', 'course-ui', 'learning', 'navigation.js');
 
 function lessonSourcePath(lesson) {
   return join(root, `${lesson.componentKey}.jsx`);
@@ -21,7 +21,7 @@ function loadCatalog() {
 }
 
 function loadNavigation() {
-  assert.ok(existsSync(navigationPath), 'src/components/lesson/navigation.js must exist');
+  assert.ok(existsSync(navigationPath), 'src/course-ui/learning/navigation.js must exist');
   return navigation;
 }
 
@@ -72,22 +72,20 @@ test('lesson catalog lookup helpers reject unknown lessons', () => {
 });
 
 test('slide deep links accept only known query or hash IDs', () => {
-  const { buildSlideUrl, getScrollBehavior, resolveSlideId } = loadNavigation();
+  const { buildSectionUrl, resolveSectionId } = loadNavigation();
   const slides = [{ id: 'title' }, { id: 'tasks' }, { id: 'summary' }];
 
-  assert.equal(resolveSlideId(slides, { search: '?slide=tasks', hash: '' }), 'tasks');
-  assert.equal(resolveSlideId(slides, { search: '', hash: '#summary' }), 'summary');
+  assert.equal(resolveSectionId(slides, { search: '?slide=tasks', hash: '' }), 'tasks');
+  assert.equal(resolveSectionId(slides, { search: '', hash: '#summary' }), 'summary');
   assert.equal(
-    resolveSlideId(slides, { search: '?slide=unknown', hash: '#also-unknown' }),
+    resolveSectionId(slides, { search: '?slide=unknown', hash: '#also-unknown' }),
     'title',
   );
-  assert.equal(resolveSlideId([], { search: '?slide=tasks', hash: '#summary' }), undefined);
+  assert.equal(resolveSectionId([], { search: '?slide=tasks', hash: '#summary' }), undefined);
   assert.equal(
-    buildSlideUrl({ pathname: '/lesson', search: '?mode=student', hash: '#old' }, 'tasks'),
+    buildSectionUrl({ pathname: '/lesson', search: '?mode=student', hash: '#old' }, 'tasks'),
     '/lesson?mode=student&slide=tasks',
   );
-  assert.equal(getScrollBehavior(true), 'auto');
-  assert.equal(getScrollBehavior(false), 'smooth');
 });
 
 test('every catalog route has a checked-in lesson wrapper', () => {

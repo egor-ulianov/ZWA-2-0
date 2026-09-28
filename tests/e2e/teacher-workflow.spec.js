@@ -100,6 +100,8 @@ test('teacher can sign in, edit roster data, and retry a conflicted attendance s
   await login.getByRole('button', { name: 'Login' }).click();
 
   await expect(page.getByRole('heading', { name: 'Attendance & student records' })).toBeVisible();
+  await expect(page.locator('[data-operations-application="true"]')).toBeVisible();
+  await expect(page.locator('[class*="portal-"]')).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Active attendance day' })).toContainText(
     'Present: 1 of 2',
   );

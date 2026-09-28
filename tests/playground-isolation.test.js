@@ -8,32 +8,20 @@ import {
   buildJavascriptDocument,
   buildStaticDocument,
   sandboxPolicy,
-} from '../src/components/playground/documents.js';
-import {
-  buildJavascriptDocument as buildCourseJavascriptDocument,
-  buildStaticDocument as buildCourseStaticDocument,
-  sandboxPolicy as courseSandboxPolicy,
 } from '../src/course-ui/exercises/runtime/documents.js';
 import {
   CHANNEL,
   VERSION,
   validatePlaygroundEvent,
   validatePlaygroundMessage,
-} from '../src/components/playground/protocol.js';
-import {
-  CHANNEL as COURSE_CHANNEL,
-  VERSION as COURSE_VERSION,
-  validatePlaygroundEvent as validateCoursePlaygroundEvent,
-  validatePlaygroundMessage as validateCoursePlaygroundMessage,
 } from '../src/course-ui/exercises/runtime/protocol.js';
-import { validateCssBasics, validateCssLayout } from '../src/components/playground/validators.js';
 import {
-  validateCssBasics as validateCourseCssBasics,
-  validateCssLayout as validateCourseCssLayout,
+  validateCssBasics,
+  validateCssLayout,
 } from '../src/course-ui/exercises/runtime/validators.js';
 
 const root = join(fileURLToPath(new URL('..', import.meta.url)));
-const documentsPath = join(root, 'src/components/playground/documents.js');
+const documentsPath = join(root, 'src/course-ui/exercises/runtime/documents.js');
 const lessonFiles = [
   'interactive_zwa_1_html5_presentation.jsx',
   'interactive_zwa_2_css_presentation.jsx',
@@ -80,9 +68,6 @@ test('sandbox policy never grants student content same-origin, forms, or navigat
   assert.deepEqual(sandboxPolicy('static'), { sandbox: '' });
   assert.deepEqual(sandboxPolicy('inspect'), { sandbox: 'allow-scripts' });
   assert.deepEqual(sandboxPolicy('javascript'), { sandbox: 'allow-scripts' });
-  assert.deepEqual(courseSandboxPolicy('static'), sandboxPolicy('static'));
-  assert.deepEqual(courseSandboxPolicy('inspect'), sandboxPolicy('inspect'));
-  assert.deepEqual(courseSandboxPolicy('javascript'), sandboxPolicy('javascript'));
 });
 
 test('static hostile HTML is framed by a no-script, no-network, no-form CSP', () => {
@@ -113,23 +98,6 @@ test('script sandbox serializes hostile code as inert data before isolated execu
   assert.match(document, /form-action 'none'/);
   assert.doesNotMatch(document, new RegExp(hostilePayload.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.match(document, /\\u003cscript\\u003e/i);
-
-  assert.equal(
-    buildCourseStaticDocument({ html: hostilePayload, css: '' }),
-    buildStaticDocument({
-      html: hostilePayload,
-      css: '',
-    }),
-  );
-  assert.equal(
-    buildCourseJavascriptDocument({
-      code: hostilePayload,
-      dom: hostilePayload,
-      stepIndex: 0,
-      token: 'test-token',
-    }),
-    document,
-  );
 });
 
 test('protocol accepts only bounded messages for the active sandbox token', () => {
@@ -196,28 +164,6 @@ test('protocol accepts only bounded messages for the active sandbox token', () =
       frameWindow,
     ),
     null,
-  );
-
-  const courseBase = {
-    channel: COURSE_CHANNEL,
-    version: COURSE_VERSION,
-    token: 'active-token',
-  };
-  assert.deepEqual(
-    validateCoursePlaygroundMessage({ ...courseBase, type: 'ready' }, 'active-token'),
-    validatePlaygroundMessage({ ...base, type: 'ready' }, 'active-token'),
-  );
-  assert.deepEqual(
-    validateCoursePlaygroundEvent(
-      { source: frameWindow, origin: 'null', data: { ...courseBase, type: 'ready' } },
-      'active-token',
-      frameWindow,
-    ),
-    validatePlaygroundEvent(
-      { source: frameWindow, origin: 'null', data: { ...base, type: 'ready' } },
-      'active-token',
-      frameWindow,
-    ),
   );
 });
 
@@ -309,35 +255,5 @@ test('CSS validators preserve task outcomes from serialized iframe styles', () =
       { ok: true, text: '#site-header používá display:flex' },
       { ok: true, text: '#site-header button má margin-left:auto' },
     ],
-  );
-  assert.deepEqual(
-    validateCourseCssBasics({
-      slideId: 'tasks',
-      stepIndex: 0,
-      inspection,
-      htmlCode: '',
-      cssCode: css,
-    }),
-    validateCssBasics({
-      slideId: 'tasks',
-      stepIndex: 0,
-      inspection,
-      htmlCode: '',
-      cssCode: css,
-    }),
-  );
-  assert.deepEqual(
-    validateCourseCssLayout({
-      stepIndex: 4,
-      inspection,
-      htmlCode: '',
-      cssCode: '#site-header button { margin-left: auto; }',
-    }),
-    validateCssLayout({
-      stepIndex: 4,
-      inspection,
-      htmlCode: '',
-      cssCode: '#site-header button { margin-left: auto; }',
-    }),
   );
 });

@@ -10,6 +10,8 @@ test('teacher sees a guarded grade-normalization workspace', async ({ page }) =>
   await page.goto('/teacher');
 
   await expect(page.getByRole('heading', { name: 'Grade normalization' })).toBeVisible();
+  await expect(page.locator('[data-operations-application="true"]')).toBeVisible();
+  await expect(page.locator('[class*="portal-"]')).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Test 1 normalization' })).toContainText(
     'Dry run before applying changes',
   );

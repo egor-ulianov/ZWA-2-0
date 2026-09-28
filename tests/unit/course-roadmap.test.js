@@ -2,13 +2,15 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { lessons } from '../../src/config/lessons.js';
-import { courseMetadata } from '../../src/components/portal/courseMetadata.js';
+import { getCourseModules } from '../../src/course-ui/course/courseModel.js';
 
-test('course metadata covers each existing lesson in catalogue order', () => {
-  assert.equal(courseMetadata.length, lessons.length);
+test('course modules cover every lesson in catalog order', () => {
+  const modules = getCourseModules();
+  const groupedLessons = modules.flatMap((module) => module.lessons);
+  assert.equal(modules.length, 4);
   assert.deepEqual(
-    courseMetadata.map(({ slug }) => slug),
+    groupedLessons.map(({ slug }) => slug),
     lessons.map(({ slug }) => slug),
   );
-  assert.ok(courseMetadata.every(({ module, focus }) => module && focus));
+  assert.ok(modules.every(({ title, color }) => title && color));
 });

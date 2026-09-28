@@ -68,5 +68,4 @@ test('presenter experience has one purpose-built main region and private notes',
   assert.match(html, /Otevřít projektor/);
   assert.match(html, /data-projector-private="presenter-notes"/);
   assert.match(html, /Začněte významem struktury/);
-  assert.doesNotMatch(html, /portal-panel|portal-action|portal-header/);
 });

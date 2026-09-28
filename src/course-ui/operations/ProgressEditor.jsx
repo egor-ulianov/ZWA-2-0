@@ -5,6 +5,7 @@ import {
   mergeServerState,
   progressPatchForFinalPointsInput,
 } from '../../lib/apiClient.js';
+import styles from './operations.module.css';
 
 const EMPTY_PROGRESS = {
   assignment_task_checked: false,
@@ -64,7 +65,9 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
     const nextServerValue = normalizeProgress(value);
     serverValueRef.current = nextServerValue;
     setDraft((current) => {
-      const next = normalizeProgress(mergeServerState(current, nextServerValue, dirtyFieldsRef.current));
+      const next = normalizeProgress(
+        mergeServerState(current, nextServerValue, dirtyFieldsRef.current),
+      );
       draftRef.current = next;
       return next;
     });
@@ -78,7 +81,9 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
     const patch = { ...pendingRef.current };
     pendingRef.current = {};
     if (!Object.keys(patch).length) return;
-    const patchVersions = Object.fromEntries(Object.keys(patch).map((field) => [field, fieldVersionsRef.current.get(field)]));
+    const patchVersions = Object.fromEntries(
+      Object.keys(patch).map((field) => [field, fieldVersionsRef.current.get(field)]),
+    );
     flushingRef.current = true;
     let failed = false;
     setStatus((current) => ({ ...current, saving: true, error: '' }));
@@ -87,14 +92,18 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
       const savedValue = normalizeProgress(result?.item || { ...serverValueRef.current, ...patch });
       serverValueRef.current = savedValue;
       for (const field of Object.keys(patch)) {
-        if (fieldVersionsRef.current.get(field) === patchVersions[field]
-          && !Object.hasOwn(pendingRef.current, field)) {
+        if (
+          fieldVersionsRef.current.get(field) === patchVersions[field] &&
+          !Object.hasOwn(pendingRef.current, field)
+        ) {
           dirtyFieldsRef.current.delete(field);
           delete failedRef.current[field];
         }
       }
       setDraft((current) => {
-        const next = normalizeProgress(mergeServerState(current, savedValue, dirtyFieldsRef.current));
+        const next = normalizeProgress(
+          mergeServerState(current, savedValue, dirtyFieldsRef.current),
+        );
         draftRef.current = next;
         return next;
       });
@@ -135,7 +144,9 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
 
   function handleFinalPointsBlur() {
     const raw = draftRef.current.assignment_final_points;
-    const patch = progressPatchForFinalPointsInput(raw === null || raw === undefined ? '' : String(raw));
+    const patch = progressPatchForFinalPointsInput(
+      raw === null || raw === undefined ? '' : String(raw),
+    );
     if (!patch) {
       const restored = normalizeProgress(serverValueRef.current).assignment_final_points;
       const next = { ...draftRef.current, assignment_final_points: restored };
@@ -158,13 +169,18 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
       setStatus((current) => ({ ...current, saving: false, accessCode: result.accessCode || '' }));
     } catch (error) {
       if (isAbortError(error)) return;
-      setStatus((current) => ({ ...current, saving: false, error: error.message || 'Unable to generate an access code' }));
+      setStatus((current) => ({
+        ...current,
+        saving: false,
+        error: error.message || 'Unable to generate an access code',
+      }));
     }
   }
 
-  const mailto = status.accessCode && isEmailAddress(username)
-    ? `mailto:${encodeURIComponent(username)}?subject=${encodeURIComponent('ZWA access information')}&body=${encodeURIComponent(`Username: ${username}\nAccess code: ${status.accessCode}\n\nLogin: ${typeof window === 'undefined' ? '/student' : `${window.location.origin}/student`}`)}`
-    : '';
+  const mailto =
+    status.accessCode && isEmailAddress(username)
+      ? `mailto:${encodeURIComponent(username)}?subject=${encodeURIComponent('ZWA access information')}&body=${encodeURIComponent(`Username: ${username}\nAccess code: ${status.accessCode}\n\nLogin: ${typeof window === 'undefined' ? '/student' : `${window.location.origin}/student`}`)}`
+      : '';
   const finalPointsErrorId = `final-points-error-${username.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 
   function retrySave() {
@@ -190,72 +206,131 @@ export default function ProgressEditor({ username, value, onSavePatch }) {
   }
 
   return (
-    <section className="mt-4 space-y-4 border-t border-[var(--portal-border)] pt-4" aria-label={`Progress for ${username}`}>
-      <fieldset className="rounded border border-[var(--portal-border)] p-4">
-        <legend className="px-1 text-sm font-semibold">Assignment checks</legend>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="inline-flex min-h-11 items-center gap-3 text-sm">
-            <input type="checkbox" checked={draft.assignment_task_checked} onChange={(event) => change({ assignment_task_checked: event.target.checked })} />
+    <section className={styles.editorSection} aria-label={`Progress for ${username}`}>
+      <fieldset className={styles.fieldset}>
+        <legend>Assignment checks</legend>
+        <div className={styles.twoColumn}>
+          <label className={styles.checkControl}>
+            <input
+              type="checkbox"
+              checked={draft.assignment_task_checked}
+              onChange={(event) => change({ assignment_task_checked: event.target.checked })}
+            />
             Task checked
           </label>
-          <label className="inline-flex min-h-11 items-center gap-3 text-sm">
-            <input type="checkbox" checked={draft.assignment_midterm_ok} onChange={(event) => change({ assignment_midterm_ok: event.target.checked })} />
+          <label className={styles.checkControl}>
+            <input
+              type="checkbox"
+              checked={draft.assignment_midterm_ok}
+              onChange={(event) => change({ assignment_midterm_ok: event.target.checked })}
+            />
             Mid-term approved
           </label>
         </div>
       </fieldset>
 
-      <fieldset className="grid grid-cols-1 gap-4 rounded border border-[var(--portal-border)] p-4">
-        <legend className="px-1 text-sm font-semibold">Assignment details</legend>
-        <label className="text-sm font-semibold">
+      <fieldset className={styles.fieldset}>
+        <legend>Assignment details</legend>
+        <label className={styles.field}>
           Semestral topic
-          <input className="mt-2 block min-h-11 w-full rounded border border-[var(--portal-border)] bg-[var(--portal-panel)] px-3 py-2 font-normal text-[var(--portal-text)]" value={draft.assignment_topic || ''} onBlur={flush} onChange={(event) => change({ assignment_topic: event.target.value })} />
+          <input
+            value={draft.assignment_topic || ''}
+            onBlur={flush}
+            onChange={(event) => change({ assignment_topic: event.target.value })}
+          />
         </label>
-        <label className="text-sm font-semibold">
+        <label className={styles.field}>
           Partner username
-          <input className="mt-2 block min-h-11 w-full rounded border border-[var(--portal-border)] bg-[var(--portal-panel)] px-3 py-2 font-normal text-[var(--portal-text)]" value={draft.assignment_partner || ''} onBlur={flush} onChange={(event) => change({ assignment_partner: event.target.value })} />
+          <input
+            value={draft.assignment_partner || ''}
+            onBlur={flush}
+            onChange={(event) => change({ assignment_partner: event.target.value })}
+          />
         </label>
-        <label className="text-sm font-semibold">
+        <label className={styles.field}>
           Final points
-          <input className="mt-2 block min-h-11 w-full rounded border border-[var(--portal-border)] bg-[var(--portal-panel)] px-3 py-2 font-normal text-[var(--portal-text)]" type="number" min="0" max="100" step="1" value={draft.assignment_final_points ?? ''} onBlur={handleFinalPointsBlur} onChange={(event) => {
-            const raw = event.target.value;
-            const patch = progressPatchForFinalPointsInput(raw);
-            if (patch) {
-              setFinalPointsError('');
-              change(patch);
-            } else {
-              fieldVersionsRef.current.set(
-                'assignment_final_points',
-                (fieldVersionsRef.current.get('assignment_final_points') || 0) + 1,
-              );
-              delete pendingRef.current.assignment_final_points;
-              delete failedRef.current.assignment_final_points;
-              dirtyFieldsRef.current.delete('assignment_final_points');
-              clearTimeout(timerRef.current);
-              if (!flushingRef.current && Object.keys(pendingRef.current).length) {
-                timerRef.current = setTimeout(flush, 500);
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="1"
+            value={draft.assignment_final_points ?? ''}
+            onBlur={handleFinalPointsBlur}
+            onChange={(event) => {
+              const raw = event.target.value;
+              const patch = progressPatchForFinalPointsInput(raw);
+              if (patch) {
+                setFinalPointsError('');
+                change(patch);
+              } else {
+                fieldVersionsRef.current.set(
+                  'assignment_final_points',
+                  (fieldVersionsRef.current.get('assignment_final_points') || 0) + 1,
+                );
+                delete pendingRef.current.assignment_final_points;
+                delete failedRef.current.assignment_final_points;
+                dirtyFieldsRef.current.delete('assignment_final_points');
+                clearTimeout(timerRef.current);
+                if (!flushingRef.current && Object.keys(pendingRef.current).length) {
+                  timerRef.current = setTimeout(flush, 500);
+                }
+                setDraft((current) => {
+                  const next = { ...current, assignment_final_points: raw };
+                  draftRef.current = next;
+                  return next;
+                });
               }
-              setDraft((current) => {
-                const next = { ...current, assignment_final_points: raw };
-                draftRef.current = next;
-                return next;
-              });
-            }
-          }} aria-invalid={Boolean(finalPointsError)} aria-describedby={finalPointsError ? finalPointsErrorId : undefined} />
-          {finalPointsError ? <p id={finalPointsErrorId} className="mt-2 text-sm text-[var(--portal-coral)]" role="alert">{finalPointsError}</p> : null}
+            }}
+            aria-invalid={Boolean(finalPointsError)}
+            aria-describedby={finalPointsError ? finalPointsErrorId : undefined}
+          />
+          {finalPointsError ? (
+            <p id={finalPointsErrorId} className={styles.error} role="alert">
+              {finalPointsError}
+            </p>
+          ) : null}
         </label>
       </fieldset>
 
-      <fieldset className="rounded border border-[var(--portal-border)] p-4">
-        <legend className="px-1 text-sm font-semibold">Student access</legend>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" className="portal-action portal-secondary-action disabled:cursor-not-allowed disabled:opacity-50" disabled={status.saving} onClick={generateAccessCode}>Generate access code</button>
-          {mailto ? <a className="portal-action" href={mailto}>Email login + code</a> : null}
+      <fieldset className={styles.fieldset}>
+        <legend>Student access</legend>
+        <div className={styles.buttonRow}>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            disabled={status.saving}
+            onClick={generateAccessCode}
+          >
+            Generate access code
+          </button>
+          {mailto ? (
+            <a className={styles.primaryButton} href={mailto}>
+              Email login + code
+            </a>
+          ) : null}
         </div>
-        <p className="mt-3 text-xs text-[var(--portal-text-muted)]" role="status" aria-live="polite">{status.saving ? 'Saving…' : status.accessCode ? 'Access code generated. Copy it now; it will not be shown again.' : 'Changes save automatically.'}</p>
+        <p className={styles.statusLine} role="status" aria-live="polite">
+          {status.saving
+            ? 'Saving…'
+            : status.accessCode
+              ? 'Access code generated. Copy it now; it will not be shown again.'
+              : 'Changes save automatically.'}
+        </p>
       </fieldset>
 
-      {status.error ? <div className="text-sm text-[var(--portal-coral)]" role="alert"><p>{status.error}</p><div className="mt-2 flex flex-wrap gap-3"><button type="button" className="font-semibold underline" onClick={retrySave}>Retry</button><button type="button" className="font-semibold underline" onClick={rollbackChanges}>Roll back</button></div></div> : null}
+      {status.error ? (
+        <div className={styles.error} role="alert">
+          <p>{status.error}</p>
+          <div className={styles.buttonRow}>
+            <button type="button" className={styles.secondaryButton} onClick={retrySave}>
+              Retry
+            </button>
+            <button type="button" className={styles.secondaryButton} onClick={rollbackChanges}>
+              Roll back
+            </button>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

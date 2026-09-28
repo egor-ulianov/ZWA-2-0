@@ -56,5 +56,4 @@ test('student learning experience renders the new editorial hierarchy with one m
   assert.match(html, /Cíl lekce/);
   assert.match(html, /Bezpečný obsah lekce/);
   assert.match(html, /Další: Kostra dokumentu/);
-  assert.doesNotMatch(html, /portal-panel|portal-action|portal-header/);
 });

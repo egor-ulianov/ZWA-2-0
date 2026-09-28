@@ -99,12 +99,12 @@ test('student progress offers retry for ordinary load failures without changing 
   assert.match(source, /loadAttempt/);
   assert.match(source, /setLoadAttempt/);
   assert.match(source, /Retry/);
-  assert.match(source, /isUnauthorized\(e\)/);
+  assert.match(source, /isUnauthorized\((?:e|cause|error)\)/);
   assert.match(source, /window\.location\.replace\('\/student'\)/);
 });
 
 test('attendance CSV file imports guard in-flight reads and report FileReader errors', async () => {
-  const source = await readFile(path.join(root, 'src/components/teacher/AttendancePage.jsx'), 'utf8');
+  const source = await readFile(path.join(root, 'src/course-ui/operations/AttendanceWorkspace.jsx'), 'utf8');
 
   assert.match(source, /fileReaderRef/);
   assert.match(source, /reader\.onerror/);
@@ -112,7 +112,7 @@ test('attendance CSV file imports guard in-flight reads and report FileReader er
 });
 
 test('attendance CSV import bounds files and cancels an active reader on unmount', async () => {
-  const source = await readFile(path.join(root, 'src/components/teacher/AttendancePage.jsx'), 'utf8');
+  const source = await readFile(path.join(root, 'src/course-ui/operations/AttendanceWorkspace.jsx'), 'utf8');
 
   assert.match(source, /MAX_CSV_INPUT_BYTES/);
   assert.match(source, /file\.size > MAX_CSV_INPUT_BYTES/);
@@ -121,7 +121,7 @@ test('attendance CSV import bounds files and cancels an active reader on unmount
 });
 
 test('attendance CSV import clears an older draft when reading or parsing a replacement fails', async () => {
-  const source = await readFile(path.join(root, 'src/components/teacher/AttendancePage.jsx'), 'utf8');
+  const source = await readFile(path.join(root, 'src/course-ui/operations/AttendanceWorkspace.jsx'), 'utf8');
 
   assert.match(source, /function showImportError\(message\)/);
   assert.match(source, /showImportError\(cause\.message/);
@@ -129,7 +129,7 @@ test('attendance CSV import clears an older draft when reading or parsing a repl
 });
 
 test('progress editor validates final points and only creates mailto links for email usernames', async () => {
-  const source = await readFile(path.join(root, 'src/components/teacher/ProgressEditor.jsx'), 'utf8');
+  const source = await readFile(path.join(root, 'src/course-ui/operations/ProgressEditor.jsx'), 'utf8');
 
   assert.match(source, /Final points must be a whole number from 0 to 100/);
   assert.match(source, /isEmailAddress\(username\)/);
@@ -137,7 +137,7 @@ test('progress editor validates final points and only creates mailto links for e
 });
 
 test('progress editor drops a queued final-points patch when the draft becomes invalid', async () => {
-  const source = await readFile(path.join(root, 'src/components/teacher/ProgressEditor.jsx'), 'utf8');
+  const source = await readFile(path.join(root, 'src/course-ui/operations/ProgressEditor.jsx'), 'utf8');
 
   assert.match(source, /delete pendingRef\.current\.assignment_final_points/);
   assert.match(source, /delete failedRef\.current\.assignment_final_points/);

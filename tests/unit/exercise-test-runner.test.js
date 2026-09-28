@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { runExerciseTests } from '../../src/components/exercises/testRunner.js';
+import { runExerciseTests } from '../../src/course-ui/exercises/behavior/testRunner.js';
 import {
   getJavaScriptDefinition,
   semanticHtmlDefinition,
-} from '../../src/components/exercises/testDefinitions.js';
+} from '../../src/course-ui/exercises/behavior/testDefinitions.js';
 
 test('JavaScript definition run returns the exercise result contract itself', () => {
   const definition = getJavaScriptDefinition(0);

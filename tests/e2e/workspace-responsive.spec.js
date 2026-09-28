@@ -147,6 +147,7 @@ test('student sign-in and record stay keyboard accessible and least-privilege at
 
   await page.goto('/student');
   await expect(page.getByRole('main')).toHaveCount(1);
+  await expect(page.locator('[data-operations-application="true"]')).toBeVisible();
   const username = page.getByLabel('Username');
   const code = page.getByLabel('Auth code');
   const signIn = page.getByRole('button', { name: 'Sign in' });
@@ -197,6 +198,7 @@ test('teacher attendance workspace keeps controls keyboard operable at 320px', a
   await loginButton.press('Enter');
 
   await expect(page.getByRole('heading', { name: 'Attendance & student records' })).toBeVisible();
+  await expect(page.locator('[data-operations-application="true"]')).toBeVisible();
   await expect(page.getByRole('main')).toHaveCount(1);
   await expectNoHorizontalOverflow(page);
 

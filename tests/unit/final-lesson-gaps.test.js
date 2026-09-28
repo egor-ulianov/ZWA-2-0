@@ -15,13 +15,12 @@ test('catalog metadata uses Czech titles while preserving stable route identifie
 
 test('shared catalog chrome and module metadata are Czech', async () => {
   const [frame, roadmap, metadata] = await Promise.all([
-    readFile(`${root}/src/components/portal/PortalFrame.jsx`, 'utf8'),
-    readFile(`${root}/src/components/portal/CourseRoadmap.jsx`, 'utf8'),
-    readFile(`${root}/src/components/portal/courseMetadata.js`, 'utf8'),
+    readFile(`${root}/src/course-ui/foundation/CourseMasthead.jsx`, 'utf8'),
+    readFile(`${root}/src/course-ui/course/CourseOverview.jsx`, 'utf8'),
+    readFile(`${root}/src/course-ui/course/courseModel.js`, 'utf8'),
   ]);
-  assert.match(frame, /ZWA · Webové aplikace/);
-  assert.match(roadmap, /Katalog kurzu/);
-  assert.match(roadmap, /Otevřít lekci/);
+  assert.match(frame, /ZWA/);
+  assert.match(roadmap, /Kurz · 12 lekcí/);
   assert.match(metadata, /Základy webu/);
   assert.doesNotMatch(roadmap, /Course catalogue|Course roadmap|Open lesson/);
   assert.doesNotMatch(
@@ -31,14 +30,14 @@ test('shared catalog chrome and module metadata are Czech', async () => {
 });
 
 test('sandbox runtime results expose Czech user-facing messages', async () => {
-  const source = await readFile(`${root}/src/components/playground/documents.js`, 'utf8');
+  const source = await readFile(`${root}/src/course-ui/exercises/runtime/documents.js`, 'utf8');
   assert.match(source, /Kód byl spuštěn/);
   assert.match(source, /Chyba běhu:/);
   assert.doesNotMatch(source, /Code executed|Runtime error:|Validation error:/);
 });
 
 test('CSS validator results use Czech user-facing messages', async () => {
-  const source = await readFile(`${root}/src/components/playground/validators.js`, 'utf8');
+  const source = await readFile(`${root}/src/course-ui/exercises/runtime/validators.js`, 'utf8');
   assert.match(source, /Úloha 1:/);
   assert.doesNotMatch(source, /Task:|has some box model styling|present/);
 });

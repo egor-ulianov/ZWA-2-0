@@ -4,7 +4,7 @@ import test from 'node:test';
 import {
   MAX_STATIC_SOURCE_LENGTH,
   runStaticTaskChecks,
-} from '../../src/components/exercises/staticTaskChecks.js';
+} from '../../src/course-ui/exercises/behavior/staticTaskChecks.js';
 
 test('static task checks inspect bounded source without evaluating it', () => {
   const results = runStaticTaskChecks(

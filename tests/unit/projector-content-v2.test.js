@@ -84,5 +84,4 @@ test('projector experience renders one clean main landmark without private desce
   assert.doesNotMatch(html, /Soukromá odpověď/);
   assert.match(html, /Předchozí snímek/);
   assert.match(html, /Následující snímek/);
-  assert.doesNotMatch(html, /portal-panel|portal-action|portal-header/);
 });

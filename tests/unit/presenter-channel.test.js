@@ -4,8 +4,8 @@ import test from 'node:test';
 import {
   createPresenterChannel,
   parsePresenterMessage,
-} from '../../src/components/lesson/presenterChannel.js';
-import { resolveLessonMode } from '../../src/components/lesson/navigation.js';
+} from '../../src/course-ui/presentation/presenterChannel.js';
+import { resolveExperienceMode } from '../../src/course-ui/learning/navigation.js';
 
 const slides = [{ id: 'intro' }, { id: 'html' }];
 
@@ -29,10 +29,10 @@ test('presenter messages ignore malformed, foreign, and unknown slide ids', () =
 });
 
 test('lesson mode accepts only student, projector, and presenter', () => {
-  assert.equal(resolveLessonMode({ search: '?mode=projector' }), 'projector');
-  assert.equal(resolveLessonMode({ search: '?mode=presenter' }), 'presenter');
-  assert.equal(resolveLessonMode({ search: '?mode=admin' }), 'student');
-  assert.equal(resolveLessonMode({ search: '' }), 'student');
+  assert.equal(resolveExperienceMode({ search: '?mode=projector' }), 'projector');
+  assert.equal(resolveExperienceMode({ search: '?mode=presenter' }), 'presenter');
+  assert.equal(resolveExperienceMode({ search: '?mode=admin' }), 'student');
+  assert.equal(resolveExperienceMode({ search: '' }), 'student');
 });
 
 test('presenter channel publishes only known slide ids and closes cleanly', () => {

@@ -68,12 +68,15 @@ test('student login reaches progress and renders only least-privilege grade fiel
   );
 
   await page.goto('/student');
+  await expect(page.locator('[data-operations-application="true"]')).toBeVisible();
+  await expect(page.locator('[class*="portal-"]')).toHaveCount(0);
   await page.getByLabel('Username').fill('alice');
   await page.getByLabel('Auth code').fill('ABC123');
   await page.getByRole('button', { name: 'Sign in' }).click();
 
   await expect(page).toHaveURL(/\/student\/progress\/?$/);
   await expect(page.getByRole('heading', { name: 'Your study record' })).toBeVisible();
+  await expect(page.locator('[data-operations-application="true"]')).toBeVisible();
   await expect(page.getByRole('region', { name: 'At a glance' })).toContainText(
     '1 attendance record',
   );
