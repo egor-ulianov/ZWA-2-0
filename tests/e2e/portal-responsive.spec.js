@@ -4,6 +4,26 @@ const { expect, test } = createRequire(import.meta.url)('@playwright/test');
 import { installDeterministicNetwork } from './helpers/browser.js';
 
 test.describe('responsive portal and projector views', () => {
+  test('course overview has no horizontal overflow from mobile through desktop', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+
+    for (const viewport of [
+      { width: 320, height: 720 },
+      { width: 1440, height: 900 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto('/');
+      await expect(page.getByRole('main')).toBeVisible();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        ),
+      ).toBe(true);
+    }
+  });
+
   test('student lesson has no horizontal overflow at 320 pixels', async ({ page }) => {
     await installDeterministicNetwork(page);
 

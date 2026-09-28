@@ -1,10 +1,13 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 import { LectureIllustration } from '../art/LectureIllustration.jsx';
 import { projectDomChildren, projectReactChildren } from './projectorContent.js';
 import styles from './presentation.module.css';
 
 const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 export function ProjectorExperience({ lesson, sections = [], activeSection, onChange, children }) {
   const activeIndex = Math.max(
@@ -17,13 +20,21 @@ export function ProjectorExperience({ lesson, sections = [], activeSection, onCh
   const reactProjection = projectReactChildren(children);
   const [domProjection, setDomProjection] = useState([]);
   const [capturedSection, setCapturedSection] = useState(null);
+  const domCaptureReady = useSyncExternalStore(
+    emptySubscribe,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
   const sourceRef = useRef(null);
-  const needsDomProjection = reactProjection.length === 0 && capturedSection !== active?.id;
-  const projectedContent = reactProjection.length > 0 ? reactProjection : domProjection;
+  const hasDomProjection = domCaptureReady && capturedSection === active?.id;
+  const needsDomProjection = domCaptureReady && !hasDomProjection;
+  const projectedContent = hasDomProjection ? domProjection : reactProjection;
 
   useClientLayoutEffect(() => {
     if (!needsDomProjection || !sourceRef.current) return;
-    setDomProjection(projectDomChildren(sourceRef.current));
+    const labelledSection = sourceRef.current.querySelector(':scope > section[aria-labelledby]');
+    const lessonContent = labelledSection?.lastElementChild;
+    setDomProjection(projectDomChildren(lessonContent || sourceRef.current));
     setCapturedSection(active?.id || null);
   }, [active?.id, needsDomProjection]);
 

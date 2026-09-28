@@ -247,3 +247,19 @@ test('teacher attendance workspace keeps controls keyboard operable at 320px', a
   await dryRun.press('Enter');
   await expect(page.getByRole('button', { name: 'Apply normalization for Test 1' })).toBeEnabled();
 });
+
+test('operations surfaces keep their editorial measure without desktop overflow', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await installStudentFixtures(page);
+
+  await page.goto('/student/progress');
+  await expect(page.getByRole('heading', { name: 'Your study record' })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await installTeacherFixtures(page);
+  await page.goto('/teacher');
+  await expect(page.getByRole('form', { name: 'Teacher login' })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});

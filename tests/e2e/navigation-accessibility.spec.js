@@ -140,16 +140,10 @@ test.describe('public catalog and lesson navigation', () => {
       expect(response.ok()).toBe(true);
       await expect(page.locator('h1').first()).toBeVisible();
 
-      if (lesson.number === 1) {
-        await page.getByRole('button', { name: 'Osnova lekce' }).click();
-      }
-      const navigation =
-        lesson.number === 1
-          ? page.getByRole('dialog', { name: 'Osnova lekce' })
-          : page.getByRole('navigation', { name: 'Osnova kurzu' });
-      const slideButtons = navigation.getByRole('button');
-      const navigableButtons =
-        lesson.number === 1 ? slideButtons.filter({ hasNotText: '×' }) : slideButtons;
+      const outlineTrigger = page.getByRole('button', { name: 'Osnova lekce' });
+      await outlineTrigger.click();
+      const navigation = page.getByRole('dialog', { name: 'Osnova lekce' });
+      const navigableButtons = navigation.locator('ol button');
       const slideCount = await navigableButtons.count();
       expect(slideCount).toBeGreaterThan(1);
       await expect(page.getByRole('tablist')).toHaveCount(0);
@@ -157,11 +151,11 @@ test.describe('public catalog and lesson navigation', () => {
       const activeSlide = navigation.locator('button[aria-current="step"]');
       await expect(activeSlide).toHaveCount(1);
       await navigableButtons.nth(1).click();
-      if (lesson.number === 1) {
-        await expect(page).toHaveURL(/slide=/);
-      } else {
-        await expect(slideButtons.nth(1)).toHaveAttribute('aria-current', 'step');
-      }
+      await expect(page).toHaveURL(/slide=/);
+      await outlineTrigger.click();
+      await expect(
+        page.getByRole('dialog', { name: 'Osnova lekce' }).locator('ol button').nth(1),
+      ).toHaveAttribute('aria-current', 'step');
     });
   }
 });

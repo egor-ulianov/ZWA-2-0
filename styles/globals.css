@@ -8,4 +8,9 @@
     background: var(--course-canvas);
     color: var(--course-ink);
   }
+
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid var(--course-blue);
+    outline-offset: 3px;
+  }
 }

@@ -38,11 +38,19 @@ test.describe('lesson projector and presenter modes', () => {
     ).toHaveCount(0);
   });
 
+  test('projector expands teaching content passed through lesson components', async ({ page }) => {
+    await installDeterministicNetwork(page);
+
+    await page.goto('/interactive-zwa-1-html5?mode=projector&slide=sections');
+    await expect(page.getByText(/HTML nabízí širokou škálu základních prvků/).last()).toBeVisible();
+    await expect(page.getByText(/Minimální HTML5 dokument začíná doctype/).last()).toBeVisible();
+  });
+
   test('projector keeps CSS teaching text without editor mirrors or controls', async ({ page }) => {
     await installDeterministicNetwork(page);
 
     await page.goto('/interactive-zwa-2?mode=projector&slide=linking');
-    await expect(page.getByText(/Vytvořte link na stylopis/)).toBeVisible();
+    await expect(page.getByText(/Toto je výuková simulace pro procvičení CSS/)).toBeVisible();
     await expect(page.locator('[data-projector-private]')).toHaveCount(0);
     await expect(
       page.locator(
