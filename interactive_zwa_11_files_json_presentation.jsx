@@ -4,6 +4,7 @@ import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
+import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -25,13 +26,16 @@ function LessonSlideContent({ slide }) {
   return (
     <>
       {slide.id === 'title' && (
-        <div className="mt-2 text-zinc-600 dark:text-zinc-400">
-          <div>Autor: Bc. Egor Ulianov</div>
-          <div>Datum: 3. 12. 2025</div>
-        </div>
+        <LessonSummary
+          intro="Postavíme malou datovou vrstvu nad JSON souborem a doplníme ji o bezpečný zápis i stránkování výsledků."
+          items={[
+            'Načteme a zapíšeme soubor pomocí PHP funkcí pro file I/O.',
+            'Převedeme data mezi JSONem a asociativním polem.',
+            'Zapouzdříme práci s uživateli do znovupoužitelné knihovny.',
+            'Přidáme stránkování pomocí parametrů limit a offset.',
+          ]}
+        />
       )}
-
-      {slide.id === 'title' && <TableOfContents />}
       {slide.id === 'theory-files' && <TheoryFilesBasics />}
       {slide.id === 'theory-json' && <TheoryJsonBasics />}
       {slide.id === 'theory-library' && <TheoryUsersLibrary />}
@@ -47,27 +51,6 @@ function LessonSlideContent({ slide }) {
 
 function StaticLessonTask(props) {
   return <StaticExercise {...props} fileName="users.lib.php" language="php" />;
-}
-
-function TableOfContents() {
-  return (
-    <ul className="list-disc pl-6 space-y-2 text-lg">
-      <li>
-        1 – Práce se soubory v PHP: <Code>file_get_contents</Code>, <Code>file_put_contents</Code>
-      </li>
-      <li>
-        2 – JSON v PHP: <Code>json_decode</Code> (assoc=<Code>true</Code>), <Code>json_encode</Code>
-      </li>
-      <li>
-        3 – Knihovna uživatelů nad souborem <Code>users.json</Code>
-      </li>
-      <li>
-        4 – Stránkování: parametry <Code>limit</Code> a <Code>offset</Code>
-      </li>
-      <li>5 – Úkoly a řešení</li>
-      <li>6 – Shrnutí a odkazy</li>
-    </ul>
-  );
 }
 
 function TheoryFilesBasics() {
@@ -538,7 +521,7 @@ export default function AppPhpLesson11() {
       title="ZWA-11: Soubory a JSON v PHP"
       objective="Použijete PHP pro bezpečnou práci se soubory, JSON daty a stránkovaným úložištěm uživatelů."
       subtitle="Interaktivní prezentace podle cvičení 11 s ukázkami kódu"
-      footerText="© 2025 ZWA – Cvičení 11: Soubory a JSON"
+      footerText="ZWA – Cvičení 11: Soubory a JSON"
     >
       <LearningSection section={current} idPrefix="lesson-files-json">
         <LessonSlideContent slide={current} />

@@ -1,12 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import lenin1 from './src/interactive-zwa-7/lenin1.png';
-import lenin2 from './src/interactive-zwa-7/lenin2.png';
-import lenin3 from './src/interactive-zwa-7/lenin3.png';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
+import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
@@ -190,15 +188,18 @@ function LessonSlideContent({ slide, password, setPassword, isWeakPassword }) {
   return (
     <>
       {slide.id === 'title' && (
-        <div className="mt-6 text-zinc-600 dark:text-zinc-400">
-          <div>Autor: Bc. Egor Ulianov</div>
-          <div>Datum: 5. 11. 2025</div>
-        </div>
+        <LessonSummary
+          intro="Propojíme objektový model JavaScriptu s načítáním dat ze serveru bez obnovení celé stránky."
+          items={[
+            'Vysvětlíme objekty, prototypy, třídy a zapouzdření.',
+            'Vytvoříme instance, metody a soukromá pole.',
+            'Projdeme životní cyklus asynchronního HTTP požadavku.',
+            'Načteme a zpracujeme data pomocí fetch a async/await.',
+          ]}
+        />
       )}
 
       {slide.id === 'quiz' && <QuizSection />}
-
-      {slide.id === 'intro' && <IntroSlide />}
 
       {slide.id === 'oop-theory' && <OopTheorySlide />}
 
@@ -218,48 +219,6 @@ function LessonSlideContent({ slide, password, setPassword, isWeakPassword }) {
 
       {slide.id === 'summary' && <SummarySlide />}
     </>
-  );
-}
-
-function IntroSlide() {
-  return (
-    <div>
-      <h3 className="text-2xl font-bold mb-4">Jak JS zabil Lenina?</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-        <img
-          src={lenin1.src}
-          alt="Lenin meme 1"
-          className="rounded-lg border border-zinc-200 dark:border-zinc-800"
-        />
-        <img
-          src={lenin2.src}
-          alt="Lenin meme 2"
-          className="rounded-lg border border-zinc-200 dark:border-zinc-800"
-        />
-        <img
-          src={lenin3.src}
-          alt="Lenin meme 3"
-          className="rounded-lg border border-zinc-200 dark:border-zinc-800"
-        />
-      </div>
-      <ul className="list-disc pl-6 space-y-2 mb-6 text-lg">
-        <li>JavaScript je vlastněn společností Oracle (kapitalisté)</li>
-        <li>V JavaScriptu můžete definovat různé třídy</li>
-        <li>V JavaScriptu můžete definovat soukromé vlastnosti</li>
-      </ul>
-      <div className="rounded-xl bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 p-6">
-        <h4 className="font-semibold text-lg mb-3">Cíle dnešního cvičení:</h4>
-        <ul className="list-disc pl-6 space-y-2 text-lg">
-          <li>Třídy (objekty, prototypy)</li>
-          <li>AJAX</li>
-        </ul>
-      </div>
-      <p className="mt-6 text-zinc-700 dark:text-zinc-300 leading-relaxed text-lg">
-        <strong>Třídy</strong> nám pomáhají strukturovat data a logiku do přehledných celků.
-        <strong> AJAX</strong> umožňuje načítat data ze serveru bez reloadu celé stránky, což je
-        základ moderních webových aplikací.
-      </p>
-    </div>
   );
 }
 
@@ -1293,7 +1252,6 @@ export default function AppJsLesson7() {
         activityType: 'quick-check',
         presenterNotes: 'Nechte studenty zdůvodnit odpověď na rozdíl mezi for...in a for...of.',
       },
-      { id: 'intro', title: 'Úvod', activityType: 'learn' },
       {
         id: 'oop-theory',
         title: 'Teorie OOP',
@@ -1340,7 +1298,7 @@ export default function AppJsLesson7() {
       title="ZWA-7: Třídy a AJAX"
       objective="Vysvětlíte základy tříd v JavaScriptu a AJAXu a procvičíte práci s asynchronními požadavky."
       subtitle="Interaktivní prezentace s příklady kódu a úkoly"
-      footerText="© 2025 ZWA – Cvičení 7: Třídy a AJAX"
+      footerText="ZWA – Cvičení 7: Třídy a AJAX"
     >
       <LearningSection section={currentSlide} idPrefix="lesson-classes-ajax">
         <LessonSlideContent

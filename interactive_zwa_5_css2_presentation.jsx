@@ -11,6 +11,7 @@ import React, {
 } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
+import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
@@ -662,7 +663,18 @@ function Css2SlideContent({ slide }) {
 
   return (
     <>
-      {slide.bullets && (
+      {slide.id === 'title' && (
+        <LessonSummary
+          intro="Navážeme na základy CSS a zaměříme se na to, jak prvky zabírají prostor a reagují na různé obrazovky."
+          items={[
+            'Rozložíme rozměry prvku pomocí box modelu.',
+            'Porovnáme normální tok, float, position a display.',
+            'Postavíme pružné řádky a sloupce pomocí Flexboxu.',
+            'Přizpůsobíme layout obrazovce i tisku pomocí media queries.',
+          ]}
+        />
+      )}
+      {slide.id !== 'title' && slide.bullets && (
         <ul className="list-disc pl-6 space-y-1 mt-2">
           {slide.bullets.map((b, i) => (
             <li key={i}>{b}</li>
@@ -827,7 +839,7 @@ export default function AppCss2Lesson() {
           .
         </>
       }
-      footerText="© 2025 ZWA – Interaktivní lekce CSS II"
+      footerText="ZWA – Interaktivní lekce CSS II"
     >
       <LearningSection section={current} idPrefix="lesson-css-ii">
         {hasTasks ? (

@@ -4,6 +4,7 @@ import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
+import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -25,13 +26,16 @@ function LessonSlideContent({ slide }) {
   return (
     <>
       {slide.id === 'title' && (
-        <div className="mt-2 text-zinc-600 dark:text-zinc-400">
-          <div>Autor: Bc. Egor Ulianov</div>
-          <div>Datum: 26. 11. 2025</div>
-        </div>
+        <LessonSummary
+          intro="Porovnáme stav uložený v prohlížeči a na serveru a navrhneme bezpečný životní cyklus uživatelské session."
+          items={[
+            'Rozlišíme cookies, session a jejich PHP superglobály.',
+            'Nastavíme vznik, platnost a mazání cookie.',
+            'Projdeme session ID, ukládání dat a ukončení session.',
+            'Ošetříme HttpOnly, Secure, SameSite, fixation a hijacking.',
+          ]}
+        />
       )}
-
-      {slide.id === 'title' && <TableOfContents />}
       {slide.id === 'theory-basics' && <TheoryBasics />}
       {slide.id === 'theory-cookies-api' && <TheoryCookiesAPI />}
       {slide.id === 'theory-session-lifecycle' && <TheorySessionLifecycle />}
@@ -48,24 +52,6 @@ function LessonSlideContent({ slide }) {
 
 function StaticLessonTask(props) {
   return <StaticExercise {...props} fileName="sessions.php" language="php" />;
-}
-
-function TableOfContents() {
-  return (
-    <ul className="list-disc pl-6 space-y-2 text-lg">
-      <li>1 – Co jsou cookies a session, superglobály</li>
-      <li>
-        2 – Cookies API v PHP: <Code>setcookie()</Code>, atributy, mazání
-      </li>
-      <li>
-        3 – Session: <Code>session_start()</Code>, ID, uložení, lifecycle
-      </li>
-      <li>4 – Bezpečnost: HttpOnly, Secure, SameSite, fixation, hijacking</li>
-      <li>5 – Praktické vzory: login, flash zprávy, remember‑me</li>
-      <li>6 – Úkoly s řešeními</li>
-      <li>7 – Shrnutí a odkazy</li>
-    </ul>
-  );
 }
 
 function TheoryBasics() {
@@ -668,7 +654,7 @@ export default function AppPhpLesson10() {
       title="ZWA-10: Session a cookies v PHP"
       objective="Vysvětlíte cookies a session v PHP a použijete jejich bezpečnostní atributy v praktických vzorech."
       subtitle="Interaktivní prezentace o cookies, session a bezpečnosti"
-      footerText="© 2025 ZWA – Cvičení 10: Session a cookies"
+      footerText="ZWA – Cvičení 10: Session a cookies"
     >
       <LearningSection section={current} idPrefix="lesson-sessions-cookies">
         <LessonSlideContent slide={current} />

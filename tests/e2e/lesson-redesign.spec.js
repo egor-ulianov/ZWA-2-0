@@ -99,28 +99,28 @@ test.describe('F1 lesson composition and deep links', () => {
     await installDeterministicNetwork(page);
 
     const openingSlides = [
-      { route: '/interactive-zwa-2?slide=title', content: 'Selektory a specifita' },
+      { route: '/interactive-zwa-2?slide=title', content: 'základní selektory' },
       {
         route: '/interactive-zwa-5-css-ii?slide=title',
-        content: 'Box model (padding/border/margin)',
+        content: 'box modelu',
       },
-      { route: '/interactive-zwa-5-js?slide=title', content: 'Přehled jazyka a prostředí' },
-      { route: '/interactive-zwa-8-php?slide=title', content: '1 – Výpis aktuálního data' },
+      { route: '/interactive-zwa-5-js?slide=title', content: 'proměnné, typy' },
+      { route: '/interactive-zwa-8-php?slide=title', content: 'datum mezi řetězcem' },
       {
         route: '/interactive-zwa-9?slide=title',
-        content: '1 – Životní cyklus formuláře na serveru',
+        content: 'GET a POST',
       },
       {
         route: '/interactive-zwa-10-sessions-cookies?slide=title',
-        content: '1 – Co jsou cookies a session, superglobály',
+        content: 'cookies, session',
       },
       {
         route: '/interactive-zwa-11-files-json?slide=title',
-        content: '1 – Práce se soubory v PHP:',
+        content: 'soubor pomocí PHP',
       },
       {
         route: '/interactive-zwa-12-auth?slide=title',
-        content: '1 – Pojmy: Autentikace vs Autorizace',
+        content: 'autentizaci, autorizaci',
       },
     ];
 
@@ -132,7 +132,11 @@ test.describe('F1 lesson composition and deep links', () => {
           exact: true,
         }),
       ).toHaveCount(0);
-      await expect(page.getByText(openingSlide.content, { exact: false })).toBeVisible();
+      await expect(
+        page
+          .locator('[data-lesson-summary="true"]')
+          .getByText(openingSlide.content, { exact: false }),
+      ).toBeVisible();
     }
   });
 

@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import portraitImg from './src/interactive-zwa-1/assets/portrait.png';
 import discordLogo from './src/interactive-zwa-1/assets/discord-logo.png';
 import telegramQr from './src/interactive-zwa-1/assets/telegram-qr.png';
-import semestralMeme from './src/interactive-zwa-1/assets/semestral-meme.png';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
+import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
@@ -391,20 +390,12 @@ const sections = [
     id: 'title',
     title: 'Základy webových aplikací – 3. cvičení',
     activityType: 'learn',
-    subtitle: 'FEL ČVUT, DCGI – 8. 10. 2025',
-    body: `Bc. Egor Ulianov`,
   },
   {
     id: 'quiz-html',
     title: 'KVÍZ: HTML základy',
     activityType: 'quick-check',
     body: `Krátký kvíz k opakování základů HTML5 (elementy, atributy, formuláře a sémantika).`,
-  },
-  {
-    id: 'about-me',
-    title: 'KDO JSEM JÁ?',
-    activityType: 'learn',
-    body: `Jazyky: Čeština, Angličtina, Ruština\nZkušenost: 2019–2025 Misterine (Fullstack), 2025–… DEVEON.ai (Leading SE)\nStudium: OI FEL ČVUT (Bc.), MFF UK (Mgr.)\nCvičící ZWA na FEL ČVUT\nOblasti: Angular, NestJS, NodeJS, .NET, Architektura, Unity, AR, Počítačové vidění`,
   },
   {
     id: 'about-course',
@@ -563,24 +554,20 @@ function LessonSlideContent({ slide, commandLog }) {
   const currentStep = hasSteps ? slide.steps[stepIndex] : null;
   return (
     <>
+      {slide.id === 'title' && (
+        <LessonSummary
+          intro="Rozložíme načtení webu na jednotlivé síťové kroky a každý z nich si ověříme diagnostickým příkazem."
+          items={[
+            'Zopakujeme, jak DNS převádí jméno na IP adresu.',
+            'Projdeme adresaci, směrování a cestu paketů sítí.',
+            'Propojíme TCP a TLS s průběhem HTTP požadavku.',
+            'Vyzkoušíme nslookup, ipconfig, ping, tracert a telnet v simulovaném terminálu.',
+          ]}
+        />
+      )}
       {slide.body && !hasSections && (
-        <div
-          className={
-            slide.id === 'about-me'
-              ? 'grid grid-cols-1 sm:grid-cols-[1fr,180px] gap-4 items-start'
-              : undefined
-          }
-        >
+        <div>
           <pre className="whitespace-pre-wrap leading-relaxed">{slide.body}</pre>
-          {slide.id === 'about-me' && (
-            <div className="justify-self-end">
-              <img
-                src={portraitImg.src}
-                alt="Bc. Egor Ulianov"
-                className="h-40 w-40 rounded-2xl object-contain bg-white/80 dark:bg-zinc-900 p-1 ring-2 ring-white/70 dark:ring-zinc-800 shadow"
-              />
-            </div>
-          )}
         </div>
       )}
       {slide.id === 'theory' && (
@@ -652,15 +639,6 @@ function LessonSlideContent({ slide, commandLog }) {
               Další
             </button>
           </div>
-        </div>
-      )}
-      {slide.id === 'tips' && (
-        <div className="mt-4 rounded-xl overflow-hidden border border-zinc-200/60 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40">
-          <img
-            src={semestralMeme.src}
-            alt="Semestrální meme"
-            className="w-full max-h-80 object-contain bg-white dark:bg-zinc-900 p-2"
-          />
         </div>
       )}
       {slide.id === 'extras' && (
@@ -986,7 +964,7 @@ export default function App() {
       title="ZWA-1: Interaktivní webová prezentace"
       objective="Vysvětlíte cestu požadavku od DNS přes TCP až po HTTP a procvičíte diagnostické příkazy v simulovaném terminálu."
       subtitle="Síťové základy a bezpečný simulovaný Linux terminál"
-      footerText="© 2025 ZWA – Interaktivní výuková ukázka (Egor Ulianov)"
+      footerText="ZWA – Interaktivní výuková ukázka"
     >
       <LearningSection section={current} idPrefix="lesson-network">
         <LessonSlideContent slide={current} commandLog={commandLogs[activeNetworkTask?.id] || []} />

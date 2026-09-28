@@ -9,10 +9,9 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import heroImg from './src/interactive-zwa-1/assets/semestral-meme.png';
-import memeImg from './src/interactive-zwa-2/assets/image.png';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
+import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
@@ -93,7 +92,6 @@ function highlightHtml(source) {
 
 // Task templates provider (HTML/CSS per slide + step)
 function getTaskTemplates(slideId, stepIndex) {
-  const heroSrc = heroImg?.src || '';
   // Base HTML used for CSS tasks
   const baseHtml = `
 <!-- CSS úlohy: NEUPRAVUJTE HTML; pracujte v záložce CSS. Místa k vyplnění jsou označena komentářem "TODO". -->
@@ -109,9 +107,6 @@ function getTaskTemplates(slideId, stepIndex) {
 </header>
 
 <main>
-  <section class="hero" style="margin: 12px 0;">
-    <img src="${heroSrc}" alt="Hero" style="max-width: 100%; border-radius: 12px; border: 1px solid #e5e7eb;" />
-  </section>
   <article>
     <p class="excerpt">V tomto úryvku si vyzkoušíte práci s pseudo-elementem první písmeno. Cílem je zvětšit první písmeno a odlišit ho pozadím.</p>
   </article>
@@ -690,12 +685,6 @@ const slideDefinitions = [
     ],
   },
   {
-    id: 'meme',
-    title: 'CSS Meme',
-    activityType: 'learn',
-    body: 'Krátké odlehčení: proč CSS patří ke každému webu.',
-  },
-  {
     id: 'linking',
     title: 'Propojení HTML a CSS',
     activityType: 'build',
@@ -827,7 +816,18 @@ function CssSlideContent({ slide, stepIndex: controlledIndex, onStepIndexChange 
   const currentStep = hasSteps ? slide.steps[stepIndex] : null;
   return (
     <>
-      {slide.body && !hasSections && !hasSteps && (
+      {slide.id === 'title' && (
+        <LessonSummary
+          intro="Na malých příkladech si ukážeme, jak prohlížeč vybírá pravidla a jak CSS propojit s HTML."
+          items={[
+            'Rozlišíme základní selektory, kombinátory a jejich specifitu.',
+            'Vysvětlíme kaskádu, dědičnost a bezpečné přepisování pravidel.',
+            'Propojíme externí stylopis s HTML dokumentem.',
+            'Procvičíme třídy, pseudo-třídy, pseudo-elementy a stavy odkazů.',
+          ]}
+        />
+      )}
+      {slide.id !== 'title' && slide.body && !hasSections && !hasSteps && (
         <div>
           <p className="leading-relaxed">{slide.body}</p>
         </div>
@@ -837,7 +837,7 @@ function CssSlideContent({ slide, stepIndex: controlledIndex, onStepIndexChange 
           <QuizCssBasics />
         </div>
       )}
-      {slide.bullets && !hasSections && !hasSteps && (
+      {slide.id !== 'title' && slide.bullets && !hasSections && !hasSteps && (
         <ul className="list-disc pl-6 space-y-1 mt-2">
           {slide.bullets.map((b, i) => (
             <li key={i}>{b}</li>
@@ -895,15 +895,6 @@ function CssSlideContent({ slide, stepIndex: controlledIndex, onStepIndexChange 
           </div>
         </div>
       )}
-      {slide.id === 'meme' && (
-        <div className="mt-3 rounded-xl overflow-hidden border border-zinc-200/60 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40">
-          <img
-            src={memeImg.src}
-            alt="CSS meme"
-            className="w-full max-h-[420px] object-contain bg-white dark:bg-zinc-900"
-          />
-        </div>
-      )}
       {slide.id === 'title' && (
         <div className="text-xs text-zinc-500 mt-3">
           Studijní materiály:{' '}
@@ -944,7 +935,7 @@ export default function App() {
       title="ZWA-4: CSS – interaktivní prezentace"
       objective="Použijete základní CSS selektory, pseudo-elementy a propojení stylopisu v praktickém playgroundu."
       subtitle="Vyberte úlohu, upravte kód v IDE a ověřte výsledek v náhledu."
-      footerText="© 2025 ZWA – CSS interaktivní výuková ukázka"
+      footerText="ZWA – CSS interaktivní výuková ukázka"
     >
       <LearningSection section={current} idPrefix="lesson-css">
         {current.taskGroup ? (

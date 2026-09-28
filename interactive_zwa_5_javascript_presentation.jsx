@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import memeImg from './src/interactive-zwa-6/image.png';
 import { getLessonByNumber } from './src/config/lessons.js';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
+import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
@@ -317,7 +317,6 @@ const slideDefinitions = [
     presenterNotes:
       'Nechte studenty vysvětlit volbu typu, deklarace nebo DOM API před vyhodnocením odpovědí.',
   },
-  { id: 'meme', title: 'Meme', activityType: 'learn' },
   {
     id: 'theory',
     title: 'Teorie – JS základy',
@@ -419,12 +418,23 @@ function JsSlideContent({ slide, stepIndex, onStepIndexChange }) {
   const currentStep = internalSteps[stepIndex];
   return (
     <>
+      {slide.id === 'title' && (
+        <LessonSummary
+          intro="Od základních hodnot přejdeme k funkcím a objektům a nakonec jejich pomocí změníme stránku v prohlížeči."
+          items={[
+            'Projdeme proměnné, typy, operátory a řízení toku programu.',
+            'Napíšeme znovupoužitelné funkce a zpracujeme pole i objekty.',
+            'Najdeme a upravíme prvky stránky přes DOM.',
+            'Propojíme události uživatele s reakcí rozhraní.',
+          ]}
+        />
+      )}
       {slide.id === 'quiz-css' && (
         <div className="mt-2">
           <QuizCssBasics />
         </div>
       )}
-      {slide.bullets && (
+      {slide.id !== 'title' && slide.bullets && (
         <ul className="list-disc pl-6 space-y-1 mt-2">
           {slide.bullets.map((b, i) => (
             <li key={i}>{b}</li>
@@ -434,15 +444,6 @@ function JsSlideContent({ slide, stepIndex, onStepIndexChange }) {
       {hasSections && (
         <div className="mt-4">
           <JavaScriptTheory sections={slide.sections} />
-        </div>
-      )}
-      {slide.id === 'meme' && (
-        <div className="mt-3 rounded-xl overflow-hidden border border-zinc-200/60 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40">
-          <img
-            src={memeImg.src}
-            alt="Meme"
-            className="w-full max-h-[420px] object-contain bg-white dark:bg-zinc-900"
-          />
         </div>
       )}
       {hasSteps && (
@@ -627,7 +628,7 @@ export default function AppJsLesson5() {
           Editor vlevo, DOM + konzole vpravo. Exportujte řešení přes <Code>exports</Code>.
         </>
       }
-      footerText="© 2025 ZWA – Interaktivní lekce JavaScriptu"
+      footerText="ZWA – Interaktivní lekce JavaScriptu"
     >
       <LearningSection section={current} idPrefix="lesson-javascript">
         {hasTasks && (

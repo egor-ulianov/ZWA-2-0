@@ -4,6 +4,7 @@ import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
+import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
@@ -30,25 +31,15 @@ function LessonSlideContent({ slide }) {
   return (
     <>
       {slide.id === 'title' && (
-        <div className="mt-6 text-zinc-600 dark:text-zinc-400">
-          <div>Autor: Bc. Egor Ulianov</div>
-          <div>Datum: 12. 11. 2025</div>
-        </div>
-      )}
-
-      {slide.id === 'title' && (
-        <ul className="list-disc pl-6 space-y-2 text-lg">
-          <li>1 – Výpis aktuálního data</li>
-          <li>2 – Práce s datem (den.měsíc.rok → timestamp → den v týdnu)</li>
-          <li>3 – Funkce pro formátování</li>
-          <li>4 – Průchod pole dat</li>
-          <li>5 – Vytváření pole měsíců</li>
-          <li>6 – Různé (unikátní) měsíce</li>
-          <li>7 – Zjištění, zda řetězec je kladné celé číslo</li>
-          <li>
-            8 – Nepovinné parametry <Code>$min</Code> a <Code>$max</Code>
-          </li>
-        </ul>
+        <LessonSummary
+          intro="Na práci s datem a poli si osvojíme základní syntaxi PHP, vlastní funkce i ověřování vstupů."
+          items={[
+            'Vypíšeme a převedeme datum mezi řetězcem, timestampem a formátovaným výstupem.',
+            'Zapouzdříme opakovanou logiku do vlastních funkcí.',
+            'Projdeme pole hodnot a odvodíme z něj unikátní měsíce.',
+            'Ověříme celočíselný vstup a použijeme nepovinné parametry.',
+          ]}
+        />
       )}
 
       {slide.id === 'theory' && <PhpTheorySections />}
@@ -856,7 +847,7 @@ export default function AppPhpLesson8() {
       title="ZWA-8: Základy PHP – Malý test č. 2"
       objective="Použijete základní PHP syntaxi pro práci s datem, funkcemi, poli a parametry."
       subtitle="Interaktivní prezentace s ukázkami kódu pro PHP základy"
-      footerText="© 2025 ZWA – Cvičení 8: Základy PHP"
+      footerText="ZWA – Cvičení 8: Základy PHP"
     >
       <LearningSection section={current} idPrefix="lesson-php">
         <LessonSlideContent slide={current} />

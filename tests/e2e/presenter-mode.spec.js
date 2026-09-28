@@ -10,7 +10,7 @@ test.describe('lesson projector and presenter modes', () => {
     await page.goto('/interactive-zwa-1-html5?mode=projector&slide=intro');
     await expect(page.getByRole('navigation', { name: /Osnova kurzu/i })).toHaveCount(0);
     await expect(page.getByText('01 / 06')).toBeVisible();
-    await expect(page.getByText('Organizace a prostředí')).toBeVisible();
+    await expect(page.getByText('Sestavíme minimální validní HTML5 dokument.')).toBeVisible();
     await expect(page.locator('textarea, iframe')).toHaveCount(0);
 
     await page.keyboard.press('ArrowRight');

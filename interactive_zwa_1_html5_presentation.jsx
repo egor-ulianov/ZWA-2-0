@@ -4,6 +4,7 @@ import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
+import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
 import StudioTabs from './src/course-ui/exercises/StudioTabs.jsx';
@@ -548,36 +549,19 @@ export default function AppHtml5() {
           )
         </>
       }
-      footerText="© 2025 ZWA – Interaktivní pracovní list HTML5"
+      footerText="ZWA – Interaktivní pracovní list HTML5"
     >
       <LearningSection section={currentSection} idPrefix="lesson-html5">
         {activeSection === 'intro' && (
-          <div>
-            <section>
-              <h3>Organizace a prostředí</h3>
-              <ul>
-                <li>Prohlížeč (Firefox/Chrome) a vývojářské nástroje</li>
-                <li>Textový editor vhodný pro kód</li>
-              </ul>
-            </section>
-            <section>
-              <h3>Cíle</h3>
-              <ul>
-                <li>Vytvořit minimální validní HTML5 dokument</li>
-                <li>
-                  Využít sémantické značky: <Code>header</Code>, <Code>nav</Code>,{' '}
-                  <Code>section</Code>, <Code>article</Code>, <Code>aside</Code>,{' '}
-                  <Code>figure</Code>, <Code>figcaption</Code>, <Code>footer</Code>
-                </li>
-                <li>
-                  Ověřit validitu ve{' '}
-                  <a href="https://validator.w3.org/nu/" target="_blank" rel="noreferrer noopener">
-                    Nu Validatoru
-                  </a>
-                </li>
-              </ul>
-            </section>
-          </div>
+          <LessonSummary
+            intro="Od kostry dokumentu přejdeme k sémantické stránce, kterou nakonec ověříme validátorem."
+            items={[
+              'Sestavíme minimální validní HTML5 dokument.',
+              'Rozdělíme obsah pomocí sémantických elementů.',
+              'Doplníme média, odkazy a tabulku.',
+              'Najdeme a opravíme chyby pomocí HTML validátoru.',
+            ]}
+          />
         )}
 
         {activeSection === 'sections' && HtmlSections()}

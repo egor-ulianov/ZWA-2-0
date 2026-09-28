@@ -11,6 +11,7 @@ import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
+import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
 import StudioTabs from './src/course-ui/exercises/StudioTabs.jsx';
@@ -1501,72 +1502,19 @@ export default function AppFormsLesson2() {
           .
         </>
       }
-      footerText="© 2025 ZWA – Interaktivní formuláře, lekce 2"
+      footerText="ZWA – Interaktivní formuláře, lekce 2"
     >
       <LearningSection section={currentSection} idPrefix="lesson-forms">
         {activeSection === 'overview' && (
-          <div>
-            <SectionCard title="Standardní prvky">
-              <ul className="list-disc pl-6 text-sm">
-                <li>
-                  <Code>form</Code>, <Code>input</Code> (vč. <Code>file</Code>, <Code>accept</Code>
-                  ), <Code>select</Code>, <Code>textarea</Code>, <Code>button</Code>
-                </li>
-              </ul>
-            </SectionCard>
-            <SectionCard title="Seskupení">
-              <ul className="list-disc pl-6 text-sm">
-                <li>
-                  <Code>label</Code> + <Code>for</Code>
-                </li>
-                <li>
-                  <Code>fieldset</Code> + <Code>legend</Code>
-                </li>
-              </ul>
-            </SectionCard>
-            <SectionCard title="Atributy">
-              <ul className="list-disc pl-6 text-sm">
-                <li>
-                  <Code>readonly</Code>, <Code>disabled</Code>, <Code>accesskey</Code>
-                </li>
-                <li>
-                  <Code>autocomplete</Code>, <Code>autofocus</Code>
-                </li>
-              </ul>
-            </SectionCard>
-            <SectionCard title="HTML5 typy inputů">
-              <ul className="list-disc pl-6 text-sm">
-                <li>
-                  <Code>time</Code>, <Code>date</Code>, <Code>datetime-local</Code>,{' '}
-                  <Code>month</Code>
-                </li>
-                <li>
-                  <Code>color</Code>, <Code>email</Code>, <Code>range</Code>, <Code>search</Code>,{' '}
-                  <Code>number</Code>, <Code>tel</Code>, <Code>url</Code>
-                </li>
-              </ul>
-            </SectionCard>
-            <SectionCard title="HTML5 nové elementy">
-              <ul className="list-disc pl-6 text-sm">
-                <li>
-                  <Code>meter</Code> (min, max, low, high, optimum)
-                </li>
-                <li>
-                  <Code>progress</Code> (max)
-                </li>
-              </ul>
-            </SectionCard>
-            <SectionCard title="Nové atributy">
-              <ul className="list-disc pl-6 text-sm">
-                <li>
-                  <Code>placeholder</Code>, <Code>required</Code>, <Code>pattern</Code>
-                </li>
-                <li>
-                  <Code>list</Code> + <Code>datalist</Code>
-                </li>
-              </ul>
-            </SectionCard>
-          </div>
+          <LessonSummary
+            intro="Projdeme cestu od správně popsaného pole až k formuláři, který sám pomůže uživateli zadat platná data."
+            items={[
+              'Propojíme popisky, pole a skupiny do přístupné struktury.',
+              'Porovnáme běžné i specializované HTML5 typy vstupů.',
+              'Nastavíme automatické doplnění, povinné hodnoty a omezení.',
+              'Procvičíme meter, progress a datalist v samostatných úlohách.',
+            ]}
+          />
         )}
 
         {activeSection === 'playground' && <FormsSections />}

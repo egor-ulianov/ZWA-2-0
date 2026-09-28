@@ -2,12 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import mvcImg from './src/interactive-zwa-8/ssr-mvc.png';
 import restImg from './src/interactive-zwa-8/resful.jpg';
 import gloryImg from './src/interactive-zwa-8/gloryofrest.png';
-import memeImg from './src/interactive-zwa-8/meme.png';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
+import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -33,35 +33,15 @@ function LessonSlideContent({ slide }) {
   return (
     <>
       {slide.id === 'title' && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <img
-              src={memeImg.src}
-              alt="Funny meme"
-              className="rounded-lg border border-zinc-200 dark:border-zinc-800"
-            />
-          </div>
-          <div className="mt-2 text-zinc-600 dark:text-zinc-400">
-            <div>Autor: Bc. Egor Ulianov</div>
-            <div>Datum: 19. 11. 2025</div>
-          </div>
-        </div>
-      )}
-
-      {slide.id === 'title' && (
-        <ul className="list-disc pl-6 space-y-2 text-lg">
-          <li>1 – Životní cyklus formuláře na serveru</li>
-          <li>
-            2 – GET vs POST, {`$_GET`}, {`$_POST`}, {`$_REQUEST`}
-          </li>
-          <li>3 – Radio vs Checkbox, názvy polí, {`name[]`}, multi-select</li>
-          <li>4 – Validace vstupů a chybová hlášení</li>
-          <li>5 – Předvyplnění hodnot a uložení do session</li>
-          <li>6 – Seznam → detail → vytvoření/úprava → smazání (CRUD)</li>
-          <li>7 – MVC/SSR a REST kontext</li>
-          <li>8 – Zadání z tutoriálu + interaktivní řešení</li>
-          <li>9 – Shrnutí a odkazy</li>
-        </ul>
+        <LessonSummary
+          intro="Projdeme celý životní cyklus serverového formuláře a použijeme jej jako základ jednoduché CRUD aplikace."
+          items={[
+            'Porovnáme GET a POST a načteme hodnoty z PHP superglobálů.',
+            'Správně pojmenujeme složitější vstupy a obnovíme jejich hodnoty.',
+            'Oddělíme validaci, chybová hlášení a uložení dat.',
+            'Sestavíme tok seznam, detail, vytvoření, úprava a smazání.',
+          ]}
+        />
       )}
 
       {slide.id === 'theory-lifecycle' && <TheoryLifecycle />}
@@ -974,7 +954,7 @@ export default function AppPhpLesson9() {
       title="ZWA-9: Server-side formuláře & CRUD"
       objective="Vysvětlíte životní cyklus serverového formuláře a procvičíte validaci vstupů i základní CRUD operace."
       subtitle="Interaktivní prezentace podle cvičení 09 s ukázkami kódu"
-      footerText="© 2025 ZWA – Cvičení 9: Formuláře a CRUD"
+      footerText="ZWA – Cvičení 9: Formuláře a CRUD"
     >
       <LearningSection section={current} idPrefix="lesson-forms-crud">
         <LessonSlideContent slide={current} />

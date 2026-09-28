@@ -4,6 +4,7 @@ import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
+import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -25,13 +26,16 @@ function LessonSlideContent({ slide }) {
   return (
     <>
       {slide.id === 'title' && (
-        <div className="mt-2 text-zinc-600 dark:text-zinc-400">
-          <div>Autor: Bc. Egor Ulianov</div>
-          <div>Datum: 11. 12. 2025</div>
-        </div>
+        <LessonSummary
+          intro="Rozlišíme ověření identity od řízení oprávnění a sestavíme bezpečnější přihlašovací tok v PHP."
+          items={[
+            'Oddělíme autentizaci, autorizaci a správu identity.',
+            'Porovnáme hesla, OTP, tokeny, SSO a vícefaktorové ověření.',
+            'Uložíme hesla pomocí bezpečného hashe a soli.',
+            'Propojíme přihlášení přes formulář se session a ochranou proti běžným útokům.',
+          ]}
+        />
       )}
-
-      {slide.id === 'title' && <TableOfContents />}
       {slide.id === 'theory-terms' && <TheoryTerms />}
       {slide.id === 'theory-methods' && <TheoryMethods />}
       {slide.id === 'theory-passwords' && <TheoryPasswords />}
@@ -49,21 +53,6 @@ function LessonSlideContent({ slide }) {
 
 function StaticLessonTask(props) {
   return <StaticExercise {...props} fileName="auth.php" language="php" />;
-}
-
-function TableOfContents() {
-  return (
-    <ul className="list-disc pl-6 space-y-2 text-lg">
-      <li>1 – Pojmy: Autentikace vs Autorizace</li>
-      <li>2 – Způsoby přihlášení: hesla, OTP, tokeny, SSO, biometrie, MFA</li>
-      <li>3 – Ukládání hesel: hash, sůl</li>
-      <li>4 – HTTP Basic/Digest autentizace</li>
-      <li>5 – Přihlášení přes formulář + session</li>
-      <li>6 – Bezpečnost: CSRF, fixation, hijacking</li>
-      <li>7 – Úkoly a domácí úkol</li>
-      <li>8 – Shrnutí a odkazy</li>
-    </ul>
-  );
 }
 
 function TheoryTerms() {
@@ -526,7 +515,7 @@ export default function AppPhpLesson12() {
       title="ZWA-12: Autentizace a autorizace"
       objective="Rozlišíte autentizaci a autorizaci, bezpečně uložíte hesla a ochráníte session po přihlášení."
       subtitle="Interaktivní prezentace podle cvičení 12"
-      footerText="© 2025 ZWA – Cvičení 12: Autentizace a autorizace"
+      footerText="ZWA – Cvičení 12: Autentizace a autorizace"
     >
       <LearningSection section={current} idPrefix="lesson-auth">
         <LessonSlideContent slide={current} />
