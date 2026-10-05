@@ -5,6 +5,7 @@ import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
+import PhpTheoryChapter from './src/course-ui/content/PhpTheoryChapter.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -22,6 +23,44 @@ function TheoryCodeBlock({ children }) {
   return <EditorialCode language={language}>{value}</EditorialCode>;
 }
 
+const PHP_THEORY_CHAPTERS = {
+  'theory-files': {
+    component: TheoryFilesBasics,
+    intro:
+      'Soubor je nejjednodušší trvalé úložiště, ale i zde musíme řešit cestu, chybu čtení a souběžný zápis. Bez těchto kontrol se krátký příklad rychle změní v nespolehlivý program.',
+    title: 'Čtení a zápis potřebují jasné hranice',
+  },
+  'theory-json': {
+    component: TheoryJsonBasics,
+    intro:
+      'JSON propojuje textový soubor s datovou strukturou PHP. Převod musí zachovat význam dat a současně viditelně selhat, pokud je vstup poškozený.',
+    title: 'JSON je přenosový formát, ne hotová databáze',
+  },
+  'theory-library': {
+    component: TheoryUsersLibrary,
+    intro:
+      'Práci se souborem uzavřeme do malé knihovny, aby zbytek aplikace používal pojmenované operace místo opakovaného čtení a dekódování.',
+    title: 'Datová vrstva schová technické detaily úložiště',
+  },
+  'theory-pagination': {
+    component: TheoryPagination,
+    intro:
+      'Stránkování vrací jen omezený výřez výsledků. Parametry limit a offset musí mít bezpečné meze a navigace musí vědět, zda existuje předchozí nebo další stránka.',
+    title: 'Výřez dat musí respektovat hranice kolekce',
+  },
+};
+
+function PhpTheorySlide({ id }) {
+  const chapter = PHP_THEORY_CHAPTERS[id];
+  if (!chapter) return null;
+  const Content = chapter.component;
+  return (
+    <PhpTheoryChapter intro={chapter.intro} title={chapter.title}>
+      <Content />
+    </PhpTheoryChapter>
+  );
+}
+
 function LessonSlideContent({ slide }) {
   return (
     <>
@@ -36,10 +75,7 @@ function LessonSlideContent({ slide }) {
           ]}
         />
       )}
-      {slide.id === 'theory-files' && <TheoryFilesBasics />}
-      {slide.id === 'theory-json' && <TheoryJsonBasics />}
-      {slide.id === 'theory-library' && <TheoryUsersLibrary />}
-      {slide.id === 'theory-pagination' && <TheoryPagination />}
+      {PHP_THEORY_CHAPTERS[slide.id] && <PhpTheorySlide id={slide.id} />}
 
       {LESSON11_TASKS.some((task) => task.id === slide.id) && (
         <FileTaskSlide task={LESSON11_TASKS.find((task) => task.id === slide.id)} />

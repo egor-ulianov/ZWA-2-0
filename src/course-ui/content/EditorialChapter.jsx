@@ -1,17 +1,17 @@
 import styles from './content.module.css';
 
-export function EditorialChapter({ children, intro }) {
+export function EditorialChapter({ children, intro, ...props }) {
   return (
-    <div className={styles.editorialChapter} data-editorial-chapter="true">
+    <div className={styles.editorialChapter} data-editorial-chapter="true" {...props}>
       {intro ? <p className={styles.editorialChapterLead}>{intro}</p> : null}
       {children}
     </div>
   );
 }
 
-export function EditorialChapterSection({ children, index, title }) {
+export function EditorialChapterSection({ children, index, title, ...props }) {
   return (
-    <section className={styles.editorialChapterSection}>
+    <section className={styles.editorialChapterSection} {...props}>
       <span aria-hidden="true" className={styles.editorialChapterIndex}>
         {String(index).padStart(2, '0')}
       </span>

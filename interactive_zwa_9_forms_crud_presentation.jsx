@@ -8,6 +8,7 @@ import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
+import PhpTheoryChapter from './src/course-ui/content/PhpTheoryChapter.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -29,6 +30,68 @@ function TheoryCodeBlock({ children }) {
   return <EditorialCode language={language}>{value}</EditorialCode>;
 }
 
+const PHP_THEORY_CHAPTERS = {
+  'theory-lifecycle': {
+    component: TheoryLifecycle,
+    intro:
+      'Serverový formulář je opakující se cyklus požadavku, kontroly vstupů a odpovědi. Když jsou tyto kroky oddělené, chyby se lépe vysvětlují i opravují.',
+    title: 'Od zobrazení formuláře k bezpečné odpovědi',
+  },
+  'theory-methods': {
+    component: TheoryMethods,
+    intro:
+      'HTTP metoda vyjadřuje záměr požadavku. GET popisuje, co chceme načíst; POST přenáší změnu, kterou musí server zpracovat a ověřit.',
+    title: 'GET čte, POST předává změnu',
+  },
+  'theory-inputs': {
+    component: TheoryInputs,
+    intro:
+      'Názvy formulářových polí určují, jakou datovou strukturu PHP vytvoří. Dobré pojmenování zjednodušuje validaci i opětovné vyplnění formuláře.',
+    title: 'Vstupní prvky se mění na strukturovaná data',
+  },
+  'theory-validation': {
+    component: TheoryValidation,
+    intro:
+      'Data od uživatele nejprve ověříme, potom normalizujeme a při výstupu escapujeme pro konkrétní kontext. Každý krok řeší jiný typ rizika.',
+    title: 'Ověření, úprava a bezpečný výstup',
+  },
+  'theory-session': {
+    component: TheorySession,
+    intro:
+      'Po přesměrování potřebujeme krátkodobě přenést zprávu nebo stav. Session poskytuje serverové úložiště svázané s konkrétním klientem.',
+    title: 'Session propojuje navazující požadavky',
+  },
+  'theory-crud': {
+    component: TheoryCrud,
+    intro:
+      'CRUD není seznam čtyř zkratek, ale tok mezi seznamem, detailem, formulářem a potvrzením změny. Každá operace má vlastní URL, vstupy a výsledek.',
+    title: 'Jednotlivé operace tvoří souvislý tok',
+  },
+  'theory-arch': {
+    component: TheoryArchitecture,
+    intro:
+      'Stejnou doménovou logiku lze vystavit jako serverem vykreslené HTML nebo jako datové API. Rozhoduje typ klienta, způsob navigace a provozní potřeby.',
+    title: 'SSR, MVC a REST rozdělují odpovědnosti jinak',
+  },
+  'rest-glory': {
+    component: GloryRestSlide,
+    intro:
+      'RESTové rozhraní dozrává od jednoho univerzálního endpointu k prostředí, ve kterém zdroje, HTTP metody a odkazy společně popisují další možné kroky.',
+    title: 'REST jako postupně zpřesňovaný kontrakt',
+  },
+};
+
+function PhpTheorySlide({ id }) {
+  const chapter = PHP_THEORY_CHAPTERS[id];
+  if (!chapter) return null;
+  const Content = chapter.component;
+  return (
+    <PhpTheoryChapter intro={chapter.intro} title={chapter.title}>
+      <Content />
+    </PhpTheoryChapter>
+  );
+}
+
 function LessonSlideContent({ slide }) {
   return (
     <>
@@ -44,14 +107,7 @@ function LessonSlideContent({ slide }) {
         />
       )}
 
-      {slide.id === 'theory-lifecycle' && <TheoryLifecycle />}
-      {slide.id === 'theory-methods' && <TheoryMethods />}
-      {slide.id === 'theory-inputs' && <TheoryInputs />}
-      {slide.id === 'theory-validation' && <TheoryValidation />}
-      {slide.id === 'theory-session' && <TheorySession />}
-      {slide.id === 'theory-crud' && <TheoryCrud />}
-      {slide.id === 'theory-arch' && <TheoryArchitecture />}
-      {slide.id === 'rest-glory' && <GloryRestSlide />}
+      {PHP_THEORY_CHAPTERS[slide.id] && <PhpTheorySlide id={slide.id} />}
 
       {LESSON9_TASKS.some((task) => task.id === slide.id) && (
         <TutorialTaskSlide task={LESSON9_TASKS.find((task) => task.id === slide.id)} />
@@ -374,7 +430,7 @@ function TheoryValidation() {
           </li>
         </ul>
       </InfoBox>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-6">
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">Validace – příklady</div>
           <TheoryCodeBlock>
@@ -548,7 +604,7 @@ switch ($action) {
     break;
 }`}</code>
       </TheoryCodeBlock>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-6">
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">Formuláře – create/edit</div>
           <TheoryCodeBlock>
@@ -590,7 +646,7 @@ switch ($action) {
 function TheoryArchitecture() {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="space-y-6">
         <img
           src={mvcImg.src}
           alt="SSR/MVC schema"
@@ -615,7 +671,7 @@ function TheoryArchitecture() {
           </li>
         </ul>
       </InfoBox>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-6">
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">SSR/MVC – kdy a proč</div>
           <ul className="list-disc pl-6 space-y-1 text-sm">
@@ -671,7 +727,7 @@ DELETE /articles/{id} → delete`}</code>
 function GloryRestSlide() {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="space-y-6">
         <img
           src={gloryImg.src}
           alt="Glory of REST (Richardson Maturity Model)"

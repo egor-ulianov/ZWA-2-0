@@ -5,6 +5,7 @@ import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
+import PhpTheoryChapter from './src/course-ui/content/PhpTheoryChapter.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -22,6 +23,56 @@ function TheoryCodeBlock({ children }) {
   return <EditorialCode language={language}>{value}</EditorialCode>;
 }
 
+const PHP_THEORY_CHAPTERS = {
+  'theory-terms': {
+    component: TheoryTerms,
+    intro:
+      'Bezpečnostní návrh začíná přesným pojmenováním odpovědností. Ověření identity, rozhodnutí o oprávnění a správa účtu jsou propojené, ale nejsou zaměnitelné.',
+    title: 'Identita a oprávnění odpovídají na jiné otázky',
+  },
+  'theory-methods': {
+    component: TheoryMethods,
+    intro:
+      'Způsob přihlášení volíme podle rizika a prostředí. Heslo, jednorázový kód, token nebo centrální poskytovatel identity přinášejí rozdílné provozní i bezpečnostní vlastnosti.',
+    title: 'Metoda autentizace musí odpovídat riziku',
+  },
+  'theory-passwords': {
+    component: TheoryPasswords,
+    intro:
+      'Heslo nikdy nepotřebujeme znovu přečíst. Ukládáme pouze pomalý adaptivní hash a při přihlášení ověřujeme, zda zadaná hodnota odpovídá uloženému výsledku.',
+    title: 'Heslo se ověřuje, neukládá',
+  },
+  'theory-http-auth': {
+    component: TheoryHttpAuth,
+    intro:
+      'HTTP nabízí vlastní autentizační mechanismy, ale každý má omezení. Basic spoléhá na HTTPS a Digest je dnes především historický mechanismus, který pomáhá pochopit challenge-response.',
+    title: 'HTTP autentizace pracuje s hlavičkami požadavku',
+  },
+  'theory-login-session': {
+    component: TheoryLoginSession,
+    intro:
+      'Formulářové přihlášení spojuje ověření hesla se vznikem session. Úspěšný tok musí obnovit identifikátor, uložit jen potřebná data a bezpečně přesměrovat.',
+    title: 'Přihlášení vytváří nový důvěryhodný stav',
+  },
+  'theory-security': {
+    component: TheorySecurity,
+    intro:
+      'Bezpečné přihlášení není jediná podmínka v kódu. Vyžaduje HTTPS, ochranu formulářů, omezení pokusů, bezpečné cookies a správné ukončení session.',
+    title: 'Obrana vzniká kombinací více vrstev',
+  },
+};
+
+function PhpTheorySlide({ id }) {
+  const chapter = PHP_THEORY_CHAPTERS[id];
+  if (!chapter) return null;
+  const Content = chapter.component;
+  return (
+    <PhpTheoryChapter intro={chapter.intro} title={chapter.title}>
+      <Content />
+    </PhpTheoryChapter>
+  );
+}
+
 function LessonSlideContent({ slide }) {
   return (
     <>
@@ -36,12 +87,7 @@ function LessonSlideContent({ slide }) {
           ]}
         />
       )}
-      {slide.id === 'theory-terms' && <TheoryTerms />}
-      {slide.id === 'theory-methods' && <TheoryMethods />}
-      {slide.id === 'theory-passwords' && <TheoryPasswords />}
-      {slide.id === 'theory-http-auth' && <TheoryHttpAuth />}
-      {slide.id === 'theory-login-session' && <TheoryLoginSession />}
-      {slide.id === 'theory-security' && <TheorySecurity />}
+      {PHP_THEORY_CHAPTERS[slide.id] && <PhpTheorySlide id={slide.id} />}
 
       {LESSON12_TASKS.some((task) => task.id === slide.id) && (
         <AuthTaskSlide task={LESSON12_TASKS.find((task) => task.id === slide.id)} />
@@ -153,7 +199,7 @@ function TheoryHttpAuth() {
           <li>Oba režimy vyžadují správné nastavení serveru a hlaviček.</li>
         </ul>
       </InfoBox>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-6">
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">Basic v PHP</div>
           <TheoryCodeBlock>

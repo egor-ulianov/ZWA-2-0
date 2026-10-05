@@ -5,6 +5,7 @@ import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
+import PhpTheoryChapter from './src/course-ui/content/PhpTheoryChapter.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -22,6 +23,50 @@ function TheoryCodeBlock({ children }) {
   return <EditorialCode language={language}>{value}</EditorialCode>;
 }
 
+const PHP_THEORY_CHAPTERS = {
+  'theory-basics': {
+    component: TheoryBasics,
+    intro:
+      'HTTP je bezstavový, ale aplikace si často musí pamatovat volbu nebo identitu uživatele. Cookie uchovává malou hodnotu u klienta, zatímco session drží důvěryhodný stav na serveru.',
+    title: 'Klientský identifikátor propojuje serverový stav',
+  },
+  'theory-cookies-api': {
+    component: TheoryCookiesAPI,
+    intro:
+      'Cookie je součást HTTP komunikace. Její název, životnost, cesta a bezpečnostní atributy společně určují, kdy ji prohlížeč uloží a kdy ji znovu odešle.',
+    title: 'Cookie nastavujte jako přesně omezený údaj',
+  },
+  'theory-session-lifecycle': {
+    component: TheorySessionLifecycle,
+    intro:
+      'Session vzniká, používá se v několika požadavcích a nakonec musí bezpečně zaniknout. PHP řeší úložiště, aplikace však stále odpovídá za obnovu ID a čisté odhlášení.',
+    title: 'Session má začátek, změny i bezpečný konec',
+  },
+  'theory-security': {
+    component: TheorySecurity,
+    intro:
+      'Bezpečná session stojí na více vrstvách: HTTPS, správných cookie atributech, obnově identifikátoru a obraně proti podvrženým požadavkům.',
+    title: 'Útokům brání soubor navazujících opatření',
+  },
+  'theory-examples': {
+    component: TheoryExamples,
+    intro:
+      'Přihlášení, jednorázové zprávy a dlouhodobé přihlášení používají session odlišně. Příklady proto procházíme jako samostatné plné bloky, ne jako zkrácené paralelní varianty.',
+    title: 'Praktické vzory stavějte jeden po druhém',
+  },
+};
+
+function PhpTheorySlide({ id }) {
+  const chapter = PHP_THEORY_CHAPTERS[id];
+  if (!chapter) return null;
+  const Content = chapter.component;
+  return (
+    <PhpTheoryChapter intro={chapter.intro} title={chapter.title}>
+      <Content />
+    </PhpTheoryChapter>
+  );
+}
+
 function LessonSlideContent({ slide }) {
   return (
     <>
@@ -36,11 +81,7 @@ function LessonSlideContent({ slide }) {
           ]}
         />
       )}
-      {slide.id === 'theory-basics' && <TheoryBasics />}
-      {slide.id === 'theory-cookies-api' && <TheoryCookiesAPI />}
-      {slide.id === 'theory-session-lifecycle' && <TheorySessionLifecycle />}
-      {slide.id === 'theory-security' && <TheorySecurity />}
-      {slide.id === 'theory-examples' && <TheoryExamples />}
+      {PHP_THEORY_CHAPTERS[slide.id] && <PhpTheorySlide id={slide.id} />}
 
       {LESSON10_TASKS.some((task) => task.id === slide.id) && (
         <SessionTaskSlide task={LESSON10_TASKS.find((task) => task.id === slide.id)} />
@@ -344,7 +385,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 function TheoryExamples() {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-6">
         <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
           <div className="font-semibold mb-2 text-sm">Login flow + regenerace ID</div>
           <TheoryCodeBlock>

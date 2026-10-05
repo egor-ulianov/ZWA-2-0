@@ -65,6 +65,41 @@
   line-height: 1.7;
 }
 
+.codeFigure :global(.tok-keyword),
+.codeFigure :global(.tok-meta) {
+  color: #ff8dab;
+  font-weight: 700;
+}
+
+.codeFigure :global(.tok-variableName) {
+  color: #86d9ff;
+}
+
+.codeFigure :global(.tok-string) {
+  color: #a9e6c6;
+}
+
+.codeFigure :global(.tok-number),
+.codeFigure :global(.tok-bool),
+.codeFigure :global(.tok-null) {
+  color: #ffd66b;
+}
+
+.codeFigure :global(.tok-comment) {
+  color: #9daac0;
+  font-style: italic;
+}
+
+.codeFigure :global(.tok-typeName),
+.codeFigure :global(.tok-propertyName) {
+  color: #b8c8ff;
+}
+
+.codeFigure :global(.tok-operator),
+.codeFigure :global(.tok-punctuation) {
+  color: #f4b985;
+}
+
 .theoryFlow {
   margin-block: 2rem;
   border-top: 2px solid var(--course-ink);
@@ -187,6 +222,32 @@
 
 .editorialChapterBody strong {
   color: var(--course-ink);
+}
+
+.phpTheoryStack {
+  display: grid;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.phpTheoryStack > :global(.space-y-4) {
+  min-width: 0;
+}
+
+.phpTheoryStack :global(.grid) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.phpTheoryStack :global(.rounded-lg) {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.phpTheoryStack .codeFigure {
+  width: 100%;
+  margin-inline: 0;
 }
 
 .editorialChapterLinks {

@@ -1,11 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { getLessonByNumber } from './src/config/lessons.js';
+import {
+  EditorialChapter,
+  EditorialChapterSection,
+} from './src/course-ui/content/EditorialChapter.jsx';
 import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
 import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
-import contentStyles from './src/course-ui/content/content.module.css';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -995,16 +998,15 @@ function PhpTheorySections() {
   ];
 
   return (
-    <div className={contentStyles.theoryFlow} data-theory-flow="true">
+    <EditorialChapter
+      data-theory-flow="true"
+      intro="PHP zpracuje HTTP požadavek na serveru, provede aplikační logiku a vytvoří odpověď pro klienta. Nejdříve si proto zasadíme syntaxi jazyka do celého životního cyklu webové aplikace."
+    >
       {sections.map((section, index) => (
         <React.Fragment key={section.title}>
-          <section className={contentStyles.theoryTopic} data-theory-topic="true">
-            <span className={contentStyles.theoryIndex}>{String(index + 1).padStart(2, '0')}</span>
-            <div className={contentStyles.theoryBody}>
-              <h3>{section.title}</h3>
-              {section.content}
-            </div>
-          </section>
+          <EditorialChapterSection data-theory-topic="true" index={index + 1} title={section.title}>
+            {section.content}
+          </EditorialChapterSection>
           {index === 2 ? (
             <EditorialIllustration
               alt="Webový požadavek prochází PHP serverem, aplikační logikou a databází a vrací hotovou stránku."
@@ -1013,7 +1015,7 @@ function PhpTheorySections() {
           ) : null}
         </React.Fragment>
       ))}
-    </div>
+    </EditorialChapter>
   );
 }
 
