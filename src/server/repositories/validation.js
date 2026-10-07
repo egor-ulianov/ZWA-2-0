@@ -34,8 +34,18 @@ export function validateIsoDate(value) {
   return value;
 }
 
-export function validateAttendanceInput({ attendanceDate, entries, actor, expectedRevision }) {
-  const date = validateIsoDate(attendanceDate);
+export function validateLectureNumber(value) {
+  const normalized = typeof value === 'string' && /^(?:[1-9]|1[0-3])$/.test(value)
+    ? Number(value)
+    : value;
+  if (!Number.isInteger(normalized) || normalized < 1 || normalized > 13) {
+    throw new TypeError('Invalid lecture number');
+  }
+  return normalized;
+}
+
+export function validateAttendanceInput({ lecture, entries, actor, expectedRevision }) {
+  const lectureNumber = validateLectureNumber(lecture);
   const revision = expectedRevision === undefined ? undefined : parseAttendanceRevision(expectedRevision);
   if (!Array.isArray(entries) || entries.length > 500) throw new TypeError('Attendance accepts at most 500 entries');
   if (typeof actor !== 'string' || !actor) throw new TypeError('Actor is required');
@@ -47,7 +57,7 @@ export function validateAttendanceInput({ attendanceDate, entries, actor, expect
     seen.add(username);
     return { username, present: entry.present };
   });
-  return { attendanceDate: date, entries: normalized, actor, expectedRevision: revision };
+  return { lecture: lectureNumber, entries: normalized, actor, expectedRevision: revision };
 }
 
 export function normalizeRosterRows(rows) {
@@ -60,6 +70,34 @@ export function normalizeRosterRows(rows) {
     if (users.has(username)) continue;
     users.add(username);
     normalized.push({ username });
+  }
+  return normalized;
+}
+
+function validateRosterLabel(value, label, maxLength) {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+  if (!normalized || normalized.length > maxLength || /[\u0000-\u001f\u007f]/.test(normalized)) {
+    throw new TypeError(`Invalid ${label}`);
+  }
+  return normalized;
+}
+
+export function normalizeTeacherRosterRows(rows) {
+  if (!Array.isArray(rows)) throw new TypeError('Roster rows must be an array');
+  if (!rows.length) throw new TypeError('Roster must contain at least one student');
+  if (rows.length > 5000) throw new TypeError('Roster accepts at most 5000 rows');
+  const users = new Set();
+  const normalized = [];
+  for (const row of rows) {
+    const username = validateUsername(row?.username);
+    if (users.has(username)) continue;
+    users.add(username);
+    normalized.push({
+      username,
+      firstName: validateRosterLabel(row?.firstName, 'first name', 200),
+      lastName: validateRosterLabel(row?.lastName, 'last name', 200),
+      parallel: validateRosterLabel(row?.parallel, 'parallel', 32),
+    });
   }
   return normalized;
 }

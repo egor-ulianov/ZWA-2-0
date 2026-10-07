@@ -229,16 +229,16 @@ test('roster parser diagnoses duplicate usernames after normalization', async ()
   ]);
 });
 
-test('attendance date reads return a map and revision from one transaction', async () => {
+test('attendance lecture reads return a map and revision from one transaction', async () => {
   const { createAttendanceRepository } = await import('../../src/server/repositories/attendance.js');
   let transactionCalled = false;
-  const sql = async () => { throw new Error('date reads must use the transaction'); };
+  const sql = async () => { throw new Error('lecture reads must use the transaction'); };
   sql.transaction = async (queriesOrFactory) => {
     transactionCalled = true;
     assert.equal(typeof queriesOrFactory, 'function');
     return [[{ username: 'alice', present: true }], [{ revision: 4 }]];
   };
-  const current = await createAttendanceRepository(sql).getByDateWithRevision('2026-09-08');
+  const current = await createAttendanceRepository(sql).getByLectureWithRevision(4);
   assert.equal(transactionCalled, true);
   assert.deepEqual(current, { map: { alice: true }, revision: 4 });
 });

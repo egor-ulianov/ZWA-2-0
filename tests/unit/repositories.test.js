@@ -4,25 +4,31 @@ import test from 'node:test';
 import {
   normalizeRosterRows,
   validateAttendanceInput,
+  validateLectureNumber,
   filterAssignmentPatch,
   validateUsername,
 } from '../../src/server/repositories/validation.js';
 import { createAttendanceRepository } from '../../src/server/repositories/attendance.js';
 import { createProgressRepository } from '../../src/server/repositories/progress.js';
+import { createStudentsRepository } from '../../src/server/repositories/students.js';
 
 test('rejects invalid usernames before a database query can be built', () => {
   assert.throws(() => validateUsername('alice; drop table students'), /username/i);
   assert.equal(validateUsername('alice.smith'), 'alice.smith');
 });
 
-test('rejects malformed attendance dates and oversized bulk entries', () => {
-  assert.throws(
-    () => validateAttendanceInput({ attendanceDate: '08/09/2026', entries: [], actor: 'teacher' }),
-    /date/i,
-  );
+test('accepts only whole lecture numbers from 1 through 13', () => {
+  assert.equal(validateLectureNumber(1), 1);
+  assert.equal(validateLectureNumber(13), 13);
+  for (const invalid of [0, 14, 1.5, '04', 'lecture 1']) {
+    assert.throws(() => validateLectureNumber(invalid), /lecture/i);
+  }
+});
+
+test('rejects oversized attendance snapshots', () => {
   assert.throws(
     () => validateAttendanceInput({
-      attendanceDate: '2026-09-08',
+      lecture: 4,
       entries: Array.from({ length: 501 }, (_, index) => ({ username: `student${index}`, present: true })),
       actor: 'teacher',
     }),
@@ -39,6 +45,41 @@ test('deduplicates roster rows after normalizing usernames', () => {
     { username: 'alice' },
     { username: 'bob' },
   ]);
+});
+
+test('roster replacement deactivates the previous roster and upserts the new active students atomically', async () => {
+  const queries = [];
+  let transactionQueries;
+  const sql = (query, parameters) => {
+    const request = { query, parameters };
+    queries.push(request);
+    return request;
+  };
+  sql.transaction = async (items) => {
+    transactionQueries = items;
+    return [];
+  };
+
+  const result = await createStudentsRepository(sql).replaceRoster([
+    { username: 'ada', firstName: 'Ada', lastName: 'Lovelace', parallel: '107' },
+    { username: 'karel.capek', firstName: 'Karel', lastName: 'Čapek', parallel: '108' },
+  ]);
+
+  assert.equal(transactionQueries.length, 4);
+  assert.match(transactionQueries[0].query, /pg_advisory_xact_lock/i);
+  assert.match(transactionQueries[1].query, /update students set active = false/i);
+  assert.match(transactionQueries[2].query, /on conflict \(username\) do update/i);
+  assert.deepEqual(queries.filter(({ parameters }) => parameters?.length === 4).map(({ parameters }) => parameters), [
+    ['ada', 'Ada', 'Lovelace', '107'],
+    ['karel.capek', 'Karel', 'Čapek', '108'],
+  ]);
+  assert.deepEqual(result, {
+    imported: 2,
+    students: [
+      { username: 'ada', firstName: 'Ada', lastName: 'Lovelace', parallel: '107' },
+      { username: 'karel.capek', firstName: 'Karel', lastName: 'Čapek', parallel: '108' },
+    ],
+  });
 });
 
 test('filters progress changes to assignment fields and enforces score bounds', () => {
@@ -64,25 +105,25 @@ test('uses one transaction for a validated bulk attendance write', async () => {
   sql.transaction = async (items) => { transactionQueries = items; };
 
   const result = await createAttendanceRepository(sql).bulkUpsert({
-    attendanceDate: '2026-09-08', actor: 'teacher',
+    lecture: 4, actor: 'teacher',
     entries: [{ username: 'alice', present: true }, { username: 'bob', present: false }],
   });
 
   assert.deepEqual(result, { count: 2 });
   assert.equal(transactionQueries.length, 2);
   assert.deepEqual(queries.map(({ parameters }) => parameters), [
-    ['2026-09-08', 'alice', true, 'teacher'],
-    ['2026-09-08', 'bob', false, 'teacher'],
+    [4, 'alice', true, 'teacher'],
+    [4, 'bob', false, 'teacher'],
   ]);
 });
 
-test('normalizes PostgreSQL date values returned as Date instances', async () => {
+test('returns student attendance keyed by lecture number', async () => {
   const sql = async () => [
-    { attendance_date: new Date(2026, 8, 8), present: true },
+    { lecture_number: 13, present: true },
   ];
 
   assert.deepEqual(await createAttendanceRepository(sql).getForStudent('alice'), {
-    '2026-09-08': true,
+    13: true,
   });
 });
 
