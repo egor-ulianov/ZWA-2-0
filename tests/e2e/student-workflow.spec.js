@@ -18,7 +18,7 @@ test('unauthorized student progress redirects back to the login page', async ({ 
   await expect(page.locator('form')).toBeVisible();
 });
 
-test('student login reaches progress and renders only least-privilege grade fields', async ({
+test('student login reaches progress with lecture attendance and least-privilege grades', async ({
   page,
 }) => {
   await installDeterministicNetwork(page);
@@ -44,7 +44,7 @@ test('student login reaches progress and renders only least-privilege grade fiel
   await page.route('**/api/student/attendance', (route) =>
     fulfillJson(route, {
       username: 'alice',
-      attendance: { '2026-09-08': true },
+      attendance: { 1: true, 13: false },
     }),
   );
   await page.route('**/api/student/grades', (route) =>
@@ -78,8 +78,17 @@ test('student login reaches progress and renders only least-privilege grade fiel
   await expect(page.getByRole('heading', { name: 'Your study record' })).toBeVisible();
   await expect(page.locator('[data-operations-application="true"]')).toBeVisible();
   await expect(page.getByRole('region', { name: 'At a glance' })).toContainText(
-    '1 attendance record',
+    '1 present lecture',
   );
+  const attendance = page.getByRole('region', { name: 'Attendance record' });
+  await expect(attendance.getByText('Lecture 1', { exact: true })).toBeVisible();
+  await expect(attendance.getByText('Lecture 1', { exact: true }).locator('..')).toContainText(
+    'Present',
+  );
+  await expect(attendance.getByText('Lecture 13', { exact: true }).locator('..')).toContainText(
+    'Absent',
+  );
+  await expect(page.getByText('2026-09-08')).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Evaluations' })).toContainText('Test 1');
   await expect(page.getByText('alice', { exact: true })).toBeVisible();
   await expect(page.getByText('Evaluation – Test 1')).toBeVisible();
@@ -109,7 +118,7 @@ test('student can use the real login and progress flow against the test provider
   await expect(page.getByText('e2e_partner', { exact: true })).toBeVisible();
   await expect(page.getByText('Evaluation – Test 1')).toBeVisible();
   await expect(page.getByText('Points:').locator('..')).toContainText('9');
-  await expect(page.getByText('2026-09-08')).toBeVisible();
+  await expect(page.getByText('Lecture 1', { exact: true })).toBeVisible();
   await expect(page.getByText('Present', { exact: true })).toBeVisible();
 });
 

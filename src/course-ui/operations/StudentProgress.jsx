@@ -22,8 +22,8 @@ function DataItem({ label, value }) {
 
 export default function StudentProgress({ data, attendance = {}, grades = {} }) {
   const progress = data?.progress || {};
-  const dates = Object.keys(attendance).sort();
-  const presentCount = dates.filter((date) => Boolean(attendance[date])).length;
+  const lectures = Object.keys(attendance).sort((left, right) => Number(left) - Number(right));
+  const presentCount = lectures.filter((lecture) => Boolean(attendance[lecture])).length;
   const evaluations = Object.entries(grades).filter(([, evaluation]) => evaluation);
 
   return (
@@ -42,7 +42,7 @@ export default function StudentProgress({ data, attendance = {}, grades = {} }) 
           <dl className={`${styles.recordBody} ${styles.summaryGrid}`}>
             <DataItem
               label="Attendance"
-              value={formatCount(presentCount, 'attendance record', 'attendance records')}
+              value={formatCount(presentCount, 'present lecture', 'present lectures')}
             />
             <DataItem
               label="Evaluations"
@@ -123,19 +123,19 @@ export default function StudentProgress({ data, attendance = {}, grades = {} }) 
               <h2 id="attendance-title">Attendance record</h2>
             </div>
             <span className={styles.muted}>
-              {formatCount(presentCount, 'present day', 'present days')}
+              {formatCount(presentCount, 'present lecture', 'present lectures')}
             </span>
           </header>
           <div className={styles.recordBody}>
-            {dates.length === 0 ? (
+            {lectures.length === 0 ? (
               <p className={styles.muted}>No attendance recorded yet.</p>
             ) : (
               <ul className={styles.attendanceList}>
-                {dates.map((date) => (
-                  <li key={date}>
-                    <span>{date}</span>
-                    <span className={attendance[date] ? styles.positive : styles.muted}>
-                      {attendance[date] ? 'Present' : 'Absent'}
+                {lectures.map((lecture) => (
+                  <li key={lecture}>
+                    <span>Lecture {lecture}</span>
+                    <span className={attendance[lecture] ? styles.positive : styles.muted}>
+                      {attendance[lecture] ? 'Present' : 'Absent'}
                     </span>
                   </li>
                 ))}

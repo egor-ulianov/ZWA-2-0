@@ -30,7 +30,7 @@ const state = {
     updated_by: 'e2e-fixture',
     updated_at: '2026-09-08T09:00:00.000Z',
   },
-  attendance: [{ attendance_date: '2026-09-08', username: 'e2e_student', present: true }],
+  attendance: [{ lecture_number: 1, username: 'e2e_student', present: true }],
   grades: [
     {
       id: 1,
@@ -42,7 +42,7 @@ const state = {
       created_at: '2026-09-08T10:00:00.000Z',
     },
   ],
-  attendanceRevisions: new Map([['2026-09-08', 0]]),
+  attendanceRevisions: new Map([[1, 0]]),
   revokedSessions: new Set(),
   rateLimitBuckets: new Map(),
 };
@@ -79,6 +79,7 @@ function resultFor(query, parameters = []) {
   if (
     normalized.startsWith('do $') ||
     normalized.startsWith('create table') ||
+    normalized.startsWith('drop table') ||
     normalized.startsWith('alter table') ||
     normalized.startsWith('select pg_advisory')
   ) {
@@ -187,44 +188,44 @@ function resultFor(query, parameters = []) {
     );
   }
 
-  if (normalized.includes('select attendance_date, username, present from attendance')) {
+  if (normalized.includes('select lecture_number, username, present from attendance')) {
     return rows(
       [
-        ['attendance_date', 1082],
+        ['lecture_number', 23],
         ['username', 25],
         ['present', 16],
       ],
       [...state.attendance]
         .sort((left, right) =>
-          `${left.attendance_date}:${left.username}`.localeCompare(
-            `${right.attendance_date}:${right.username}`,
+          `${left.lecture_number}:${left.username}`.localeCompare(
+            `${right.lecture_number}:${right.username}`,
           ),
         )
-        .map((entry) => [entry.attendance_date, entry.username, entry.present]),
+        .map((entry) => [entry.lecture_number, entry.username, entry.present]),
     );
   }
 
   if (normalized.includes('from attendance where username')) {
     return rows(
       [
-        ['attendance_date', 1082],
+        ['lecture_number', 23],
         ['present', 16],
       ],
       state.attendance
         .filter((entry) => entry.username === params[0])
-        .sort((left, right) => left.attendance_date.localeCompare(right.attendance_date))
-        .map((entry) => [entry.attendance_date, entry.present]),
+        .sort((left, right) => left.lecture_number - right.lecture_number)
+        .map((entry) => [entry.lecture_number, entry.present]),
     );
   }
 
-  if (normalized.includes('select username, present from attendance where attendance_date')) {
+  if (normalized.includes('select username, present from attendance where lecture_number')) {
     return rows(
       [
         ['username', 25],
         ['present', 16],
       ],
       state.attendance
-        .filter((entry) => entry.attendance_date === params[0])
+        .filter((entry) => entry.lecture_number === params[0])
         .map((entry) => [entry.username, entry.present]),
     );
   }
@@ -240,25 +241,25 @@ function resultFor(query, parameters = []) {
   }
 
   if (normalized.includes('with bumped as')) {
-    const date = params[0];
+    const lecture = params[0];
     const expectedRevision = Number(params[1]);
-    const currentRevision = state.attendanceRevisions.get(date) || 0;
+    const currentRevision = state.attendanceRevisions.get(lecture) || 0;
     if (currentRevision !== expectedRevision) return emptyResult();
     const entries = JSON.parse(params[2] || '[]');
     for (const entry of entries) {
       const existing = state.attendance.find(
-        (item) => item.attendance_date === date && item.username === entry.username,
+        (item) => item.lecture_number === lecture && item.username === entry.username,
       );
       if (existing) existing.present = Boolean(entry.present);
       else
         state.attendance.push({
-          attendance_date: date,
+          lecture_number: lecture,
           username: entry.username,
           present: Boolean(entry.present),
         });
     }
     const revision = currentRevision + 1;
-    state.attendanceRevisions.set(date, revision);
+    state.attendanceRevisions.set(lecture, revision);
     return rows(
       [
         ['revision', 23],
@@ -268,13 +269,18 @@ function resultFor(query, parameters = []) {
     );
   }
 
-  if (normalized.includes('insert into attendance (attendance_date')) {
-    const [date, username, present] = params;
+  if (normalized.includes('insert into attendance (lecture_number')) {
+    const [lecture, username, present] = params;
     const existing = state.attendance.find(
-      (item) => item.attendance_date === date && item.username === username,
+      (item) => item.lecture_number === lecture && item.username === username,
     );
     if (existing) existing.present = Boolean(present);
-    else state.attendance.push({ attendance_date: date, username, present: Boolean(present) });
+    else
+      state.attendance.push({
+        lecture_number: lecture,
+        username,
+        present: Boolean(present),
+      });
     return emptyResult();
   }
 
