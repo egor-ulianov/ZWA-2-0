@@ -20,11 +20,11 @@ export function CourseOverview({ lessons }) {
       <main className={styles.overview}>
         <div className={styles.overviewInner}>
           <header className={styles.introduction}>
-            <p className={styles.eyebrow}>Kurz · 12 lekcí</p>
+            <p className={styles.eyebrow}>Kurz · 13 lekcí</p>
             <h1>Jak funguje moderní web</h1>
             <p>
-              Od sémantického HTML přes interaktivní rozhraní až po bezpečnou práci se stavem a daty
-              na serveru.
+              Od sítě a HTTP přes sémantické HTML a interaktivní rozhraní až po bezpečný server a
+              architekturu MVC.
             </p>
           </header>
 

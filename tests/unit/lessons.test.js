@@ -25,12 +25,12 @@ function loadNavigation() {
   return navigation;
 }
 
-test('lesson catalog preserves all twelve ordered public routes', () => {
+test('lesson catalog follows the thirteen-item exercise schedule without small-test entries', () => {
   const { lessons } = loadCatalog();
   const expectedHrefs = [
+    '/interactive-zwa-1/',
     '/interactive-zwa-1-html5',
     '/interactive-zwa-2-forms',
-    '/interactive-zwa-1/',
     '/interactive-zwa-2',
     '/interactive-zwa-5-css-ii',
     '/interactive-zwa-5-js',
@@ -40,17 +40,38 @@ test('lesson catalog preserves all twelve ordered public routes', () => {
     '/interactive-zwa-10-sessions-cookies',
     '/interactive-zwa-11-files-json',
     '/interactive-zwa-12-auth',
+    '/interactive-zwa-13-mvc',
+  ];
+  const expectedTitles = [
+    'GitLab, síť a HTTP',
+    'Jazyk HTML',
+    'Tvorba formulářů na klientské straně',
+    'CSS',
+    'CSS II',
+    'JavaScript',
+    'JavaScript II',
+    'Školní server a PHP',
+    'Obsluha formulářů na straně serveru, seznam, detail, CRUD',
+    'Udržení stavu aplikace (session)',
+    'Soubory',
+    'Autentizace a autorizace',
+    'MVC',
   ];
 
-  assert.equal(lessons.length, 12);
+  assert.equal(lessons.length, 13);
   assert.deepEqual(
     lessons.map((lesson) => lesson.number),
-    Array.from({ length: 12 }, (_, i) => i + 1),
+    Array.from({ length: 13 }, (_, i) => i + 1),
   );
   assert.deepEqual(
     lessons.map((lesson) => lesson.href),
     expectedHrefs,
   );
+  assert.deepEqual(
+    lessons.map((lesson) => lesson.shortTitle),
+    expectedTitles,
+  );
+  assert.ok(lessons.every((lesson) => !/malý test/i.test(`${lesson.title} ${lesson.shortTitle}`)));
   for (const key of ['number', 'slug', 'title', 'href', 'componentKey']) {
     assert.ok(
       lessons.every((lesson) => typeof lesson[key] === 'string' || typeof lesson[key] === 'number'),
@@ -64,8 +85,9 @@ test('lesson catalog preserves all twelve ordered public routes', () => {
 
 test('lesson catalog lookup helpers reject unknown lessons', () => {
   const { getLessonByNumber, getLessonBySlug, lessons } = loadCatalog();
-  assert.equal(getLessonByNumber(3).href, '/interactive-zwa-1/');
+  assert.equal(getLessonByNumber(1).href, '/interactive-zwa-1/');
   assert.equal(getLessonBySlug(lessons[6].slug).number, 7);
+  assert.equal(getLessonBySlug('mvc').number, 13);
   assert.equal(getLessonByNumber(0), undefined);
   assert.equal(getLessonByNumber('3'), undefined);
   assert.equal(getLessonBySlug('missing-lesson'), undefined);

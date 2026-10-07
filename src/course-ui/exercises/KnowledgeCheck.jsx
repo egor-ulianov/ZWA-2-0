@@ -19,10 +19,17 @@ export default function KnowledgeCheck({
   const [submitted, setSubmitted] = useState(false);
   const answered = Object.keys(answers).length;
   const total = questions.length;
+  const gradedTotal = questions.filter((question) =>
+    Number.isInteger(question.correctIndex),
+  ).length;
   const score = useMemo(
     () =>
       questions.reduce(
-        (sum, question) => sum + (answers[question.id] === question.correctIndex ? 1 : 0),
+        (sum, question) =>
+          sum +
+          (Number.isInteger(question.correctIndex) && answers[question.id] === question.correctIndex
+            ? 1
+            : 0),
         0,
       ),
     [answers, questions],
@@ -69,8 +76,9 @@ export default function KnowledgeCheck({
               <div role="radiogroup" aria-label={`Odpovědi pro otázku ${questionIndex + 1}`}>
                 {question.options.map((option, optionIndex) => {
                   const active = selected === optionIndex;
-                  const correct = submitted && optionIndex === question.correctIndex;
-                  const wrong = submitted && active && !correct;
+                  const graded = Number.isInteger(question.correctIndex);
+                  const correct = submitted && graded && optionIndex === question.correctIndex;
+                  const wrong = submitted && graded && active && !correct;
                   const state = correct
                     ? 'correct'
                     : wrong
@@ -103,10 +111,8 @@ export default function KnowledgeCheck({
         {submitted ? (
           <>
             <p role="status">
-              <strong>
-                {score} z {total}
-              </strong>{' '}
-              {resultMessage(score, total)}
+              <strong>{gradedTotal ? `${score} z ${gradedTotal}` : 'Hotovo'}</strong>{' '}
+              {resultMessage(score, gradedTotal)}
             </p>
             <button type="button" onClick={reset}>
               Zkusit znovu

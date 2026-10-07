@@ -11,7 +11,7 @@ const expectedModules = [
   ['state-data', 'Stav a data', 'apricot'],
 ];
 
-test('course modules preserve the approved order and group three ordered lessons each', () => {
+test('course modules preserve the approved order for all thirteen lessons', () => {
   assert.deepEqual(
     COURSE_MODULES.map(({ id, title, color }) => [id, title, color]),
     expectedModules,
@@ -25,14 +25,13 @@ test('course modules preserve the approved order and group three ordered lessons
       [1, 2, 3],
       [4, 5, 6],
       [7, 8, 9],
-      [10, 11, 12],
+      [10, 11, 12, 13],
     ],
   );
-  assert.ok(modules.every((module) => module.lessons.length === 3));
 });
 
 test('every public lesson has concise course metadata and unique local artwork', () => {
-  assert.equal(lessons.length, 12);
+  assert.equal(lessons.length, 13);
 
   for (const lesson of lessons) {
     assert.equal(typeof lesson.shortTitle, 'string');
@@ -43,7 +42,7 @@ test('every public lesson has concise course metadata and unique local artwork',
     assert.match(lesson.artwork, /^\/course-art\/lesson-\d{2}-[a-z0-9-]+\.svg$/);
   }
 
-  assert.equal(new Set(lessons.map((lesson) => lesson.artwork)).size, 12);
+  assert.equal(new Set(lessons.map((lesson) => lesson.artwork)).size, 13);
 });
 
 test('custom lesson lists retain route authority and omit unknown module entries', () => {

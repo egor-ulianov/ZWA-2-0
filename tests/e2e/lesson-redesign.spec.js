@@ -156,17 +156,65 @@ test.describe('F1 lesson composition and deep links', () => {
     );
   });
 
-  test('lecture quizzes share a rich shell while keeping individual teaching visuals', async ({
+  test('every lecture reviews the previous lecture with at least five questions', async ({
     page,
   }) => {
     await installDeterministicNetwork(page);
 
     const quizRoutes = [
-      { route: '/interactive-zwa-1?slide=quiz-html', visual: 'html-structure' },
-      { route: '/interactive-zwa-2?slide=quiz-css', visual: 'css-specificity' },
-      { route: '/interactive-zwa-5-css-ii?slide=quiz-css', visual: 'css-layout' },
-      { route: '/interactive-zwa-5-js?slide=quiz-css', visual: 'javascript-event-loop' },
-      { route: '/interactive-zwa-7?slide=quiz', visual: 'javascript-dom-ajax' },
+      {
+        route: '/interactive-zwa-1?slide=quiz-html',
+        title: 'Vaše zkušenost na začátku kurzu',
+        experience: true,
+      },
+      {
+        route: '/interactive-zwa-1-html5?slide=quiz',
+        title: 'Opakování: GitLab, síť a HTTP',
+      },
+      {
+        route: '/interactive-zwa-2-forms?slide=quiz',
+        title: 'Opakování: sémantické HTML',
+      },
+      {
+        route: '/interactive-zwa-2?slide=quiz-css',
+        title: 'Opakování: HTML formuláře',
+      },
+      {
+        route: '/interactive-zwa-5-css-ii?slide=quiz-css',
+        title: 'Opakování: základy CSS',
+      },
+      {
+        route: '/interactive-zwa-5-js?slide=quiz-css',
+        title: 'Opakování: CSS layout a responzivita',
+      },
+      {
+        route: '/interactive-zwa-7?slide=quiz',
+        title: 'Opakování: základy JavaScriptu',
+      },
+      {
+        route: '/interactive-zwa-8-php?slide=quiz',
+        title: 'Opakování: JavaScript třídy a AJAX',
+      },
+      {
+        route: '/interactive-zwa-9?slide=quiz',
+        title: 'Opakování: základy PHP',
+      },
+      {
+        route: '/interactive-zwa-10-sessions-cookies?slide=quiz',
+        title: 'Opakování: serverové formuláře a CRUD',
+      },
+      {
+        route: '/interactive-zwa-11-files-json?slide=quiz',
+        title: 'Opakování: sessions a cookies',
+      },
+      {
+        route: '/interactive-zwa-12-auth?slide=quiz',
+        title: 'Opakování: soubory a JSON',
+      },
+      {
+        route: '/interactive-zwa-13-mvc?slide=quiz',
+        title: 'Opakování: autentizace a autorizace',
+      },
     ];
 
     for (const quizRoute of quizRoutes) {
@@ -174,15 +222,51 @@ test.describe('F1 lesson composition and deep links', () => {
       const quiz = page.locator('[data-lesson-quiz]');
       await expect(quiz).toBeVisible();
       await expect(quiz.getByText('Rychlá kontrola', { exact: true })).toBeVisible();
-      await expect(quiz.locator('[data-quiz-visual]')).toHaveAttribute(
-        'data-quiz-visual',
-        quizRoute.visual,
-      );
+      await expect(quiz.getByRole('heading', { name: quizRoute.title })).toBeVisible();
+      const questionCount = await quiz.locator('fieldset').count();
+      if (quizRoute.experience) {
+        expect(questionCount).toBe(1);
+      } else {
+        expect(questionCount).toBeGreaterThanOrEqual(5);
+      }
       await expect(quiz.locator('[data-quiz-progress]')).toHaveText(/0 (?:\/|z) \d+ zodpovězeno/);
+      if (quizRoute.experience) {
+        await expect(
+          quiz.locator('fieldset legend').filter({ hasText: /zkušenost/i }),
+        ).toBeVisible();
+      }
 
       await quiz.locator('[data-quiz-option]').first().click();
       await expect(quiz.locator('[data-quiz-progress]')).toHaveText(/1 (?:\/|z) \d+ zodpovězeno/);
+      if (quizRoute.experience) {
+        await quiz.getByRole('button', { name: 'Ověřit odpovědi' }).click();
+        await expect(quiz.getByRole('status')).toContainText('Hotovo');
+        await expect(quiz.getByRole('status')).toContainText('Na výsledku se nic neboduje');
+        await expect(quiz.locator('[data-answer-state="incorrect"]')).toHaveCount(0);
+      }
     }
+  });
+
+  test('graded review quizzes score mixed answers and reset cleanly', async ({ page }) => {
+    await installDeterministicNetwork(page);
+    await page.goto('/interactive-zwa-1-html5?slide=quiz');
+
+    const quiz = page.locator('[data-lesson-quiz]');
+    const questions = quiz.locator('fieldset');
+    await expect(questions).toHaveCount(5);
+
+    for (let index = 0; index < 5; index += 1) {
+      await questions.nth(index).locator('[data-quiz-option]').first().click();
+    }
+    await quiz.getByRole('button', { name: 'Ověřit odpovědi' }).click();
+
+    await expect(quiz.getByRole('status')).toContainText('2 z 5');
+    await expect(quiz.locator('[data-answer-state="incorrect"]')).toHaveCount(3);
+    await expect(quiz.locator('[data-answer-state="correct"]')).toHaveCount(5);
+
+    await quiz.getByRole('button', { name: 'Zkusit znovu' }).click();
+    await expect(quiz.locator('[data-quiz-progress]')).toHaveText('0 z 5 zodpovězeno');
+    await expect(quiz.locator('[data-answer-state="incorrect"]')).toHaveCount(0);
   });
 
   test('HTML5 lesson keeps its task deep link and learning objective', async ({ page }) => {

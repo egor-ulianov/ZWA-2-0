@@ -1,4 +1,4 @@
-import { isValidElement } from 'react';
+import { isValidElement, useEffect, useRef, useState } from 'react';
 
 import styles from './exercise.module.css';
 
@@ -55,6 +55,54 @@ export default function ExerciseStage({
   verificationLabel = 'Spustit ověření',
   staticCheck = false,
 }) {
+  const [ideExpanded, setIdeExpanded] = useState(false);
+  const shrinkButtonRef = useRef(null);
+  const workspaceRef = useRef(null);
+
+  useEffect(() => {
+    if (!ideExpanded) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    const returnFocus = document.activeElement;
+    const focusFrame = requestAnimationFrame(() => shrinkButtonRef.current?.focus());
+
+    document.body.style.overflow = 'hidden';
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setIdeExpanded(false);
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+      const focusable = Array.from(
+        workspaceRef.current?.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) || [],
+      ).filter((element) => !element.hasAttribute('hidden'));
+      const first = focusable[0];
+      const last = focusable.at(-1);
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      requestAnimationFrame(() => returnFocus?.focus());
+    };
+  }, [ideExpanded]);
+
   return (
     <div className={styles.stage} data-exercise-stage="true" data-projector-private={privateMarker}>
       <section role="region" aria-label="Zadání" className={styles.brief}>
@@ -63,10 +111,38 @@ export default function ExerciseStage({
         <div>{brief}</div>
       </section>
 
-      <section role="region" aria-label="IDE" className={styles.workspace}>
-        <div className={styles.regionHeading}>
-          <span>02</span>
-          <h3>IDE</h3>
+      {ideExpanded ? (
+        <div
+          aria-hidden="true"
+          className={styles.ideBackdrop}
+          data-ide-backdrop="true"
+          onClick={() => setIdeExpanded(false)}
+        />
+      ) : null}
+
+      <section
+        ref={workspaceRef}
+        role={ideExpanded ? 'dialog' : 'region'}
+        aria-label={ideExpanded ? 'Rozšířené IDE' : 'IDE'}
+        aria-modal={ideExpanded ? 'true' : undefined}
+        className={`${styles.workspace} ${ideExpanded ? styles.workspaceExpanded : ''}`}
+        data-ide-expanded={ideExpanded ? 'true' : undefined}
+      >
+        <div className={styles.workspaceHeader}>
+          <div className={styles.regionHeading}>
+            <span>02</span>
+            <h3>IDE</h3>
+          </div>
+          <button
+            ref={ideExpanded ? shrinkButtonRef : undefined}
+            type="button"
+            className={styles.ideSizeButton}
+            aria-label={ideExpanded ? 'Zmenšit IDE' : 'Rozbalit IDE'}
+            onClick={() => setIdeExpanded((expanded) => !expanded)}
+          >
+            <span aria-hidden="true">{ideExpanded ? '↙' : '↗'}</span>
+            {ideExpanded ? 'Zmenšit IDE' : 'Rozbalit IDE'}
+          </button>
         </div>
         {studio}
       </section>

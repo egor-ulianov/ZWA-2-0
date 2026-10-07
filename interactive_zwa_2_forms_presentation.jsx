@@ -13,6 +13,7 @@ import EditorialIllustration from './src/course-ui/content/EditorialIllustration
 import Code from './src/course-ui/content/InlineCode.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
+import PreviousLectureQuiz from './src/course-ui/exercises/PreviousLectureQuiz.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
 import StudioTabs from './src/course-ui/exercises/StudioTabs.jsx';
 import SandboxFrame from './src/course-ui/exercises/runtime/SandboxFrame.jsx';
@@ -1403,6 +1404,7 @@ const FORM_TASK_STARTERS = {
 
 const sections = [
   { id: 'overview', title: 'Přehled', activityType: 'learn' },
+  { id: 'quiz', title: 'Opakování předchozí lekce', activityType: 'quick-check' },
   { id: 'playground', title: 'Sekce', activityType: 'build' },
   ...FORM_TASKS.map((task) => ({ id: task.id, title: task.label, activityType: 'apply' })),
 ];
@@ -1478,7 +1480,7 @@ export default function AppFormsLesson2() {
   const activeTask =
     FORM_TASKS.find((task) => task.id === activeSection) ||
     (activeSection === 'tasks' ? FORM_TASKS[0] : null);
-  const lesson = getLessonByNumber(2);
+  const lesson = getLessonByNumber(3);
 
   return (
     <LearningExperience
@@ -1486,7 +1488,7 @@ export default function AppFormsLesson2() {
       sections={navigationSections}
       activeSection={activeSection}
       onChange={setActiveSection}
-      title="ZWA-2: Klientské formuláře (lekce 2)"
+      title="ZWA-3: Tvorba formulářů na klientské straně"
       objective="Rozpoznáte HTML5 prvky formulářů a ověříte jejich atributy i klientskou validaci."
       subtitle={
         <>
@@ -1502,7 +1504,7 @@ export default function AppFormsLesson2() {
           .
         </>
       }
-      footerText="ZWA – Interaktivní formuláře, lekce 2"
+      footerText="ZWA – Interaktivní formuláře, lekce 3"
     >
       <LearningSection section={currentSection} idPrefix="lesson-forms">
         {activeSection === 'overview' && (
@@ -1516,6 +1518,8 @@ export default function AppFormsLesson2() {
             ]}
           />
         )}
+
+        {activeSection === 'quiz' && <PreviousLectureQuiz lessonNumber={3} />}
 
         {activeSection === 'playground' && <FormsSections />}
 

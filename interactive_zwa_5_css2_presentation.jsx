@@ -14,7 +14,7 @@ import EditorialIllustration from './src/course-ui/content/EditorialIllustration
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
-import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
+import PreviousLectureQuiz from './src/course-ui/exercises/PreviousLectureQuiz.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
 import StudioTabs from './src/course-ui/exercises/StudioTabs.jsx';
 import SandboxFrame from './src/course-ui/exercises/runtime/SandboxFrame.jsx';
@@ -568,6 +568,13 @@ const slideDefinitions = [
     ],
   },
   {
+    id: 'quiz-css',
+    title: 'KVÍZ: CSS základy',
+    activityType: 'quick-check',
+    presenterNotes: 'Otázky opakují látku z předchozí lekce CSS.',
+    steps: [],
+  },
+  {
     id: 'theory',
     title: 'Teorie – CSS II',
     activityType: 'learn',
@@ -629,13 +636,6 @@ const slideDefinitions = [
     title: 'Odkazy',
     activityType: 'learn',
     links: CSS2_REFERENCE_LINKS,
-  },
-  {
-    id: 'quiz-css',
-    title: 'KVÍZ: CSS základy',
-    activityType: 'quick-check',
-    presenterNotes: 'Nechte studenty nejdřív zdůvodnit volbu, teprve potom zobrazte skóre.',
-    steps: [],
   },
   {
     id: 'tasks',
@@ -704,7 +704,7 @@ function Css2SlideContent({ slide }) {
       )}
       {slide.id === 'quiz-css' && (
         <div className="mt-2">
-          <QuizCssBasics />
+          <ReviewQuiz />
         </div>
       )}
     </>
@@ -737,78 +737,8 @@ function CssLayoutTheory({ sections }) {
   );
 }
 
-function QuizCssBasics() {
-  const questions = [
-    {
-      id: 'q1',
-      text: 'Pořadí stavů odkazů (doporučené) je…',
-      options: [
-        ':visited, :link, :hover, :active',
-        ':link, :visited, :hover, :active',
-        ':hover, :link, :visited, :active',
-      ],
-      correctIndex: 1,
-      hint: 'LVHA',
-    },
-    {
-      id: 'q2',
-      text: 'Které pravidlo má vyšší specifitu?',
-      options: ['.card .title', '#title', 'header h1'],
-      correctIndex: 1,
-      hint: 'id > třída > element',
-    },
-    {
-      id: 'q3',
-      text: 'Co dělá box-sizing:border-box?',
-      options: ['Zruší padding', 'Zahrne padding+border do šířky/výšky', 'Změní display na block'],
-      correctIndex: 1,
-      hint: 'Výpočet boxu',
-    },
-    {
-      id: 'q4',
-      text: 'Které z následujících ODEBERE element z toku a accessibility?',
-      options: ['visibility:hidden', 'display:none', 'opacity:0'],
-      correctIndex: 1,
-      hint: 'display:none',
-    },
-    {
-      id: 'q5',
-      text: 'Jak zarovnáte tlačítko vpravo ve flex řádku?',
-      options: ['text-align:right', 'margin-left:auto', 'float:right'],
-      correctIndex: 1,
-      hint: 'Flex a auto margin',
-    },
-    {
-      id: 'q6',
-      text: 'Mobile-first media query pro desktop je…',
-      options: [
-        '@media (max-width: 800px)',
-        '@media (min-width: 800px)',
-        '@media screen and (touch)',
-      ],
-      correctIndex: 1,
-      hint: 'min-width pro větší obrazovky',
-    },
-    {
-      id: 'q7',
-      text: 'Jak nejlépe zajistit obtékání obrázku textem v moderním layoutu?',
-      options: ['float', 'flexbox justify-content', 'obvykle ne – použíjte float jen výjimečně'],
-      correctIndex: 2,
-      hint: 'Float je historický',
-    },
-  ];
-  return (
-    <KnowledgeCheck
-      title="CSS II: layout a responzivita"
-      subtitle="Ověřte si box model, flexbox, media queries, display a práci s odkazy."
-      questions={questions}
-      visual={
-        <div role="img" aria-label="Schéma CSS layoutu" data-quiz-visual="css-layout">
-          <strong>flex</strong> · grid · @media
-        </div>
-      }
-    />
-  );
+function ReviewQuiz() {
+  return <PreviousLectureQuiz lessonNumber={5} />;
 }
 
 export default function AppCss2Lesson() {

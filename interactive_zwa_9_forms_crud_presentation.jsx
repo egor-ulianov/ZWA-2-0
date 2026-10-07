@@ -1,6 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import mvcImg from './src/interactive-zwa-8/ssr-mvc.png';
-import restImg from './src/interactive-zwa-8/resful.jpg';
 import gloryImg from './src/interactive-zwa-8/gloryofrest.png';
 import { getLessonByNumber } from './src/config/lessons.js';
 import EditorialCallout from './src/course-ui/content/EditorialCallout.jsx';
@@ -9,6 +7,7 @@ import EditorialIllustration from './src/course-ui/content/EditorialIllustration
 import Code from './src/course-ui/content/InlineCode.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import PhpTheoryChapter from './src/course-ui/content/PhpTheoryChapter.jsx';
+import PreviousLectureQuiz from './src/course-ui/exercises/PreviousLectureQuiz.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -67,12 +66,6 @@ const PHP_THEORY_CHAPTERS = {
       'CRUD není seznam čtyř zkratek, ale tok mezi seznamem, detailem, formulářem a potvrzením změny. Každá operace má vlastní URL, vstupy a výsledek.',
     title: 'Jednotlivé operace tvoří souvislý tok',
   },
-  'theory-arch': {
-    component: TheoryArchitecture,
-    intro:
-      'Stejnou doménovou logiku lze vystavit jako serverem vykreslené HTML nebo jako datové API. Rozhoduje typ klienta, způsob navigace a provozní potřeby.',
-    title: 'SSR, MVC a REST rozdělují odpovědnosti jinak',
-  },
   'rest-glory': {
     component: GloryRestSlide,
     intro:
@@ -106,6 +99,8 @@ function LessonSlideContent({ slide }) {
           ]}
         />
       )}
+
+      {slide.id === 'quiz' && <PreviousLectureQuiz lessonNumber={9} />}
 
       {PHP_THEORY_CHAPTERS[slide.id] && <PhpTheorySlide id={slide.id} />}
 
@@ -643,87 +638,6 @@ switch ($action) {
   );
 }
 
-function TheoryArchitecture() {
-  return (
-    <div className="space-y-4">
-      <div className="space-y-6">
-        <img
-          src={mvcImg.src}
-          alt="SSR/MVC schema"
-          className="rounded-lg border border-zinc-200 dark:border-zinc-800"
-        />
-        <img
-          src={restImg.src}
-          alt="REST concept"
-          className="rounded-lg border border-zinc-200 dark:border-zinc-800"
-        />
-      </div>
-      <InfoBox>
-        <div className="font-semibold mb-1">Kde se CRUD bere v architektuře</div>
-        <ul className="list-disc pl-6 space-y-1 text-sm">
-          <li>
-            <strong>SSR/MVC:</strong> PHP generuje HTML na základě požadavků. Controller čte vstupy,
-            volá model, vrací view.
-          </li>
-          <li>
-            <strong>REST:</strong> server poskytuje JSON API (GET/POST/PUT/DELETE) a frontend (např.
-            JS) zobrazuje data.
-          </li>
-        </ul>
-      </InfoBox>
-      <div className="space-y-6">
-        <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
-          <div className="font-semibold mb-2 text-sm">SSR/MVC – kdy a proč</div>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>Rychlý první render, SEO přirozeně, jednoduché linky a formuláře.</li>
-            <li>Menší JS bundle – výkon na slabších zařízeních.</li>
-            <li>Skvělé pro obsahové a administrativní aplikace.</li>
-          </ul>
-          <TheoryCodeBlock>
-            <code className="language-text">{`Model (data, DB) ←→ Controller (logika) ←→ View (HTML šablona)`}</code>
-          </TheoryCodeBlock>
-        </div>
-        <div className="rounded-lg bg-white/60 dark:bg-zinc-900/60 p-4">
-          <div className="font-semibold mb-2 text-sm">REST API – kdy a proč</div>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>Oddělení klientů (web, mobil, integrace) od backendu.</li>
-            <li>Kešování odpovědí, škálování, možnost verzování.</li>
-            <li>Jasné mapování: zdroj → URL, operace → HTTP verb.</li>
-          </ul>
-          <TheoryCodeBlock>
-            <code className="language-text">{`GET /articles       → list
-POST /articles      → create
-GET /articles/{id}  → detail
-PUT /articles/{id}  → full update
-PATCH /articles/{id}→ partial update
-DELETE /articles/{id} → delete`}</code>
-          </TheoryCodeBlock>
-        </div>
-      </div>
-      <div className="text-xs text-zinc-500">
-        Kurzová opora (cvičení 09):{' '}
-        <a
-          className="underline"
-          href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/09/start"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          Cvičení 09 – Obsluha formulářů, seznam, detail, CRUD
-        </a>{' '}
-        • Teorie REST:{' '}
-        <a
-          className="underline"
-          href="https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          Roy Fielding – Dissertation (REST)
-        </a>
-      </div>
-    </div>
-  );
-}
-
 function GloryRestSlide() {
   return (
     <div className="space-y-4">
@@ -973,6 +887,7 @@ export default function AppPhpLesson9() {
         subtitle: 'Obsluha formulářů, seznam, detail, CRUD',
         activityType: 'learn',
       },
+      { id: 'quiz', title: 'Opakování předchozí lekce', activityType: 'quick-check' },
       { id: 'theory-lifecycle', title: 'Teorie – Životní cyklus formuláře', activityType: 'learn' },
       {
         id: 'theory-methods',
@@ -987,7 +902,6 @@ export default function AppPhpLesson9() {
       { id: 'theory-validation', title: 'Teorie – Validace a sanitizace', activityType: 'learn' },
       { id: 'theory-session', title: 'Teorie – Session (BONUS)', activityType: 'learn' },
       { id: 'theory-crud', title: 'Teorie – Mini CRUD', activityType: 'learn' },
-      { id: 'theory-arch', title: 'Kontekst – SSR/MVC a REST', activityType: 'learn' },
       { id: 'rest-glory', title: 'REST Maturity – Glory of REST', activityType: 'learn' },
       ...LESSON9_TASKS.map(({ id, title }) => ({ id, title, activityType: 'apply' })),
       { id: 'summary', title: 'Shrnutí a odkazy', activityType: 'learn' },

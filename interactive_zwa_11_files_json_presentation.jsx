@@ -6,6 +6,7 @@ import EditorialIllustration from './src/course-ui/content/EditorialIllustration
 import Code from './src/course-ui/content/InlineCode.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import PhpTheoryChapter from './src/course-ui/content/PhpTheoryChapter.jsx';
+import PreviousLectureQuiz from './src/course-ui/exercises/PreviousLectureQuiz.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -75,6 +76,7 @@ function LessonSlideContent({ slide }) {
           ]}
         />
       )}
+      {slide.id === 'quiz' && <PreviousLectureQuiz lessonNumber={11} />}
       {PHP_THEORY_CHAPTERS[slide.id] && <PhpTheorySlide id={slide.id} />}
 
       {LESSON11_TASKS.some((task) => task.id === slide.id) && (
@@ -524,6 +526,7 @@ export default function AppPhpLesson11() {
         subtitle: 'Soubory a JSON v PHP',
         activityType: 'learn',
       },
+      { id: 'quiz', title: 'Opakování předchozí lekce', activityType: 'quick-check' },
       { id: 'theory-files', title: 'Teorie – Práce se soubory', activityType: 'learn' },
       { id: 'theory-json', title: 'Teorie – JSON (encode/decode)', activityType: 'learn' },
       {

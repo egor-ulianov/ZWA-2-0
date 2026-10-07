@@ -64,7 +64,7 @@ test.describe('responsive portal and projector views', () => {
     await expect(next).toBeFocused();
     await next.press('Enter');
 
-    await expect(page).toHaveURL(/mode=projector.*slide=sections/);
+    await expect(page).toHaveURL(/mode=projector.*slide=quiz/);
     await expect(page.getByRole('button', { name: 'Následující snímek' })).toBeFocused();
   });
 });

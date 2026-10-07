@@ -5,7 +5,7 @@ import EditorialIllustration from './src/course-ui/content/EditorialIllustration
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
-import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
+import PreviousLectureQuiz from './src/course-ui/exercises/PreviousLectureQuiz.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
 import StudioTabs from './src/course-ui/exercises/StudioTabs.jsx';
 import { getJavaScriptDefinition } from './src/course-ui/exercises/behavior/testDefinitions.js';
@@ -312,10 +312,9 @@ const slideDefinitions = [
   },
   {
     id: 'quiz-css',
-    title: 'KVÍZ: JavaScript základy',
+    title: 'KVÍZ: CSS II',
     activityType: 'quick-check',
-    presenterNotes:
-      'Nechte studenty vysvětlit volbu typu, deklarace nebo DOM API před vyhodnocením odpovědí.',
+    presenterNotes: 'Otázky opakují layout a responzivitu z předchozí lekce CSS II.',
   },
   {
     id: 'theory',
@@ -431,7 +430,7 @@ function JsSlideContent({ slide, stepIndex, onStepIndexChange }) {
       )}
       {slide.id === 'quiz-css' && (
         <div className="mt-2">
-          <QuizCssBasics />
+          <ReviewQuiz />
         </div>
       )}
       {slide.id !== 'title' && slide.bullets && (
@@ -523,83 +522,8 @@ function JavaScriptTheory({ sections }) {
   );
 }
 
-function QuizCssBasics() {
-  const questions = [
-    {
-      id: 'q1',
-      text: 'Co vrátí výraz typeof 42?',
-      options: ['number', 'string', 'object'],
-      correctIndex: 0,
-      hint: 'typeof vrací řetězec s typem hodnoty.',
-    },
-    {
-      id: 'q2',
-      text: 'Kterou deklaraci nelze znovu přiřadit?',
-      options: ['var', 'let', 'const'],
-      correctIndex: 2,
-      hint: 'const chrání vazbu proměnné před novým přiřazením.',
-    },
-    {
-      id: 'q3',
-      text: 'Který operátor porovnává hodnotu i typ bez přetypování?',
-      options: ['==', '=', '==='],
-      correctIndex: 2,
-      hint: 'Striktní rovnost je v JavaScriptu ===.',
-    },
-    {
-      id: 'q4',
-      text: 'Co pro pole typicky prochází cyklus for...of?',
-      options: ['indexy', 'hodnoty', 'vlastnosti prototypu'],
-      correctIndex: 1,
-      hint: 'for...of iteruje přes hodnoty iterovatelného objektu.',
-    },
-    {
-      id: 'q5',
-      text: 'Který zápis vybere první prvek odpovídající CSS selektoru?',
-      options: [
-        'document.querySelector(selector)',
-        'document.querySelectorAll(selector)',
-        'document.getElements(selector)',
-      ],
-      correctIndex: 0,
-      hint: 'querySelector vrací první odpovídající prvek.',
-    },
-    {
-      id: 'q6',
-      text: 'Který zápis správně připojí handler na kliknutí?',
-      options: [
-        "button.addEventListener('click', handler)",
-        'button.click(handler)',
-        "listen(button, 'click', handler)",
-      ],
-      correctIndex: 0,
-      hint: 'Události se připojují metodou addEventListener.',
-    },
-    {
-      id: 'q7',
-      text: 'Co udělá event.preventDefault() ve formuláři?',
-      options: ['zastaví výchozí akci prohlížeče', 'odstraní handler', 'ukončí celý JavaScript'],
-      correctIndex: 0,
-      hint: 'Například zabrání odeslání formuláře a reloadu stránky.',
-    },
-  ];
-
-  return (
-    <KnowledgeCheck
-      title="JavaScript základy"
-      subtitle="Procvičte typy, deklarace, cykly, DOM selektory a práci s událostmi."
-      questions={questions}
-      visual={
-        <div
-          role="img"
-          aria-label="Schéma JavaScript event loop"
-          data-quiz-visual="javascript-event-loop"
-        >
-          call stack → queue → event loop
-        </div>
-      }
-    />
-  );
+function ReviewQuiz() {
+  return <PreviousLectureQuiz lessonNumber={6} />;
 }
 
 export default function AppJsLesson5() {

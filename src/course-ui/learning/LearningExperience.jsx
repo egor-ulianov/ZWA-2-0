@@ -121,11 +121,28 @@ export function LearningExperience({
       sections={sections}
     />
   );
+  const presentationHref = currentSection?.id
+    ? `?mode=projector&slide=${encodeURIComponent(currentSection.id)}`
+    : '?mode=projector';
+  const presentationAction = (
+    <a
+      aria-label="Spustit prezentaci"
+      className={styles.presentationAction}
+      data-presentation-launch
+      href={presentationHref}
+    >
+      <span aria-hidden="true" className={styles.presentationIcon}>
+        ▶
+      </span>
+      <span className={styles.presentationLabel}>Prezentace</span>
+    </a>
+  );
 
   return (
     <LearningContext.Provider value={contextValue}>
       <CourseApplication title={title || lesson?.shortTitle || lesson?.title} variant="lesson">
         <CourseMasthead
+          actions={presentationAction}
           contextLabel={lesson?.number ? `Lekce ${lesson.number}` : 'Lekce'}
           outlineControl={outlineControl}
         />

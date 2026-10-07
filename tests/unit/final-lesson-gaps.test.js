@@ -7,8 +7,9 @@ const root = fileURLToPath(new URL('../..', import.meta.url));
 
 test('catalog metadata uses Czech titles while preserving stable route identifiers', async () => {
   const source = await readFile(`${root}/src/config/lessons.js`, 'utf8');
-  assert.match(source, /HTML5 prezentace/);
-  assert.match(source, /simulovanou linuxovou CLI/);
+  assert.match(source, /GitLab, síť a HTTP/);
+  assert.match(source, /Jazyk HTML/);
+  assert.match(source, /Tvorba formulářů na klientské straně/);
   assert.doesNotMatch(source, /Presentation with Live Playground|Simulated Linux CLI/);
   assert.match(source, /href: '\/interactive-zwa-1-html5'/);
 });
@@ -20,7 +21,7 @@ test('shared catalog chrome and module metadata are Czech', async () => {
     readFile(`${root}/src/course-ui/course/courseModel.js`, 'utf8'),
   ]);
   assert.match(frame, /ZWA/);
-  assert.match(roadmap, /Kurz · 12 lekcí/);
+  assert.match(roadmap, /Kurz · 13 lekcí/);
   assert.match(metadata, /Základy webu/);
   assert.doesNotMatch(roadmap, /Course catalogue|Course roadmap|Open lesson/);
   assert.doesNotMatch(

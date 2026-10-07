@@ -6,6 +6,7 @@ import EditorialIllustration from './src/course-ui/content/EditorialIllustration
 import Code from './src/course-ui/content/InlineCode.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import PhpTheoryChapter from './src/course-ui/content/PhpTheoryChapter.jsx';
+import PreviousLectureQuiz from './src/course-ui/exercises/PreviousLectureQuiz.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -87,6 +88,7 @@ function LessonSlideContent({ slide }) {
           ]}
         />
       )}
+      {slide.id === 'quiz' && <PreviousLectureQuiz lessonNumber={12} />}
       {PHP_THEORY_CHAPTERS[slide.id] && <PhpTheorySlide id={slide.id} />}
 
       {LESSON12_TASKS.some((task) => task.id === slide.id) && (
@@ -526,6 +528,7 @@ export default function AppPhpLesson12() {
         subtitle: 'Autentizace a autorizace v PHP',
         activityType: 'learn',
       },
+      { id: 'quiz', title: 'Opakování předchozí lekce', activityType: 'quick-check' },
       { id: 'theory-terms', title: 'Teorie – Pojmy (authn vs authz)', activityType: 'learn' },
       { id: 'theory-methods', title: 'Teorie – Způsoby autentikace', activityType: 'learn' },
       { id: 'theory-passwords', title: 'Teorie – Ukládání hesel', activityType: 'learn' },

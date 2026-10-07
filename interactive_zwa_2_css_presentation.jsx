@@ -14,7 +14,7 @@ import EditorialIllustration from './src/course-ui/content/EditorialIllustration
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
-import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
+import PreviousLectureQuiz from './src/course-ui/exercises/PreviousLectureQuiz.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
 import StudioTabs from './src/course-ui/exercises/StudioTabs.jsx';
 import SandboxFrame from './src/course-ui/exercises/runtime/SandboxFrame.jsx';
@@ -649,7 +649,7 @@ const slideDefinitions = [
   },
   {
     id: 'quiz-css',
-    title: 'KVÍZ: CSS základy',
+    title: 'KVÍZ: HTML formuláře',
     activityType: 'quick-check',
     body: null,
   },
@@ -834,7 +834,7 @@ function CssSlideContent({ slide, stepIndex: controlledIndex, onStepIndexChange 
       )}
       {slide.id === 'quiz-css' && (
         <div className="mt-2">
-          <QuizCssBasics />
+          <ReviewQuiz />
         </div>
       )}
       {slide.id !== 'title' && slide.bullets && !hasSections && !hasSteps && (
@@ -965,61 +965,6 @@ export default function App() {
   );
 }
 
-function QuizCssBasics() {
-  const questions = [
-    {
-      id: 'q1',
-      text: 'Který selektor cílí na element s id="title"?',
-      options: ['.title', '#title', 'title'],
-      correctIndex: 1,
-      hint: 'id selektor',
-    },
-    {
-      id: 'q2',
-      text: 'Co je vyšší specifita?',
-      options: ['.nav a', '#nav a', 'a.nav'],
-      correctIndex: 1,
-      hint: 'id > třída > element',
-    },
-    {
-      id: 'q3',
-      text: 'Jak nastavíte font na Georgia a fallback serif?',
-      options: ['font: Georgia;', 'font-family: Georgia, serif;', 'font-style: Georgia, serif;'],
-      correctIndex: 1,
-      hint: 'font-family',
-    },
-    {
-      id: 'q4',
-      text: 'Jak stylovat navštívený odkaz?',
-      options: ['a:hover', 'a:visited', 'a:active'],
-      correctIndex: 1,
-      hint: ':visited',
-    },
-    {
-      id: 'q5',
-      text: 'Jak vyberete první písmeno odstavce .excerpt?',
-      options: ['p.excerpt:first-letter', 'p.excerpt::first-letter', 'p:first-letter.excerpt'],
-      correctIndex: 1,
-      hint: '::first-letter',
-    },
-    {
-      id: 'q6',
-      text: 'Která vlastnost nastaví číslování na lower-alpha?',
-      options: ['list-style', 'list-style-type', 'counter-style'],
-      correctIndex: 1,
-      hint: 'list-style-type',
-    },
-  ];
-  return (
-    <KnowledgeCheck
-      title="CSS základy"
-      subtitle="Procvičte selektory, specifitu, stavové pseudo-třídy a typické CSS vlastnosti."
-      questions={questions}
-      visual={
-        <div role="img" aria-label="Schéma specificity CSS" data-quiz-visual="css-specificity">
-          <strong>#id</strong> &gt; .třída &gt; element
-        </div>
-      }
-    />
-  );
+function ReviewQuiz() {
+  return <PreviousLectureQuiz lessonNumber={4} />;
 }

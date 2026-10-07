@@ -15,10 +15,10 @@ test.describe('public catalog and lesson navigation', () => {
 
     const modules = page.locator('article[data-course-module]');
     await expect(modules).toHaveCount(4);
-    for (const moduleCard of await modules.all()) {
-      await expect(moduleCard.getByRole('link')).toHaveCount(3);
+    for (const [index, moduleCard] of (await modules.all()).entries()) {
+      await expect(moduleCard.getByRole('link')).toHaveCount(index === 3 ? 4 : 3);
     }
-    const networkLesson = page.getByRole('link', { name: /Jak putuje požadavek/ });
+    const networkLesson = page.getByRole('link', { name: /GitLab, síť a HTTP/ });
     await expect(networkLesson).toHaveAttribute('href', '/interactive-zwa-1');
 
     await networkLesson.click();
@@ -51,7 +51,7 @@ test.describe('public catalog and lesson navigation', () => {
     await expect(firstLesson).toBeFocused();
     await firstLesson.press('Enter');
 
-    await expect(page).toHaveURL(/\/interactive-zwa-1-html5\/?(?:\?slide=(?:title|intro))?$/);
+    await expect(page).toHaveURL(/\/interactive-zwa-1\/?(?:\?slide=title)?$/);
     await expect(page.locator('h1').first()).toBeVisible();
   });
 
@@ -63,7 +63,7 @@ test.describe('public catalog and lesson navigation', () => {
     await page.goto('/interactive-zwa-1-html5?slide=tasks#stale');
     await expect(page.getByRole('button', { name: 'Osnova lekce' })).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'Navigace mezi snímky' })).toHaveCount(0);
-    await expect(page.getByText('Lekce 1', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('Lekce 2', { exact: true }).first()).toBeVisible();
     await page.getByRole('button', { name: 'Osnova lekce' }).click();
     await expect(
       page
@@ -98,10 +98,10 @@ test.describe('public catalog and lesson navigation', () => {
     await expect(page.getByRole('tablist')).toHaveCount(0);
     await expect(page.getByRole('tabpanel')).toHaveCount(0);
     let slides = outline.getByRole('button').filter({ hasNotText: '×' });
-    await expect(slides).toHaveCount(6);
+    await expect(slides).toHaveCount(7);
 
     await slides.nth(1).click();
-    await expect(page).toHaveURL(/slide=sections/);
+    await expect(page).toHaveURL(/slide=quiz/);
 
     await page.keyboard.press('End');
     await expect(page).toHaveURL(/slide=html-task-media/);

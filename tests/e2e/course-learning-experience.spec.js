@@ -20,9 +20,11 @@ test.describe('HTML5 course learning experience', () => {
       'aria-valuenow',
       '1',
     );
-    await expect(page.getByRole('heading', { level: 1, name: /HTML5/ })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /Jazyk HTML/ })).toBeVisible();
     await expect(page.getByRole('heading', { level: 2, name: 'Úvod' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Další: Sekce' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Další: Opakování předchozí lekce' }),
+    ).toBeVisible();
     await expect(page.locator('[class*="portal-"], .lesson-shell')).toHaveCount(0);
   });
 

@@ -323,7 +323,51 @@
   font-weight: 800;
 }
 
+.presentationAction {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--course-blue);
+  border-radius: 999px;
+  background: var(--course-blue);
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.presentationAction:hover {
+  border-color: var(--course-blue-deep);
+  background: var(--course-blue-deep);
+}
+
+.presentationIcon {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
 @media (max-width: 34rem) {
+  .presentationLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .presentationAction {
+    width: 2.75rem;
+    padding-inline: 0;
+  }
+
   .hero {
     padding-inline: 0.625rem;
   }

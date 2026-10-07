@@ -13,6 +13,6 @@ test('homepage renders the lesson catalog and protected workspace entry point', 
   expect(response).not.toBeNull();
   expect(response.ok()).toBe(true);
   await expect(page.getByRole('heading', { name: 'Jak funguje moderní web' })).toBeVisible();
-  await expect(page.getByRole('main').getByRole('link', { name: /Otevřít lekci/ })).toHaveCount(12);
+  await expect(page.getByRole('main').getByRole('link', { name: /Otevřít lekci/ })).toHaveCount(13);
   await expect(page.getByRole('link', { name: 'Docházka' })).toBeVisible();
 });

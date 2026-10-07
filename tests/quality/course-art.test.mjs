@@ -8,7 +8,7 @@ import { lessons } from '../../src/config/lessons.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
-test('all twelve original lecture illustrations follow the shared vector rules', async () => {
+test('every lecture illustration follows the shared vector rules', async () => {
   const bodies = [];
 
   for (const lesson of lessons) {
@@ -24,6 +24,6 @@ test('all twelve original lecture illustrations follow the shared vector rules',
     assert.match(body, /aria-hidden="true"/);
   }
 
-  assert.equal(bodies.length, 12);
-  assert.equal(new Set(bodies).size, 12);
+  assert.equal(bodies.length, 13);
+  assert.equal(new Set(bodies).size, 13);
 });

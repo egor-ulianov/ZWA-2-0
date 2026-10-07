@@ -9,7 +9,7 @@ import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
-import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
+import PreviousLectureQuiz from './src/course-ui/exercises/PreviousLectureQuiz.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -31,97 +31,8 @@ function TheoryCodeBlock({ children }) {
   return <EditorialCode language={language}>{value}</EditorialCode>;
 }
 
-function QuizSection() {
-  const questions = [
-    {
-      id: 'q1',
-      text: 'Jaký typový systém používá JavaScript?',
-      options: [
-        'Statické typování – typ se musí vždy definovat předem',
-        'Dynamické typování – proměnná může změnit typ za běhu',
-        'Žádné typování – v JS jsou jen stringy',
-      ],
-      correctIndex: 1,
-    },
-    {
-      id: 'q2',
-      text: 'Co nejlépe odpovídá pojmu „duck-typing" v JavaScriptu?',
-      options: [
-        'Pokud něco vypadá jako typ a chová se jako typ, tak se k němu tak chováme',
-        'Všechny proměnné musí mít typ duck',
-        'Proměnné typu var se vždy mění na let',
-      ],
-      correctIndex: 0,
-    },
-    {
-      id: 'q3',
-      text: 'Jaký je rozdíl mezi cykly for...in a for...of u pole?',
-      options: [
-        'for...in iteruje přes indexy, for...of přes hodnoty pole',
-        'for...in se používá jen pro objekty, for...of jen pro čísla',
-        'Žádný rozdíl, oba dělají to samé',
-      ],
-      correctIndex: 0,
-    },
-    {
-      id: 'q4',
-      text: 'Co dělá metoda forEach u pole?',
-      options: [
-        'Seřadí prvky pole',
-        'Projde všechny prvky pole a na každý zavolá předanou funkci',
-        'Vrátí délku pole',
-      ],
-      correctIndex: 1,
-    },
-    {
-      id: 'q5',
-      text: 'Jak se chová funkce confirm("I like ZWA classes")?',
-      options: [
-        'Vypíše text do konzole',
-        'Zobrazí dialog s OK/Cancel a vrátí true/false podle volby uživatele',
-        'Vždy vyvolá chybu',
-      ],
-      correctIndex: 1,
-    },
-    {
-      id: 'q6',
-      text: 'Jaký je hlavní rozdíl mezi document.querySelector("#alert-input") a document.getElementById("alert-input")?',
-      options: [
-        'querySelector používá CSS selektory a může vrátit jakýkoli prvek, getElementById hledá přímo podle id',
-        'getElementById umí hledat podle třídy',
-        'querySelector vždy vrací pole',
-      ],
-      correctIndex: 0,
-    },
-    {
-      id: 'q7',
-      text: 'Který zápis správně přidá listener na kliknutí tlačítka?',
-      options: [
-        'button.onClick = "alert(\'Ahoj\')"',
-        'button.addEventListener("click", () => alert("Ahoj"));',
-        'addEventListener(button, "click", alert("Ahoj"))',
-      ],
-      correctIndex: 1,
-    },
-  ];
-
-  return (
-    <KnowledgeCheck
-      title="JavaScript: třídy a AJAX"
-      subtitle="Zopakujte si typování, DOM, události a práci s daty před třídami a AJAXem."
-      questions={questions}
-      visual={
-        <div role="img" aria-label="Schéma DOM a AJAX" data-quiz-visual="javascript-dom-ajax">
-          DOM ↔ fetch ↔ server
-        </div>
-      }
-      resultMessage={(score) => {
-        if (score <= 2) return 'Je čas se na to ještě podívat 🙂';
-        if (score <= 4) return 'Dobrá práce, ale ještě je co zlepšovat.';
-        return 'Skvělé, máte to v malíku! 🎉';
-      }}
-    />
-  );
+function ReviewQuiz() {
+  return <PreviousLectureQuiz lessonNumber={7} />;
 }
 
 function ChallengeReveal({ children }) {
@@ -203,7 +114,7 @@ function LessonSlideContent({ slide, password, setPassword, isWeakPassword }) {
         />
       )}
 
-      {slide.id === 'quiz' && <QuizSection />}
+      {slide.id === 'quiz' && <ReviewQuiz />}
 
       {slide.id === 'oop-theory' && <OopTheorySlide />}
 
@@ -1064,9 +975,9 @@ export default function AppJsLesson7() {
       },
       {
         id: 'quiz',
-        title: 'KVÍZ: JavaScript, třídy a AJAX',
+        title: 'KVÍZ: JavaScript základy',
         activityType: 'quick-check',
-        presenterNotes: 'Nechte studenty zdůvodnit odpověď na rozdíl mezi for...in a for...of.',
+        presenterNotes: 'Otázky opakují základy JavaScriptu z předchozí lekce.',
       },
       {
         id: 'oop-theory',
@@ -1111,10 +1022,10 @@ export default function AppJsLesson7() {
       sections={slides}
       activeSection={activeSection}
       onChange={setActiveSection}
-      title="ZWA-7: Třídy a AJAX"
+      title="ZWA-7: JavaScript II – třídy a AJAX"
       objective="Vysvětlíte základy tříd v JavaScriptu a AJAXu a procvičíte práci s asynchronními požadavky."
       subtitle="Interaktivní prezentace s příklady kódu a úkoly"
-      footerText="ZWA – Cvičení 7: Třídy a AJAX"
+      footerText="ZWA – Cvičení 7: JavaScript II"
     >
       <LearningSection section={currentSlide} idPrefix="lesson-classes-ajax">
         <LessonSlideContent

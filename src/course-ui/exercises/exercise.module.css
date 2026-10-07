@@ -64,6 +64,86 @@
   min-width: 0;
 }
 
+.workspaceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.workspaceHeader .regionHeading {
+  margin-bottom: 0;
+}
+
+.ideSizeButton {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--course-line);
+  background: var(--course-paper);
+  color: var(--course-blue-deep);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 780;
+}
+
+.ideSizeButton:hover,
+.ideSizeButton:focus-visible {
+  border-color: var(--course-blue);
+  background: var(--course-blue-soft);
+}
+
+.ideBackdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  background: rgb(8 14 27 / 72%);
+}
+
+.workspaceExpanded {
+  position: fixed;
+  z-index: 1001;
+  inset: clamp(0.5rem, 2vw, 1.5rem);
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  padding: clamp(1rem, 2vw, 1.5rem) !important;
+  border: 2px solid var(--course-ink);
+  background: var(--course-paper);
+  box-shadow: 0 1.5rem 5rem rgb(8 14 27 / 35%);
+}
+
+.workspaceExpanded > .tabs {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.workspaceExpanded .tabPanel,
+.workspaceExpanded .tabPanel > div,
+.workspaceExpanded .editor {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.workspaceExpanded .tabPanel {
+  overflow: auto;
+}
+
+.workspaceExpanded .editor > div,
+.workspaceExpanded .editor :global(.cm-editor),
+.workspaceExpanded .editor :global(.cm-scroller) {
+  min-height: 100%;
+  flex: 1;
+}
+
 .previewSurface {
   min-width: 0;
   overflow: hidden;
@@ -323,6 +403,15 @@
 }
 
 @media (max-width: 42rem) {
+  .workspaceHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ideSizeButton {
+    align-self: flex-end;
+  }
+
   .brief,
   .knowledge > header {
     grid-template-columns: minmax(0, 1fr);

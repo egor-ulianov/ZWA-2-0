@@ -11,7 +11,6 @@ const PHP_THEORY_ROUTES = [
   '/interactive-zwa-9?slide=theory-validation',
   '/interactive-zwa-9?slide=theory-session',
   '/interactive-zwa-9?slide=theory-crud',
-  '/interactive-zwa-9?slide=theory-arch',
   '/interactive-zwa-10-sessions-cookies?slide=theory-basics',
   '/interactive-zwa-10-sessions-cookies?slide=theory-cookies-api',
   '/interactive-zwa-10-sessions-cookies?slide=theory-session-lifecycle',
@@ -27,6 +26,9 @@ const PHP_THEORY_ROUTES = [
   '/interactive-zwa-12-auth?slide=theory-http-auth',
   '/interactive-zwa-12-auth?slide=theory-login-session',
   '/interactive-zwa-12-auth?slide=theory-security',
+  '/interactive-zwa-13-mvc?slide=theory-responsibilities',
+  '/interactive-zwa-13-mvc?slide=theory-request-flow',
+  '/interactive-zwa-13-mvc?slide=theory-structure',
 ];
 
 test.describe('PHP lecture editorial design', () => {
@@ -55,7 +57,7 @@ test.describe('PHP lecture editorial design', () => {
   for (const route of [
     '/interactive-zwa-9?slide=theory-validation',
     '/interactive-zwa-9?slide=theory-crud',
-    '/interactive-zwa-9?slide=theory-arch',
+    '/interactive-zwa-13-mvc?slide=theory-structure',
     '/interactive-zwa-10-sessions-cookies?slide=theory-examples',
     '/interactive-zwa-12-auth?slide=theory-http-auth',
   ]) {

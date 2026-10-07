@@ -9,6 +9,7 @@ import EditorialCode from './src/course-ui/content/EditorialCode.jsx';
 import EditorialIllustration from './src/course-ui/content/EditorialIllustration.jsx';
 import Code from './src/course-ui/content/InlineCode.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
+import PreviousLectureQuiz from './src/course-ui/exercises/PreviousLectureQuiz.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -44,6 +45,8 @@ function LessonSlideContent({ slide }) {
           ]}
         />
       )}
+
+      {slide.id === 'quiz' && <PreviousLectureQuiz lessonNumber={8} />}
 
       {slide.id === 'theory' && <PhpTheorySections />}
 
@@ -803,11 +806,12 @@ export default function AppPhpLesson8() {
       {
         id: 'title',
         title: 'Základy webových aplikací – 8. cvičení',
-        subtitle: 'PHP – Malý test #2 (základy PHP)',
+        subtitle: 'Školní server a základy PHP',
         activityType: 'learn',
         presenterNotes:
           'Začněte krátkým příkladem data a nechte studenty pojmenovat jednotlivé kroky.',
       },
+      { id: 'quiz', title: 'Opakování předchozí lekce', activityType: 'quick-check' },
       {
         id: 'theory',
         title: 'Teorie – PHP rychlý přehled',
@@ -847,7 +851,7 @@ export default function AppPhpLesson8() {
       sections={slides}
       activeSection={activeSection}
       onChange={setActiveSection}
-      title="ZWA-8: Základy PHP – Malý test č. 2"
+      title="ZWA-8: Školní server a PHP"
       objective="Použijete základní PHP syntaxi pro práci s datem, funkcemi, poli a parametry."
       subtitle="Interaktivní prezentace s ukázkami kódu pro PHP základy"
       footerText="ZWA – Cvičení 8: Základy PHP"

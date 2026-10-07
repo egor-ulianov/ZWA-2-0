@@ -177,6 +177,29 @@ test.describe('static lesson task workspaces', () => {
     }
   });
 
+  test('MVC task keeps the starter draft separate from the read-only solution', async ({
+    page,
+  }) => {
+    await installDeterministicNetwork(page);
+    await page.goto('/interactive-zwa-13-mvc?slide=task');
+
+    const taskRegion = page.getByRole('region', { name: 'Zadání' });
+    const ide = page.getByRole('region', { name: 'IDE' });
+    const editor = ide.getByRole('textbox', { name: 'Editor – zdrojový kód' });
+
+    await expect(taskRegion).toContainText('Doplňte metodu show()');
+    await expect(editor).toContainText('// Doplňte koordinaci modelu a view.');
+
+    await ide.getByRole('tab', { name: 'Řešení', exact: true }).click();
+    const solutionPanel = ide.getByRole('tabpanel');
+    await expect(solutionPanel.locator('[data-solution-panel="true"]')).toHaveAttribute(
+      'aria-readonly',
+      'true',
+    );
+    await expect(solutionPanel.locator('.cm-content')).toContainText('$this->articles->find($id)');
+    await expect(solutionPanel.locator('.cm-content')).toContainText('http_response_code(404)');
+  });
+
   for (const route of taskRoutes) {
     test(`${route} exposes the Czech static task workspace zones`, async ({ page }) => {
       await installDeterministicNetwork(page);
@@ -255,6 +278,10 @@ test.describe('static lesson task workspaces', () => {
       {
         route: '/interactive-zwa-8-php?slide=t1',
         source: "date('j.n.Y')",
+      },
+      {
+        route: '/interactive-zwa-13-mvc?slide=task',
+        source: '$this->articles->find($id)',
       },
     ];
 

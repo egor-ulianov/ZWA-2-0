@@ -6,6 +6,7 @@ import EditorialIllustration from './src/course-ui/content/EditorialIllustration
 import Code from './src/course-ui/content/InlineCode.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
+import PreviousLectureQuiz from './src/course-ui/exercises/PreviousLectureQuiz.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
 import StudioTabs from './src/course-ui/exercises/StudioTabs.jsx';
 import SandboxFrame from './src/course-ui/exercises/runtime/SandboxFrame.jsx';
@@ -450,6 +451,7 @@ const HTML_REFERENCE_SOLUTIONS = {
 
 const sections = [
   { id: 'intro', title: 'Úvod', activityType: 'learn' },
+  { id: 'quiz', title: 'Opakování předchozí lekce', activityType: 'quick-check' },
   { id: 'sections', title: 'Sekce', activityType: 'learn' },
   { id: 'validator', title: 'Validátor', activityType: 'diagnose' },
   ...HTML_TASKS.map((task) => ({ id: task.id, title: task.label, activityType: 'apply' })),
@@ -526,7 +528,7 @@ export default function AppHtml5() {
   const activeTask =
     HTML_TASKS.find((task) => task.id === activeSection) ||
     (activeSection === 'tasks' ? HTML_TASKS[0] : null);
-  const lesson = getLessonByNumber(1);
+  const lesson = getLessonByNumber(2);
 
   return (
     <LearningExperience
@@ -534,11 +536,11 @@ export default function AppHtml5() {
       sections={navigationSections}
       activeSection={activeSection}
       onChange={setActiveSection}
-      title="ZWA-1: Interaktivní prezentace HTML5"
+      title="ZWA-2: Jazyk HTML"
       objective="Vytvoříte validní HTML5 dokument se sémantickou strukturou a ověříte jej validátorem."
       subtitle={
         <>
-          Cvičení 1 – HTML5 témata a živý playground (
+          Cvičení 2 – HTML5 témata a živý playground (
           <a
             href="https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/01/start"
             target="_blank"
@@ -563,6 +565,8 @@ export default function AppHtml5() {
             ]}
           />
         )}
+
+        {activeSection === 'quiz' && <PreviousLectureQuiz lessonNumber={2} />}
 
         {activeSection === 'sections' && HtmlSections()}
 

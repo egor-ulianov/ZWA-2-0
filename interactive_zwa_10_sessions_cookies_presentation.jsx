@@ -6,6 +6,7 @@ import EditorialIllustration from './src/course-ui/content/EditorialIllustration
 import Code from './src/course-ui/content/InlineCode.jsx';
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import PhpTheoryChapter from './src/course-ui/content/PhpTheoryChapter.jsx';
+import PreviousLectureQuiz from './src/course-ui/exercises/PreviousLectureQuiz.jsx';
 import StaticExercise from './src/course-ui/exercises/StaticExercise.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
 import { LearningSection } from './src/course-ui/learning/LearningSection.jsx';
@@ -81,6 +82,7 @@ function LessonSlideContent({ slide }) {
           ]}
         />
       )}
+      {slide.id === 'quiz' && <PreviousLectureQuiz lessonNumber={10} />}
       {PHP_THEORY_CHAPTERS[slide.id] && <PhpTheorySlide id={slide.id} />}
 
       {LESSON10_TASKS.some((task) => task.id === slide.id) && (
@@ -653,6 +655,7 @@ export default function AppPhpLesson10() {
         subtitle: 'Session a cookies v PHP',
         activityType: 'learn',
       },
+      { id: 'quiz', title: 'Opakování předchozí lekce', activityType: 'quick-check' },
       {
         id: 'theory-basics',
         title: 'Teorie – Cookies vs Session, superglobály',
@@ -692,7 +695,7 @@ export default function AppPhpLesson10() {
       sections={slides}
       activeSection={activeSection}
       onChange={setActiveSection}
-      title="ZWA-10: Session a cookies v PHP"
+      title="ZWA-10: Udržení stavu aplikace (session)"
       objective="Vysvětlíte cookies a session v PHP a použijete jejich bezpečnostní atributy v praktických vzorech."
       subtitle="Interaktivní prezentace o cookies, session a bezpečnosti"
       footerText="ZWA – Cvičení 10: Session a cookies"

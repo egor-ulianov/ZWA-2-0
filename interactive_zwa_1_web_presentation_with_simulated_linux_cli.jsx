@@ -9,7 +9,7 @@ import EditorialIllustration from './src/course-ui/content/EditorialIllustration
 import LessonSummary from './src/course-ui/content/LessonSummary.jsx';
 import contentStyles from './src/course-ui/content/content.module.css';
 import ExerciseStage from './src/course-ui/exercises/ExerciseStage.jsx';
-import KnowledgeCheck from './src/course-ui/exercises/KnowledgeCheck.jsx';
+import PreviousLectureQuiz from './src/course-ui/exercises/PreviousLectureQuiz.jsx';
 import StudioEditor from './src/course-ui/exercises/StudioEditor.jsx';
 import StudioTabs from './src/course-ui/exercises/StudioTabs.jsx';
 import { LearningExperience } from './src/course-ui/learning/LearningExperience.jsx';
@@ -390,14 +390,14 @@ const NETWORK_TASKS = [
 const sections = [
   {
     id: 'title',
-    title: 'Základy webových aplikací – 3. cvičení',
+    title: 'Základy webových aplikací – 1. cvičení',
     activityType: 'learn',
   },
   {
     id: 'quiz-html',
-    title: 'KVÍZ: HTML základy',
+    title: 'VSTUPNÍ OTÁZKA: ZKUŠENOST',
     activityType: 'quick-check',
-    body: `Krátký kvíz k opakování základů HTML5 (elementy, atributy, formuláře a sémantika).`,
+    body: 'Jedna nebodovaná otázka o dosavadní zkušenosti s tvorbou webových aplikací.',
   },
   {
     id: 'about-course',
@@ -726,7 +726,7 @@ function LessonSlideContent({ slide, commandLog }) {
           ))}
         </ul>
       )}
-      {slide.id === 'quiz-html' && <QuizHtmlBasics />}
+      {slide.id === 'quiz-html' && <ReviewQuiz />}
       {slide.id === 'about-course' && <CoursePurposeChapter />}
       {slide.id === 'tips' && <SemesterProjectChapter />}
       {slide.id === 'extras' && <CourseSupportChapter />}
@@ -780,90 +780,8 @@ function LessonSlideContent({ slide, commandLog }) {
   );
 }
 
-function QuizHtmlBasics() {
-  const questions = [
-    {
-      id: 'q1',
-      text: 'Který z následujících je správný minimální HTML5 skeleton?',
-      options: [
-        '<!doctype html><html><head><title></title></head><body></body></html>',
-        '<html5><head><title></title></head><body></body></html5>',
-        '<doctype html5><html><head></head><body></body></html>',
-      ],
-      correctIndex: 0,
-      hint: 'Viz validátor a HTML5 doctype.',
-    },
-    {
-      id: 'q2',
-      text: 'Který element je sémantický pro navigaci?',
-      options: ['<div>', '<nav>', '<section>'],
-      correctIndex: 1,
-      hint: 'HTML5 sémantické značky.',
-    },
-    {
-      id: 'q3',
-      text: 'Jaký atribut zajistí, že pole formuláře musí být vyplněno?',
-      options: ['required', 'mandatory', 'mustfill'],
-      correctIndex: 0,
-      hint: 'HTML5 atributy formulářů.',
-    },
-    {
-      id: 'q4',
-      text: 'Jaký typ inputu použijete pro e‑mail s nativní validací?',
-      options: ['text', 'email', 'address'],
-      correctIndex: 1,
-      hint: 'Nové typy inputů.',
-    },
-    {
-      id: 'q5',
-      text: 'Které dvojice tvoří logický celek pro formuláře?',
-      options: ['label + input', 'legend + option', 'meter + datalist'],
-      correctIndex: 0,
-      hint: 'Label patří k ovládacím prvkům.',
-    },
-    {
-      id: 'q6',
-      text: 'Který element použijete pro seskupení formulářových prvků s popiskem skupiny?',
-      options: ['<fieldset> + <legend>', '<section> + <h3>', '<div> + <span>'],
-      correctIndex: 0,
-      hint: 'Formulářové skupiny se značí fieldsetem a legendou.',
-    },
-    {
-      id: 'q7',
-      text: 'Jaký atribut použijete k zobrazení šedého návodu uvnitř textového pole?',
-      options: ['placeholder', 'hint', 'title'],
-      correctIndex: 0,
-      hint: 'HTML5 přidalo atribut placeholder.',
-    },
-  ];
-
-  return (
-    <KnowledgeCheck
-      title="HTML základy"
-      subtitle="Ověřte si, že dokážete rozpoznat kostru dokumentu, sémantické elementy a formulářové atributy."
-      questions={questions}
-      visual={
-        <div
-          role="img"
-          aria-label="Schéma struktury HTML dokumentu"
-          data-quiz-visual="html-structure"
-        >
-          <strong>&lt;html&gt;</strong>
-          <span>&lt;head&gt; + &lt;body&gt;</span>
-        </div>
-      }
-      resources={[
-        {
-          label: 'Cvičení 1 – HTML',
-          href: 'https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/01/start',
-        },
-        {
-          label: 'Cvičení 2 – Formuláře',
-          href: 'https://cw.fel.cvut.cz/wiki/courses/b6b39zwa/tutorials/02/start',
-        },
-      ]}
-    />
-  );
+function ReviewQuiz() {
+  return <PreviousLectureQuiz lessonNumber={1} />;
 }
 
 function TaskChecklist({ commandLog, checked = false, requirementIds }) {
@@ -1056,7 +974,7 @@ export default function App() {
     setActiveSection(nextSection);
   }
 
-  const lesson = getLessonByNumber(3);
+  const lesson = getLessonByNumber(1);
 
   return (
     <LearningExperience
@@ -1064,7 +982,7 @@ export default function App() {
       sections={navigationSections}
       activeSection={activeSection}
       onChange={handleSectionChange}
-      title="ZWA-1: Interaktivní webová prezentace"
+      title="ZWA-1: GitLab, síť a HTTP"
       objective="Vysvětlíte cestu požadavku od DNS přes TCP až po HTTP a procvičíte diagnostické příkazy v simulovaném terminálu."
       subtitle="Síťové základy a bezpečný simulovaný Linux terminál"
       footerText="ZWA – Interaktivní výuková ukázka"
