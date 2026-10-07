@@ -21,13 +21,13 @@ Replace date-oriented attendance editing with one compact teacher matrix. Teache
 
 Attendance is keyed by `lecture_number` instead of `attendance_date`.
 
-Migration `008` will map distinct existing attendance dates to lecture numbers in ascending chronological order. The earliest date becomes lecture 1, the next becomes lecture 2, and so on. The same mapping applies to `attendance` and `attendance_revisions`, after which the obsolete date columns are removed. The resulting constraints are:
+The project is treated as having no attendance history. Migration `008` replaces the date-based attendance and revision structures without backfill or compatibility behavior. The resulting constraints are:
 
 - `attendance.lecture_number` is an integer from 1 through 13.
 - The attendance primary key is `(lecture_number, username)`.
 - `attendance_revisions.lecture_number` is an integer from 1 through 13 and remains the revision primary key.
 
-If the database contains more than thirteen distinct historical attendance dates, migration must stop with an explicit error instead of discarding or merging history.
+Existing date-based attendance and revision rows, if any, are intentionally discarded by this migration.
 
 ## Server Contract
 
@@ -78,4 +78,3 @@ Keep verification proportionate:
 - Repository/API coverage for lecture snapshots, revisions, and the migration contract.
 - One Playwright workflow covering the matrix, row filtering, and independent checkbox edits across two lectures.
 - Existing focused teacher and student workflows, lint, formatting, and type-checking.
-
