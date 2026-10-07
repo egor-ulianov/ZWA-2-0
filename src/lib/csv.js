@@ -1,4 +1,8 @@
-import { validateIsoDate, validateUsername } from '../server/repositories/validation.js';
+import {
+  normalizeTeacherRosterRows,
+  validateLectureNumber,
+  validateUsername,
+} from '../server/repositories/validation.js';
 
 export const MAX_CSV_INPUT_CHARACTERS = 1_000_000;
 export const MAX_CSV_INPUT_BYTES = 2_000_000;
@@ -161,11 +165,11 @@ export function serializeAttendanceCsv(rows) {
   const extras = [
     ...new Set(
       rows.flatMap((row) =>
-        Object.keys(row).filter((key) => !['username', 'present', 'date'].includes(key)),
+        Object.keys(row).filter((key) => !['username', 'present', 'lecture'].includes(key)),
       ),
     ),
   ];
-  const headers = ['username', 'present', 'date', ...extras];
+  const headers = ['username', 'present', 'lecture', ...extras];
   const lines = [
     headers,
     ...rows.map((row) =>
@@ -209,7 +213,7 @@ export function parseAttendanceCsv(text, { knownUsernames } = {}) {
   }
 
   const headers = headerRow.values.map((header) => header.trim().toLowerCase());
-  const requiredColumns = ['username', 'present', 'date'];
+  const requiredColumns = ['username', 'present', 'lecture'];
   const missingColumns = requiredColumns.filter((column) => !headers.includes(column));
   if (missingColumns.length) {
     throw new TypeError(`Missing column: ${missingColumns.join(', ')}`);
@@ -224,12 +228,11 @@ export function parseAttendanceCsv(text, { knownUsernames } = {}) {
 
   const usernameIndex = headers.indexOf('username');
   const presentIndex = headers.indexOf('present');
-  const dateIndex = headers.indexOf('date');
+  const lectureIndex = headers.indexOf('lecture');
   const entries = [];
   const rejected = [];
-  const seenUsernames = new Set();
+  const seenCells = new Set();
   const known = normalizedKnownUsernames(knownUsernames);
-  let date = '';
 
   records.forEach((row) => {
     const username = rowUsername(row, usernameIndex);
@@ -254,32 +257,109 @@ export function parseAttendanceCsv(text, { knownUsernames } = {}) {
       reject('Username is invalid');
       return;
     }
-    if (seenUsernames.has(username)) {
-      reject('Duplicate username');
-      return;
-    }
-    seenUsernames.add(username);
-
     const present = presentValue(row.values[presentIndex]);
-    const rowDate = String(row.values[dateIndex] ?? '').trim();
     if (present === null) {
       reject('Present must be 1, 0, true, or false');
     } else if (known && !known.has(username)) {
       reject('Unknown username');
     } else {
+      let lecture;
       try {
-        validateIsoDate(rowDate);
+        lecture = validateLectureNumber(String(row.values[lectureIndex] ?? '').trim());
       } catch {
-        reject('Date must be a real YYYY-MM-DD date');
+        reject('Lecture must be a whole number from 1 to 13');
         return;
       }
-      if (date && rowDate !== date) {
-        reject('All rows must use the same date');
-      } else {
-        date ||= rowDate;
-        entries.push({ username, present });
+      const cell = `${username}:${lecture}`;
+      if (seenCells.has(cell)) {
+        reject('Duplicate username and lecture');
+        return;
       }
+      seenCells.add(cell);
+      entries.push({ username, present, lecture });
     }
   });
-  return { date, entries, rejected };
+  return { entries, rejected };
+}
+
+export function parseTeacherRosterCsv(text) {
+  const rows = parseCsvRows(String(text ?? ''));
+  const diagnostics = [];
+  const [headerRow, ...records] = rows;
+  if (!headerRow) {
+    return {
+      students: [],
+      diagnostics: [{ line: 1, severity: 'error', message: 'Missing header row' }],
+    };
+  }
+  diagnostics.push(
+    ...headerRow.errors.map((message) => ({
+      line: headerRow.line,
+      severity: 'error',
+      message,
+    })),
+  );
+  const headers = headerRow.values.map((value) => value.trim().toLowerCase());
+  const required = [
+    ['Last Name', 'last name'],
+    ['First Name', 'first name'],
+    ['Username', 'username'],
+    ['Exerc.', 'exerc.'],
+  ];
+  for (const [label, key] of required) {
+    if (!headers.includes(key)) {
+      diagnostics.push({
+        line: headerRow.line,
+        severity: 'error',
+        message: `Missing required column: ${label}`,
+      });
+    }
+  }
+  if (diagnostics.length) return { students: [], diagnostics };
+
+  const indexes = Object.fromEntries(required.map(([, key]) => [key, headers.indexOf(key)]));
+  const students = [];
+  const seen = new Set();
+  for (const row of records) {
+    if (row.values.every((value) => !value.trim())) continue;
+    if (row.errors.length || row.values.length !== headers.length) {
+      diagnostics.push({
+        line: row.line,
+        severity: 'error',
+        message:
+          row.errors.join('; ') || `Expected ${headers.length} fields, got ${row.values.length}`,
+      });
+      continue;
+    }
+    try {
+      const [student] = normalizeTeacherRosterRows([
+        {
+          username: row.values[indexes.username],
+          firstName: row.values[indexes['first name']],
+          lastName: row.values[indexes['last name']],
+          parallel: row.values[indexes['exerc.']],
+        },
+      ]);
+      if (seen.has(student.username)) {
+        diagnostics.push({
+          line: row.line,
+          severity: 'error',
+          message: `Duplicate username: ${student.username}`,
+        });
+        continue;
+      }
+      seen.add(student.username);
+      students.push(student);
+    } catch (error) {
+      diagnostics.push({
+        line: row.line,
+        severity: 'error',
+        message: error.message,
+      });
+    }
+  }
+  if (!students.length && !diagnostics.length) {
+    diagnostics.push({ line: 1, severity: 'error', message: 'Roster contains no students' });
+  }
+  return { students, diagnostics };
 }

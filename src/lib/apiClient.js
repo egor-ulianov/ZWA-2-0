@@ -11,7 +11,7 @@ export function isAbortError(error) {
   return error?.name === 'AbortError';
 }
 
-export function createAttendanceSnapshotOptions({ date, map, revision }) {
+export function createAttendanceSnapshotOptions({ lecture, map, revision }) {
   if (!Number.isSafeInteger(revision) || revision < 0) {
     throw new ApiError('Attendance revision required', {
       status: 428,
@@ -24,7 +24,7 @@ export function createAttendanceSnapshotOptions({ date, map, revision }) {
       'Content-Type': 'application/json',
       'If-Match': `"${revision}"`,
     },
-    body: JSON.stringify({ date, map }),
+    body: JSON.stringify({ lecture, map }),
   };
 }
 

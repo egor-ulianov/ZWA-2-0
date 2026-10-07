@@ -22,14 +22,14 @@ test('attendance snapshot options carry the server revision as If-Match', async 
   const { createAttendanceSnapshotOptions } = await import('../../src/lib/apiClient.js');
 
   const options = createAttendanceSnapshotOptions({
-    date: '2026-09-08',
+    lecture: 4,
     map: { alice: true },
     revision: 4,
   });
 
   assert.equal(options.headers['If-Match'], '"4"');
   assert.deepEqual(JSON.parse(options.body), {
-    date: '2026-09-08',
+    lecture: 4,
     map: { alice: true },
   });
 });

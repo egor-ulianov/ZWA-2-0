@@ -1,7 +1,7 @@
 # Data and auth API contract
 
-**Contract version:** 2.0
-**Last updated:** 2026-09-08
+**Contract version:** 3.0
+**Last updated:** 2026-10-07
 
 When migrations are managed as a separate release step, run
 `node scripts/migrate.mjs` before starting the application, then import an
@@ -33,8 +33,8 @@ The current teacher UI uses `username` as the student identity and the
 
 - Student identity is `username`; input is trimmed and normalized to lowercase, then
   validated as `[a-z0-9][a-z0-9._-]{0,63}`. The database identity is `students.username`.
-- Attendance API payloads use `date`, `map`, and `revision`; the database column
-  is `attendance.attendance_date`.
+- Attendance API payloads use `lecture`, `map`, and `revision`; `lecture` is an
+  integer from 1 through 13 and the database column is `attendance.lecture_number`.
 - Progress uses the `assignment_*` names above. Legacy `progress.auth_code` is
   not a current field.
 - Access-code login accepts `{ username, code }`; codes must be 8--128
@@ -47,13 +47,12 @@ least-privilege DTO containing only `test_number`, `points`, `max_points`,
 `reasoning`, and `graded_at`. It does not expose attempt IDs, usernames,
 actors, model names, prompt versions, image counts, or other audit metadata.
 
-Attendance reads for a date return a monotonically increasing `revision` and
+Attendance reads for a lecture return a monotonically increasing `revision` and
 the same value as a quoted `ETag`. Attendance snapshot writes must send that
 value as `If-Match: "<revision>"` (or as the numeric `revision` body field).
 Missing preconditions return `428`; a stale revision returns `409` and writes
 nothing. This is an intentional contract tightening for old unversioned full
-snapshot writers; the `date`/`map` payload and successful response remain
-compatible, with the new response also returning the next revision.
+snapshot writers; successful responses return the next revision.
 
 The `If-Match` header is the canonical write precondition. Numeric body
 `revision` remains a compatibility form for older clients, but clients should
@@ -66,8 +65,8 @@ prefer the header and must refresh after `409`.
 - Legacy `progress.test1` through `test4` and `test_grades` data is migrated
   into audited grade attempts; those legacy grade fields are not API response
   names.
-- A legacy attendance table using `date` text is copied into the current
-  `attendance_date` schema during migration.
+- Date-based attendance is intentionally discarded when the empty project moves
+  to the lecture-number schema; there is no date compatibility contract.
 - The previous normalization apply shape without `runId` remains accepted only
   when it resolves the latest same-teacher preview; new clients must apply an
   explicit `runId`.

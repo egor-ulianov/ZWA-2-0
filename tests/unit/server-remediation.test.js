@@ -254,7 +254,7 @@ test('attendance snapshot writes require a precondition revision', async () => {
   await attendanceHandler({
     method: 'POST',
     headers: { cookie: `teacher_session=${encodeURIComponent(token)}`, origin: 'http://localhost:3000' },
-    body: { date: '2026-09-08', map: { alice: true } },
+    body: { lecture: 4, map: { alice: true } },
   }, res);
   assert.equal(res.statusCode, 428);
   assert.equal(res.body.error, 'Attendance revision required');
@@ -273,7 +273,7 @@ test('attendance rejects a stale revision without reporting success', async () =
   await attendanceHandler({
     method: 'POST',
     headers: { cookie: `teacher_session=${encodeURIComponent(token)}`, origin: 'http://localhost:3000', 'if-match': '"3"' },
-    body: { date: '2026-09-08', map: { alice: true } },
+    body: { lecture: 4, map: { alice: true } },
   }, res);
   assert.equal(res.statusCode, 409);
   assert.equal(res.body.error, 'Attendance changed; reload and retry');
