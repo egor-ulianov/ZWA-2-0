@@ -29,7 +29,8 @@ export default function AttendanceWorkspace() {
   const [error, setError] = React.useState('');
   const [attendanceStatus, setAttendanceStatus] = React.useState('Attendance ready.');
   const [savingLectures, setSavingLectures] = React.useState(new Set());
-  const [failedSave, setFailedSave] = React.useState(null);
+  const [blockedLectures, setBlockedLectures] = React.useState(new Set());
+  const [failedSaves, setFailedSaves] = React.useState({});
   const [importDraft, setImportDraft] = React.useState(null);
   const [importError, setImportError] = React.useState('');
   const [rosterDraft, setRosterDraft] = React.useState(null);
@@ -75,6 +76,8 @@ export default function AttendanceWorkspace() {
     revisionsRef.current = safeRevisions;
     setOverview(safeOverview);
     setRevisions(safeRevisions);
+    setBlockedLectures(new Set());
+    setFailedSaves({});
   }, []);
 
   const applyLecture = React.useCallback((lecture, map, revision) => {
@@ -126,6 +129,36 @@ export default function AttendanceWorkspace() {
     });
   }
 
+  function setLectureBlocked(lecture, blocked) {
+    setBlockedLectures((current) => {
+      const next = new Set(current);
+      if (blocked) next.add(lecture);
+      else next.delete(lecture);
+      return next;
+    });
+  }
+
+  function clearFailedSave(lecture) {
+    setFailedSaves((current) => {
+      if (!current[lecture]) return current;
+      const next = { ...current };
+      delete next[lecture];
+      return next;
+    });
+  }
+
+  function recordFailedSave(failure) {
+    setFailedSaves((current) => ({ ...current, [failure.lecture]: failure }));
+  }
+
+  function restoreConfirmedLecture(lecture) {
+    overviewRef.current = {
+      ...overviewRef.current,
+      [lecture]: { ...(confirmedRef.current[lecture] || {}) },
+    };
+    setOverview(overviewRef.current);
+  }
+
   async function reloadLecture(lecture) {
     const result = await client(`/api/attendance?lecture=${lecture}`);
     applyLecture(lecture, result.map, result.revision);
@@ -158,11 +191,12 @@ export default function AttendanceWorkspace() {
     return queuesRef.current.get(lecture);
   }
 
-  function persistLecture(lecture, nextMap) {
+  function persistLecture(lecture, nextMap, retryPatch = nextMap) {
     const snapshot = { ...nextMap };
+    const patch = { ...retryPatch };
     const version = (saveVersionsRef.current.get(lecture) || 0) + 1;
     saveVersionsRef.current.set(lecture, version);
-    setFailedSave(null);
+    clearFailedSave(lecture);
     setLectureSaving(lecture, true);
     setAttendanceStatus(`Saving lecture ${lecture}…`);
     return queueForLecture(lecture)
@@ -172,39 +206,44 @@ export default function AttendanceWorkspace() {
         overviewRef.current = { ...overviewRef.current, [lecture]: snapshot };
         setOverview(overviewRef.current);
         if (saveVersionsRef.current.get(lecture) === version) {
+          clearFailedSave(lecture);
+          setLectureBlocked(lecture, false);
           setAttendanceStatus(`Lecture ${lecture} saved.`);
         }
       })
       .catch(async (cause) => {
         if (isAbortError(cause) || isUnauthorized(cause)) throw cause;
         queueForLecture(lecture).clearPending(cause);
+        if (saveVersionsRef.current.get(lecture) !== version) throw cause;
         if (cause.status === 409) {
           try {
             await reloadLecture(lecture);
+            setLectureBlocked(lecture, false);
             setAttendanceStatus(`Lecture ${lecture} changed on the server.`);
-            setFailedSave({
+            recordFailedSave({
               lecture,
-              map: snapshot,
+              patch,
+              needsReload: false,
               message: `Lecture ${lecture} changed on the server. Latest values were reloaded.`,
             });
           } catch (reloadError) {
+            restoreConfirmedLecture(lecture);
+            setLectureBlocked(lecture, true);
             setAttendanceStatus(`Unable to reload lecture ${lecture}.`);
-            setFailedSave({
+            recordFailedSave({
               lecture,
-              map: snapshot,
+              patch,
+              needsReload: true,
               message: reloadError.message || `Unable to reload lecture ${lecture}`,
             });
           }
         } else {
-          overviewRef.current = {
-            ...overviewRef.current,
-            [lecture]: { ...(confirmedRef.current[lecture] || {}) },
-          };
-          setOverview(overviewRef.current);
+          restoreConfirmedLecture(lecture);
           setAttendanceStatus(`Lecture ${lecture} was not saved.`);
-          setFailedSave({
+          recordFailedSave({
             lecture,
-            map: snapshot,
+            patch,
+            needsReload: false,
             message: cause.message || `Unable to save lecture ${lecture}`,
           });
         }
@@ -221,15 +260,33 @@ export default function AttendanceWorkspace() {
     const nextMap = { ...(overviewRef.current[lecture] || {}), [username]: present };
     overviewRef.current = { ...overviewRef.current, [lecture]: nextMap };
     setOverview(overviewRef.current);
-    persistLecture(lecture, nextMap).catch(() => undefined);
+    persistLecture(lecture, nextMap, { [username]: present }).catch(() => undefined);
   }
 
-  function retryAttendanceSave() {
-    if (!failedSave) return;
-    const { lecture, map } = failedSave;
-    overviewRef.current = { ...overviewRef.current, [lecture]: { ...map } };
+  async function retryAttendanceSave(lecture) {
+    const failure = failedSaves[lecture];
+    if (!failure) return;
+    if (failure.needsReload) {
+      setLectureSaving(lecture, true);
+      setAttendanceStatus(`Reloading lecture ${lecture}…`);
+      try {
+        await reloadLecture(lecture);
+        setLectureBlocked(lecture, false);
+      } catch (cause) {
+        restoreConfirmedLecture(lecture);
+        setAttendanceStatus(`Unable to reload lecture ${lecture}.`);
+        recordFailedSave({
+          ...failure,
+          message: cause.message || `Unable to reload lecture ${lecture}`,
+        });
+        setLectureSaving(lecture, false);
+        return;
+      }
+    }
+    const nextMap = { ...(overviewRef.current[lecture] || {}), ...failure.patch };
+    overviewRef.current = { ...overviewRef.current, [lecture]: nextMap };
     setOverview(overviewRef.current);
-    persistLecture(lecture, map).catch(() => undefined);
+    persistLecture(lecture, nextMap, failure.patch).catch(() => undefined);
   }
 
   function handleAttendanceFile(event) {
@@ -295,10 +352,14 @@ export default function AttendanceWorkspace() {
       await Promise.all(
         [...grouped.entries()].map(([lecture, entries]) => {
           const nextMap = { ...(overviewRef.current[lecture] || {}) };
-          for (const entry of entries) nextMap[entry.username] = entry.present;
+          const patch = {};
+          for (const entry of entries) {
+            nextMap[entry.username] = entry.present;
+            patch[entry.username] = entry.present;
+          }
           overviewRef.current = { ...overviewRef.current, [lecture]: nextMap };
           setOverview(overviewRef.current);
-          return persistLecture(lecture, nextMap);
+          return persistLecture(lecture, nextMap, patch);
         }),
       );
       setImportDraft(null);
@@ -429,7 +490,11 @@ export default function AttendanceWorkspace() {
       (parallel === 'all' || student.parallel === parallel)
     );
   });
-  const attendanceBusy = savingLectures.size > 0;
+  const disabledLectures = new Set([...savingLectures, ...blockedLectures]);
+  const attendanceBusy = disabledLectures.size > 0;
+  const failedSaveEntries = Object.values(failedSaves).sort(
+    (left, right) => left.lecture - right.lecture,
+  );
 
   if (teacher === undefined) {
     return (
@@ -530,22 +595,22 @@ export default function AttendanceWorkspace() {
               </select>
             </label>
           </div>
-          {failedSave ? (
-            <p className={styles.error} role="alert">
-              {failedSave.message}{' '}
+          {failedSaveEntries.map((failure) => (
+            <p className={styles.error} key={failure.lecture} role="alert">
+              {failure.message}{' '}
               <button
                 className={styles.secondaryButton}
-                onClick={retryAttendanceSave}
+                onClick={() => retryAttendanceSave(failure.lecture)}
                 type="button"
               >
-                Retry lecture {failedSave.lecture}
+                {failure.needsReload ? 'Reload and retry' : 'Retry'} lecture {failure.lecture}
               </button>
             </p>
-          ) : null}
+          ))}
         </section>
 
         <LectureAttendanceMatrix
-          disabledLectures={savingLectures}
+          disabledLectures={disabledLectures}
           onToggle={updateAttendance}
           overview={overview}
           students={filtered}

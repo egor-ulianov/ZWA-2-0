@@ -58,7 +58,9 @@ test('teacher can sign in, retry a conflicted lecture, and edit progress', async
   await installDeterministicNetwork(page);
   let authenticated = false;
   let attendancePostCount = 0;
+  const attendancePosts = [];
   const initialAttendance = { alice: false, bob: true };
+  const reloadedAttendance = { alice: false, bob: false };
   const progressByUser = {
     alice: {
       username: 'alice',
@@ -90,7 +92,7 @@ test('teacher can sign in, retry a conflicted lecture, and edit progress', async
     if (route.request().method() === 'GET' && url.searchParams.has('lecture')) {
       return fulfillJson(
         route,
-        { lecture: 1, map: initialAttendance, revision: 1 },
+        { lecture: 1, map: reloadedAttendance, revision: 1 },
         { headers: { etag: '"1"' } },
       );
     }
@@ -98,6 +100,7 @@ test('teacher can sign in, retry a conflicted lecture, and edit progress', async
       return fulfillJson(route, { overview: { 1: initialAttendance }, revisions: { 1: 1 } });
     }
     attendancePostCount += 1;
+    attendancePosts.push(JSON.parse(route.request().postData() || '{}'));
     if (attendancePostCount === 1) {
       return fulfillJson(route, { error: 'Attendance changed; reload and retry' }, { status: 409 });
     }
@@ -134,6 +137,7 @@ test('teacher can sign in, retry a conflicted lecture, and edit progress', async
   await conflict.getByRole('button', { name: 'Retry lecture 1' }).click();
   await expect.poll(() => attendancePostCount).toBe(2);
   await expect(aliceAttendance).toBeChecked();
+  expect(attendancePosts[1].map).toEqual({ alice: true, bob: false });
   await expect(page.getByRole('status').filter({ hasText: 'Lecture 1 saved.' })).toBeVisible();
 
   const aliceRow = page.getByRole('listitem').filter({
@@ -242,6 +246,83 @@ test('teacher retry persists the recovered lecture map before the next edit', as
   await bobAttendance.check();
   await expect.poll(() => postCount).toBe(3);
   expect(postedMaps[2]).toEqual({ alice: true, bob: true });
+});
+
+test('teacher keeps failures per lecture and blocks an untrusted conflict reload', async ({
+  page,
+}) => {
+  await installDeterministicNetwork(page);
+  const posts = [];
+  let lectureThreeReadCount = 0;
+  let lectureThreePostCount = 0;
+  await page.route('**/api/teacher/me', (route) => fulfillJson(route, { username: 'teacher' }));
+  await page.route('**/api/students', (route) =>
+    fulfillJson(route, {
+      count: 2,
+      students: [{ username: 'alice' }, { username: 'bob' }],
+    }),
+  );
+  await page.route('**/api/attendance**', (route) => {
+    const url = new URL(route.request().url());
+    if (route.request().method() === 'GET' && url.searchParams.has('lecture')) {
+      lectureThreeReadCount += 1;
+      if (lectureThreeReadCount === 1) {
+        return fulfillJson(route, { error: 'Reload unavailable' }, { status: 503 });
+      }
+      return fulfillJson(route, {
+        lecture: 3,
+        map: { alice: false, bob: true },
+        revision: 2,
+      });
+    }
+    if (route.request().method() === 'GET') {
+      return fulfillJson(route, {
+        overview: {
+          1: { alice: false, bob: false },
+          2: { alice: false, bob: false },
+          3: { alice: false, bob: false },
+        },
+        revisions: { 1: 1, 2: 1, 3: 1 },
+      });
+    }
+    const body = JSON.parse(route.request().postData() || '{}');
+    posts.push(body);
+    if (body.lecture === 1) {
+      return fulfillJson(route, { error: 'Lecture one unavailable' }, { status: 503 });
+    }
+    if (body.lecture === 2) {
+      return fulfillJson(route, { error: 'Lecture two unavailable' }, { status: 503 });
+    }
+    lectureThreePostCount += 1;
+    if (lectureThreePostCount === 1) {
+      return fulfillJson(route, { error: 'Attendance changed; reload and retry' }, { status: 409 });
+    }
+    return fulfillJson(route, { ok: true, count: 2, revision: 3 });
+  });
+  await page.route('**/api/progress', (route) => fulfillJson(route, { items: [] }));
+
+  await page.goto('/attendance');
+  const matrix = page.getByRole('region', { name: 'Attendance by lecture' });
+  await matrix.getByRole('checkbox', { name: 'alice, lecture 1', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Retry lecture 1' })).toBeVisible();
+  await matrix.getByRole('checkbox', { name: 'alice, lecture 2', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Retry lecture 1' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retry lecture 2' })).toBeVisible();
+
+  const lectureThree = matrix.getByRole('checkbox', {
+    name: 'alice, lecture 3',
+    exact: true,
+  });
+  await lectureThree.click();
+  const recover = page.getByRole('button', { name: 'Reload and retry lecture 3' });
+  await expect(recover).toBeVisible();
+  await expect(lectureThree).not.toBeChecked();
+  await expect(lectureThree).toBeDisabled();
+  await recover.click();
+  await expect.poll(() => lectureThreePostCount).toBe(2);
+  await expect(lectureThree).toBeChecked();
+  await expect(lectureThree).toBeEnabled();
+  expect(posts.at(-1).map).toEqual({ alice: true, bob: true });
 });
 
 test('teacher can retry a failed generated access-code request', async ({ page }) => {
