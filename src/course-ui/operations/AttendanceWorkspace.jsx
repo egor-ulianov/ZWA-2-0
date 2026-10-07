@@ -6,45 +6,42 @@ import {
   isUnauthorized,
   request,
 } from '../../lib/apiClient.js';
-import { MAX_CSV_INPUT_BYTES, parseAttendanceCsv, serializeAttendanceCsv } from '../../lib/csv.js';
+import {
+  MAX_CSV_INPUT_BYTES,
+  parseAttendanceCsv,
+  parseTeacherRosterCsv,
+  serializeAttendanceCsv,
+} from '../../lib/csv.js';
 import AttendanceImportPreview from './AttendanceImportPreview.jsx';
 import AttendanceStudentRow from './AttendanceStudentRow.jsx';
+import LectureAttendanceMatrix, { LECTURES } from './LectureAttendanceMatrix.jsx';
 import TeacherWorkspace, { TeacherLogin } from './TeacherWorkspace.jsx';
 import styles from './operations.module.css';
-
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 export default function AttendanceWorkspace() {
   const [teacher, setTeacher] = React.useState(undefined);
   const [students, setStudents] = React.useState([]);
-  const [date, setDate] = React.useState(today);
-  const [attendance, setAttendance] = React.useState({});
   const [overview, setOverview] = React.useState({});
+  const [revisions, setRevisions] = React.useState({});
   const [progress, setProgress] = React.useState({});
   const [query, setQuery] = React.useState('');
+  const [parallel, setParallel] = React.useState('all');
   const [error, setError] = React.useState('');
-  const [saveError, setSaveError] = React.useState(null);
-  const [attendanceStatus, setAttendanceStatus] = React.useState({
-    kind: 'idle',
-    message: 'Attendance ready.',
-  });
-  const [attendanceDateLoading, setAttendanceDateLoading] = React.useState(false);
-  const [attendanceDateError, setAttendanceDateError] = React.useState('');
+  const [attendanceStatus, setAttendanceStatus] = React.useState('Attendance ready.');
+  const [savingLectures, setSavingLectures] = React.useState(new Set());
+  const [failedSave, setFailedSave] = React.useState(null);
   const [importDraft, setImportDraft] = React.useState(null);
+  const [importError, setImportError] = React.useState('');
+  const [rosterDraft, setRosterDraft] = React.useState(null);
+  const [rosterStatus, setRosterStatus] = React.useState('');
+  const [rosterBusy, setRosterBusy] = React.useState(false);
+  const overviewRef = React.useRef({});
+  const revisionsRef = React.useRef({});
+  const confirmedRef = React.useRef({});
   const queuesRef = React.useRef(new Map());
-  const revisionsRef = React.useRef(new Map());
-  const progressQueuesRef = React.useRef(new Map());
-  const confirmedRef = React.useRef(new Map());
-  const attendanceRef = React.useRef({});
   const saveVersionsRef = React.useRef(new Map());
+  const progressQueuesRef = React.useRef(new Map());
   const fileReaderRef = React.useRef(null);
-  const dateLoadVersionRef = React.useRef(0);
-  const verifiedAttendanceDateRef = React.useRef(null);
-  const selectedDateRef = React.useRef(date);
-  const selectedDateVersionRef = React.useRef(0);
-  selectedDateRef.current = date;
 
   React.useEffect(
     () => () => {
@@ -66,50 +63,33 @@ export default function AttendanceWorkspace() {
     [onUnauthorized],
   );
 
-  const applyAttendance = React.useCallback((targetDate, map, revision) => {
-    const snapshot = { ...map };
-    if (Number.isSafeInteger(revision) && revision >= 0) {
-      revisionsRef.current.set(targetDate, revision);
-    }
-    confirmedRef.current.set(targetDate, snapshot);
-    setOverview((current) => ({ ...current, [targetDate]: snapshot }));
-    if (targetDate === selectedDateRef.current) {
-      verifiedAttendanceDateRef.current = targetDate;
-      attendanceRef.current = snapshot;
-      setAttendance(snapshot);
-    }
+  const applyOverview = React.useCallback((nextOverview, nextRevisions = {}) => {
+    const safeOverview = Object.fromEntries(
+      Object.entries(nextOverview || {}).map(([lecture, map]) => [lecture, { ...(map || {}) }]),
+    );
+    const safeRevisions = Object.fromEntries(
+      Object.entries(nextRevisions || {}).map(([lecture, revision]) => [lecture, Number(revision)]),
+    );
+    overviewRef.current = safeOverview;
+    confirmedRef.current = safeOverview;
+    revisionsRef.current = safeRevisions;
+    setOverview(safeOverview);
+    setRevisions(safeRevisions);
   }, []);
 
-  const readAttendanceDate = React.useCallback(
-    async (targetDate, signal) => {
-      const data = await client(`/api/attendance?date=${encodeURIComponent(targetDate)}`, {
-        signal,
-      });
-      const revision = Number(data?.revision);
-      if (!Number.isSafeInteger(revision) || revision < 0)
-        throw new Error('Attendance response is missing a revision');
-      const map = data.map || {};
-      return { map, revision };
-    },
-    [client],
-  );
-
-  const reloadAttendance = React.useCallback(
-    (targetDate, signal) => readAttendanceDate(targetDate, signal),
-    [readAttendanceDate],
-  );
+  const applyLecture = React.useCallback((lecture, map, revision) => {
+    const snapshot = { ...(map || {}) };
+    overviewRef.current = { ...overviewRef.current, [lecture]: snapshot };
+    confirmedRef.current = { ...confirmedRef.current, [lecture]: snapshot };
+    revisionsRef.current = { ...revisionsRef.current, [lecture]: Number(revision) || 0 };
+    setOverview(overviewRef.current);
+    setRevisions(revisionsRef.current);
+  }, []);
 
   const loadTeacherData = React.useCallback(
     async (signal) => {
       setError('');
       setTeacher(undefined);
-      setStudents([]);
-      setOverview({});
-      setProgress({});
-      attendanceRef.current = {};
-      verifiedAttendanceDateRef.current = null;
-      setAttendance({});
-      setAttendanceDateError('');
       try {
         const me = await client('/api/teacher/me', { signal });
         const [studentData, attendanceData, progressData] = await Promise.all([
@@ -117,252 +97,170 @@ export default function AttendanceWorkspace() {
           client('/api/attendance', { signal }),
           client('/api/progress', { signal }),
         ]);
-        const nextOverview = attendanceData.overview || {};
         setStudents(studentData.students || []);
-        setOverview(nextOverview);
+        applyOverview(attendanceData.overview || {}, attendanceData.revisions || {});
         setProgress(
           Object.fromEntries((progressData.items || []).map((item) => [item.username, item])),
         );
-        setAttendanceDateLoading(true);
         setTeacher(me.username || 'teacher');
       } catch (cause) {
         if (isAbortError(cause) || isUnauthorized(cause)) return;
         setError(cause.message || 'Unable to load teacher data');
       }
     },
-    [client],
+    [applyOverview, client],
   );
 
   React.useEffect(() => {
     const controller = new AbortController();
-    loadTeacherData(controller.signal);
+    Promise.resolve().then(() => loadTeacherData(controller.signal));
     return () => controller.abort();
   }, [loadTeacherData]);
 
-  React.useEffect(() => {
-    if (!teacher) return undefined;
-    const requestVersion = ++dateLoadVersionRef.current;
-    const requestedDate = date;
-    const controller = new AbortController();
-    setAttendanceDateLoading(true);
-    setAttendanceDateError('');
-    readAttendanceDate(requestedDate, controller.signal)
-      .then(({ map, revision }) => {
-        if (dateLoadVersionRef.current !== requestVersion || requestedDate !== date) return;
-        applyAttendance(requestedDate, map, revision);
-        setError('');
-      })
-      .catch((cause) => {
-        if (dateLoadVersionRef.current !== requestVersion || requestedDate !== date) return;
-        if (isAbortError(cause) || isUnauthorized(cause)) return;
-        const message = cause.message || 'Unable to load attendance';
-        confirmedRef.current.delete(requestedDate);
-        revisionsRef.current.delete(requestedDate);
-        verifiedAttendanceDateRef.current = null;
-        attendanceRef.current = {};
-        setAttendance({});
-        setAttendanceDateError(message);
-        setError(message);
-      })
-      .finally(() => {
-        if (dateLoadVersionRef.current === requestVersion && requestedDate === date) {
-          setAttendanceDateLoading(false);
-        }
-      });
-    return () => controller.abort();
-  }, [applyAttendance, date, readAttendanceDate, teacher]);
-
-  async function refreshAttendanceDate(targetDate) {
-    if (targetDate !== selectedDateRef.current) return { stale: true };
-    const requestVersion = ++dateLoadVersionRef.current;
-    setAttendanceDateLoading(true);
-    setAttendanceDateError('');
-    try {
-      const { map, revision } = await reloadAttendance(targetDate);
-      if (dateLoadVersionRef.current !== requestVersion || targetDate !== selectedDateRef.current)
-        return { stale: true };
-      applyAttendance(targetDate, map, revision);
-      setError('');
-      return { stale: false };
-    } catch (cause) {
-      if (
-        dateLoadVersionRef.current === requestVersion &&
-        targetDate === selectedDateRef.current &&
-        !isAbortError(cause) &&
-        !isUnauthorized(cause)
-      ) {
-        const message = cause.message || 'Unable to reload attendance';
-        confirmedRef.current.delete(targetDate);
-        revisionsRef.current.delete(targetDate);
-        verifiedAttendanceDateRef.current = null;
-        attendanceRef.current = {};
-        setAttendance({});
-        setAttendanceDateError(message);
-        setError(message);
-      }
-      throw cause;
-    } finally {
-      if (dateLoadVersionRef.current === requestVersion && targetDate === selectedDateRef.current) {
-        setAttendanceDateLoading(false);
-      }
-    }
+  function setLectureSaving(lecture, saving) {
+    setSavingLectures((current) => {
+      const next = new Set(current);
+      if (saving) next.add(lecture);
+      else next.delete(lecture);
+      return next;
+    });
   }
 
-  function queueForDate(targetDate) {
-    if (!queuesRef.current.has(targetDate)) {
+  async function reloadLecture(lecture) {
+    const result = await client(`/api/attendance?lecture=${lecture}`);
+    applyLecture(lecture, result.map, result.revision);
+    return result;
+  }
+
+  function queueForLecture(lecture) {
+    if (!queuesRef.current.has(lecture)) {
       queuesRef.current.set(
-        targetDate,
-        createSerializedRequestQueue(({ map }) => {
-          const options = createAttendanceSnapshotOptions({
-            date: targetDate,
-            map,
-            revision: revisionsRef.current.get(targetDate),
-          });
-          return client('/api/attendance', options).then((result) => {
-            const revision = Number(result?.revision);
-            if (!Number.isSafeInteger(revision) || revision < 0)
-              throw new Error('Attendance response is missing a revision');
-            revisionsRef.current.set(targetDate, revision);
+        lecture,
+        createSerializedRequestQueue(({ map }) =>
+          client(
+            '/api/attendance',
+            createAttendanceSnapshotOptions({
+              lecture,
+              map,
+              revision: Number(revisionsRef.current[lecture] || 0),
+            }),
+          ).then((result) => {
+            revisionsRef.current = {
+              ...revisionsRef.current,
+              [lecture]: Number(result.revision),
+            };
+            setRevisions(revisionsRef.current);
             return result;
-          });
-        }),
+          }),
+        ),
       );
     }
-    return queuesRef.current.get(targetDate);
+    return queuesRef.current.get(lecture);
   }
 
-  function persist(targetDate, nextMap) {
-    const selectedDateVersion = selectedDateVersionRef.current;
-    const version = (saveVersionsRef.current.get(targetDate) || 0) + 1;
-    saveVersionsRef.current.set(targetDate, version);
-    setSaveError(null);
-    setAttendanceStatus({ kind: 'saving', message: 'Saving attendance…' });
+  function persistLecture(lecture, nextMap) {
     const snapshot = { ...nextMap };
-    const queue = queueForDate(targetDate);
-    return queue
+    const version = (saveVersionsRef.current.get(lecture) || 0) + 1;
+    saveVersionsRef.current.set(lecture, version);
+    setFailedSave(null);
+    setLectureSaving(lecture, true);
+    setAttendanceStatus(`Saving lecture ${lecture}…`);
+    return queueForLecture(lecture)
       .enqueue({ map: snapshot })
       .then(() => {
-        confirmedRef.current.set(targetDate, snapshot);
-        setOverview((current) => ({ ...current, [targetDate]: snapshot }));
-        const isCurrentDate =
-          targetDate === selectedDateRef.current &&
-          selectedDateVersionRef.current === selectedDateVersion;
-        if (isCurrentDate) {
-          verifiedAttendanceDateRef.current = targetDate;
-          attendanceRef.current = snapshot;
-          setAttendance(snapshot);
-        }
-        if (isCurrentDate && saveVersionsRef.current.get(targetDate) === version) {
-          setSaveError(null);
-          setAttendanceStatus({ kind: 'saved', message: 'Attendance saved.' });
+        confirmedRef.current = { ...confirmedRef.current, [lecture]: snapshot };
+        overviewRef.current = { ...overviewRef.current, [lecture]: snapshot };
+        setOverview(overviewRef.current);
+        if (saveVersionsRef.current.get(lecture) === version) {
+          setAttendanceStatus(`Lecture ${lecture} saved.`);
         }
       })
       .catch(async (cause) => {
         if (isAbortError(cause) || isUnauthorized(cause)) throw cause;
+        queueForLecture(lecture).clearPending(cause);
         if (cause.status === 409) {
-          queue.clearPending(cause);
-          const isCurrentDate =
-            targetDate === selectedDateRef.current &&
-            selectedDateVersionRef.current === selectedDateVersion;
-          if (isCurrentDate) {
-            setAttendanceStatus({
-              kind: 'conflict',
-              message:
-                'Attendance conflict: the latest values are being reloaded. Review and retry.',
+          try {
+            await reloadLecture(lecture);
+            setAttendanceStatus(`Lecture ${lecture} changed on the server.`);
+            setFailedSave({
+              lecture,
+              map: snapshot,
+              message: `Lecture ${lecture} changed on the server. Latest values were reloaded.`,
+            });
+          } catch (reloadError) {
+            setAttendanceStatus(`Unable to reload lecture ${lecture}.`);
+            setFailedSave({
+              lecture,
+              map: snapshot,
+              message: reloadError.message || `Unable to reload lecture ${lecture}`,
             });
           }
-          try {
-            const refresh = await refreshAttendanceDate(targetDate);
-            if (
-              !refresh.stale &&
-              targetDate === selectedDateRef.current &&
-              selectedDateVersionRef.current === selectedDateVersion &&
-              saveVersionsRef.current.get(targetDate) === version
-            ) {
-              setSaveError({
-                message:
-                  'Attendance changed on the server. The latest values were reloaded; review and retry.',
-                date: targetDate,
-                conflict: true,
-                action: 'reload',
-              });
-            }
-          } catch (reloadError) {
-            if (
-              !isAbortError(reloadError) &&
-              !isUnauthorized(reloadError) &&
-              targetDate === selectedDateRef.current &&
-              selectedDateVersionRef.current === selectedDateVersion &&
-              saveVersionsRef.current.get(targetDate) === version
-            ) {
-              const message = reloadError.message || 'Unable to reload attendance after a conflict';
-              setAttendanceStatus({
-                kind: 'error',
-                message: `Attendance reload failed: ${message}`,
-              });
-              setSaveError({ message, date: targetDate, conflict: true, action: 'reload' });
-            }
-          }
-        } else if (
-          targetDate === selectedDateRef.current &&
-          selectedDateVersionRef.current === selectedDateVersion &&
-          saveVersionsRef.current.get(targetDate) === version
-        ) {
-          attendanceRef.current = confirmedRef.current.get(targetDate) || {};
-          setAttendance(attendanceRef.current);
-          const message = cause.message || 'Unable to save attendance';
-          setAttendanceStatus({ kind: 'error', message: `Attendance save failed: ${message}` });
-          setSaveError({ message, date: targetDate, map: snapshot, action: 'retry' });
+        } else {
+          overviewRef.current = {
+            ...overviewRef.current,
+            [lecture]: { ...(confirmedRef.current[lecture] || {}) },
+          };
+          setOverview(overviewRef.current);
+          setAttendanceStatus(`Lecture ${lecture} was not saved.`);
+          setFailedSave({
+            lecture,
+            map: snapshot,
+            message: cause.message || `Unable to save lecture ${lecture}`,
+          });
         }
         throw cause;
+      })
+      .finally(() => {
+        if (saveVersionsRef.current.get(lecture) === version) {
+          setLectureSaving(lecture, false);
+        }
       });
   }
 
-  function updateAttendance(nextMap) {
-    if (attendanceDateLoading || attendanceDateError || verifiedAttendanceDateRef.current !== date)
-      return;
-    const snapshot = { ...nextMap };
-    attendanceRef.current = snapshot;
-    setAttendance(snapshot);
-    persist(date, snapshot).catch((cause) => {
-      if (!isAbortError(cause) && !isUnauthorized(cause)) return;
-      return undefined;
-    });
+  function updateAttendance({ lecture, username, present }) {
+    const nextMap = { ...(overviewRef.current[lecture] || {}), [username]: present };
+    overviewRef.current = { ...overviewRef.current, [lecture]: nextMap };
+    setOverview(overviewRef.current);
+    persistLecture(lecture, nextMap).catch(() => undefined);
   }
 
-  function handleFile(event) {
+  function retryAttendanceSave() {
+    if (!failedSave) return;
+    const { lecture, map } = failedSave;
+    overviewRef.current = { ...overviewRef.current, [lecture]: { ...map } };
+    setOverview(overviewRef.current);
+    persistLecture(lecture, map).catch(() => undefined);
+  }
+
+  function handleAttendanceFile(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    if (fileReaderRef.current) {
-      setSaveError({ message: 'A CSV file is already being read.' });
-      return;
-    }
     function showImportError(message) {
       setImportDraft(null);
-      setSaveError({ message });
+      setImportError(message);
+    }
+    if (fileReaderRef.current) {
+      showImportError('A CSV file is already being read.');
+      return;
     }
     if (typeof file.size === 'number' && file.size > MAX_CSV_INPUT_BYTES) {
       showImportError(`CSV file exceeds the maximum size of ${MAX_CSV_INPUT_BYTES} bytes.`);
       return;
     }
     const reader = new FileReader();
-    const readDateVersion = dateLoadVersionRef.current;
     fileReaderRef.current = reader;
     const finishReading = () => {
       if (fileReaderRef.current === reader) fileReaderRef.current = null;
     };
     reader.onload = () => {
-      if (dateLoadVersionRef.current !== readDateVersion) {
-        finishReading();
-        return;
-      }
       try {
         setImportDraft(
           parseAttendanceCsv(String(reader.result || ''), {
             knownUsernames: new Set(students.map((student) => student.username)),
           }),
         );
+        setImportError('');
       } catch (cause) {
         showImportError(cause.message || 'Unable to parse CSV');
       } finally {
@@ -371,12 +269,10 @@ export default function AttendanceWorkspace() {
     };
     reader.onerror = () => {
       finishReading();
-      if (dateLoadVersionRef.current !== readDateVersion) return;
       showImportError(reader.error?.message || 'Unable to read CSV file');
     };
     reader.onabort = () => {
       finishReading();
-      if (dateLoadVersionRef.current !== readDateVersion) return;
       showImportError('CSV file reading was cancelled.');
     };
     try {
@@ -387,118 +283,98 @@ export default function AttendanceWorkspace() {
     }
   }
 
-  function confirmImport() {
-    if (
-      attendanceDateLoading ||
-      attendanceDateError ||
-      !importDraft?.entries.length ||
-      !importDraft.date
-    )
-      return;
-    const draft = importDraft;
-    const sourceDateVersion = selectedDateVersionRef.current;
-    let importDateVersion = sourceDateVersion;
-    setSaveError(null);
-    (async () => {
-      try {
-        const baseResponse =
-          draft.date === selectedDateRef.current
-            ? { map: attendanceRef.current, revision: revisionsRef.current.get(draft.date) }
-            : await readAttendanceDate(draft.date);
-        if (selectedDateVersionRef.current !== sourceDateVersion) return;
-        if (Number.isSafeInteger(baseResponse.revision) && baseResponse.revision >= 0) {
-          revisionsRef.current.set(draft.date, baseResponse.revision);
-        }
-        const base = baseResponse.map;
-        const next = {
-          ...base,
-          ...Object.fromEntries(draft.entries.map((entry) => [entry.username, entry.present])),
-        };
-        if (draft.date !== selectedDateRef.current) {
-          selectedDateRef.current = draft.date;
-          selectedDateVersionRef.current += 1;
-          importDateVersion = selectedDateVersionRef.current;
-          dateLoadVersionRef.current += 1;
-          setAttendanceDateLoading(true);
-          setAttendanceDateError('');
-          setError('');
-          setSaveError(null);
-          setImportDraft(null);
-          setAttendanceStatus({ kind: 'idle', message: 'Attendance ready.' });
-          verifiedAttendanceDateRef.current = null;
-          attendanceRef.current = {};
-          setAttendance({});
-          setDate(draft.date);
-        }
-        attendanceRef.current = next;
-        setAttendance(next);
-        await persist(draft.date, next);
-        if (
-          selectedDateRef.current !== draft.date ||
-          selectedDateVersionRef.current !== importDateVersion
-        )
-          return;
-        const readback = await readAttendanceDate(draft.date);
-        if (
-          selectedDateRef.current !== draft.date ||
-          selectedDateVersionRef.current !== importDateVersion
-        )
-          return;
-        applyAttendance(draft.date, readback.map, readback.revision);
-        setImportDraft(null);
-      } catch (cause) {
-        if (isAbortError(cause) || isUnauthorized(cause)) return;
-        if (
-          selectedDateRef.current !== draft.date ||
-          selectedDateVersionRef.current !== importDateVersion
-        )
-          return;
-        setSaveError((current) =>
-          current?.date === draft.date && current.action
-            ? current
-            : {
-                message: cause.message || 'Unable to persist or verify CSV import',
-                date: draft.date,
-                action: 'reload',
-              },
-        );
+  async function confirmImport() {
+    if (!importDraft?.entries.length) return;
+    const grouped = new Map();
+    for (const entry of importDraft.entries) {
+      if (!grouped.has(entry.lecture)) grouped.set(entry.lecture, []);
+      grouped.get(entry.lecture).push(entry);
+    }
+    setImportError('');
+    try {
+      await Promise.all(
+        [...grouped.entries()].map(([lecture, entries]) => {
+          const nextMap = { ...(overviewRef.current[lecture] || {}) };
+          for (const entry of entries) nextMap[entry.username] = entry.present;
+          overviewRef.current = { ...overviewRef.current, [lecture]: nextMap };
+          setOverview(overviewRef.current);
+          return persistLecture(lecture, nextMap);
+        }),
+      );
+      setImportDraft(null);
+    } catch (cause) {
+      if (!isAbortError(cause) && !isUnauthorized(cause)) {
+        setImportError(cause.message || 'Unable to persist CSV import');
       }
-    })();
+    }
   }
 
-  function retrySave() {
-    if (attendanceDateLoading || !saveError?.action) return;
-    if (saveError.date !== selectedDateRef.current) {
-      setSaveError(null);
+  function handleRosterFile(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (fileReaderRef.current) {
+      setRosterStatus('A CSV file is already being read.');
       return;
     }
-    if (saveError.action === 'reload') {
-      setAttendanceStatus({ kind: 'loading', message: 'Reloading latest attendance…' });
-      const reloadDate = saveError.date;
-      const refreshPromise = refreshAttendanceDate(reloadDate);
-      const refreshVersion = dateLoadVersionRef.current;
-      refreshPromise
-        .then((result) => {
-          if (result.stale || dateLoadVersionRef.current !== refreshVersion) return;
-          setSaveError(null);
-          setAttendanceStatus({
-            kind: 'ready',
-            message: 'Latest attendance reloaded. Review and retry.',
-          });
-        })
-        .catch((cause) => {
-          if (dateLoadVersionRef.current !== refreshVersion) return;
-          if (!isAbortError(cause) && !isUnauthorized(cause)) {
-            const message = cause.message || 'Unable to reload attendance';
-            setAttendanceStatus({ kind: 'error', message: `Attendance reload failed: ${message}` });
-            setSaveError({ message, date: reloadDate, conflict: true, action: 'reload' });
-          }
-        });
+    if (typeof file.size === 'number' && file.size > MAX_CSV_INPUT_BYTES) {
+      setRosterDraft(null);
+      setRosterStatus(`CSV file exceeds the maximum size of ${MAX_CSV_INPUT_BYTES} bytes.`);
       return;
     }
-    persist(saveError.date, saveError.map).catch((cause) => {
-      if (!isAbortError(cause) && !isUnauthorized(cause)) return;
-    });
+    const reader = new FileReader();
+    fileReaderRef.current = reader;
+    const finishReading = () => {
+      if (fileReaderRef.current === reader) fileReaderRef.current = null;
+    };
+    reader.onload = () => {
+      try {
+        const csv = String(reader.result || '');
+        setRosterDraft({ csv, ...parseTeacherRosterCsv(csv) });
+        setRosterStatus('');
+      } catch (cause) {
+        setRosterDraft(null);
+        setRosterStatus(cause.message || 'Unable to parse roster CSV');
+      } finally {
+        finishReading();
+      }
+    };
+    reader.onerror = () => {
+      finishReading();
+      setRosterDraft(null);
+      setRosterStatus(reader.error?.message || 'Unable to read roster CSV');
+    };
+    reader.onabort = () => {
+      finishReading();
+      setRosterDraft(null);
+      setRosterStatus('Roster CSV reading was cancelled.');
+    };
+    reader.readAsText(file);
+  }
+
+  async function confirmRosterImport() {
+    const hasErrors = rosterDraft?.diagnostics.some(({ severity }) => severity === 'error');
+    if (!rosterDraft?.students.length || hasErrors || rosterBusy) return;
+    setRosterBusy(true);
+    setRosterStatus('Replacing active roster…');
+    try {
+      const result = await client('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ csv: rosterDraft.csv }),
+      });
+      setStudents(result.students || []);
+      setQuery('');
+      setParallel('all');
+      setRosterDraft(null);
+      setRosterStatus(`Active roster replaced with ${result.count || 0} students.`);
+    } catch (cause) {
+      if (!isUnauthorized(cause)) {
+        setRosterStatus(cause.message || 'Unable to replace the active roster');
+      }
+    } finally {
+      setRosterBusy(false);
+    }
   }
 
   function saveProgressPatch(username, patch) {
@@ -527,40 +403,49 @@ export default function AttendanceWorkspace() {
     try {
       await client('/api/teacher/logout', { method: 'POST' });
     } catch (_) {
-      /* local session state still ends */
+      /* local session still ends */
     }
     setTeacher(null);
     setStudents([]);
-    attendanceRef.current = {};
-    setAttendance({});
+    applyOverview({}, {});
   }
 
-  const filtered = students.filter((student) =>
-    student.username.includes(query.trim().toLowerCase()),
+  const normalizedQuery = query.trim().toLocaleLowerCase('cs');
+  const parallels = [...new Set(students.map((student) => student.parallel).filter(Boolean))].sort(
+    (left, right) => left.localeCompare(right, undefined, { numeric: true }),
   );
-  const dates = [...new Set([...Object.keys(overview), date])].sort();
-  const presentCount = students.filter((student) => attendance[student.username]).length;
-  const attendanceSaving = Boolean(queuesRef.current.get(date)?.pendingCount);
-  const attendanceBusy = attendanceSaving || attendanceDateLoading || Boolean(attendanceDateError);
+  const filtered = students.filter((student) => {
+    const searchable = [
+      student.firstName,
+      student.lastName,
+      `${student.firstName || ''} ${student.lastName || ''}`,
+      student.username,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLocaleLowerCase('cs');
+    return (
+      (!normalizedQuery || searchable.includes(normalizedQuery)) &&
+      (parallel === 'all' || student.parallel === parallel)
+    );
+  });
+  const attendanceBusy = savingLectures.size > 0;
 
   if (teacher === undefined) {
     return (
       <TeacherWorkspace
-        title="Attendance & student records"
-        description="Review attendance and maintain the assignment record for each student."
         activeSection="attendance"
+        description="Review attendance and maintain the assignment record for each student."
+        title="Attendance & student records"
       >
         <section className={styles.statusPanel} role="status" aria-live="polite">
           {error ? (
             <div role="alert">
               <p className={styles.error}>{error}</p>
               <button
-                type="button"
                 className={styles.secondaryButton}
-                onClick={() => {
-                  setError('');
-                  loadTeacherData();
-                }}
+                onClick={() => loadTeacherData()}
+                type="button"
               >
                 Retry loading workspace
               </button>
@@ -576,9 +461,9 @@ export default function AttendanceWorkspace() {
   if (teacher === null) {
     return (
       <TeacherWorkspace
-        title="Attendance & student records"
-        description="Review attendance and maintain the assignment record for each student."
         activeSection="attendance"
+        description="Review attendance and maintain the assignment record for each student."
+        title="Attendance & student records"
       >
         <section className={styles.panel} aria-labelledby="teacher-login-title">
           <p className={styles.sectionLabel}>Secure access</p>
@@ -594,198 +479,204 @@ export default function AttendanceWorkspace() {
 
   return (
     <TeacherWorkspace
-      title="Attendance & student records"
-      description="Review attendance and maintain the assignment record for each student."
-      username={teacher}
-      activeSection="attendance"
       actions={
-        <button type="button" className={styles.secondaryButton} onClick={logout}>
+        <button className={styles.secondaryButton} onClick={logout} type="button">
           Logout
         </button>
       }
+      activeSection="attendance"
+      description="Review attendance and maintain the assignment record for each student."
+      title="Attendance & student records"
+      username={teacher}
     >
       {error ? (
         <p className={styles.error} role="alert">
           {error}
         </p>
       ) : null}
-
       <div className={styles.stack}>
-        <section className={styles.panel} aria-labelledby="active-attendance-day-title">
+        <section className={styles.panel} aria-labelledby="attendance-filters-title">
           <div className={styles.recordHeaderPlain}>
             <div>
-              <p className={styles.sectionLabel}>Operational view</p>
-              <h2 id="active-attendance-day-title">Active attendance day</h2>
-              <p className={styles.muted}>
-                Choose a date, narrow the visible roster, and apply attendance changes to the
-                filtered students.
-              </p>
+              <p className={styles.sectionLabel}>Roster view</p>
+              <h2 id="attendance-filters-title">Find students</h2>
             </div>
-            <div>
-              <p>
-                <strong>
-                  Present: {presentCount} of {students.length}
-                </strong>
-              </p>
-              <p className={styles.statusLine} role="status" aria-live="polite">
-                {attendanceDateLoading
-                  ? `Loading attendance for ${date}…`
-                  : attendanceDateError
-                    ? `Attendance unavailable for ${date}: ${attendanceDateError}`
-                    : attendanceStatus.message}
-              </p>
-            </div>
+            <p className={styles.statusLine} role="status" aria-live="polite">
+              {attendanceStatus}
+            </p>
           </div>
-          <div className={styles.controlGrid}>
-            <label className={styles.field} htmlFor="attendance-date">
-              Attendance date
-              <input
-                id="attendance-date"
-                type="date"
-                value={date}
-                disabled={attendanceSaving || attendanceDateLoading}
-                onChange={(event) => {
-                  selectedDateRef.current = event.target.value;
-                  selectedDateVersionRef.current += 1;
-                  dateLoadVersionRef.current += 1;
-                  setAttendanceDateLoading(true);
-                  setAttendanceDateError('');
-                  setError('');
-                  setSaveError(null);
-                  setImportDraft(null);
-                  setAttendanceStatus({ kind: 'idle', message: 'Attendance ready.' });
-                  verifiedAttendanceDateRef.current = null;
-                  attendanceRef.current = {};
-                  setAttendance({});
-                  setDate(event.target.value);
-                }}
-              />
-            </label>
+          <div className={styles.filterGrid}>
             <label className={styles.field} htmlFor="attendance-search">
-              Search username
+              Search name or username
               <input
                 id="attendance-search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
               />
             </label>
-            <div className={styles.buttonRow}>
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                disabled={attendanceBusy}
-                onClick={() =>
-                  updateAttendance({
-                    ...attendanceRef.current,
-                    ...Object.fromEntries(filtered.map((student) => [student.username, true])),
-                  })
-                }
+            <label className={styles.field} htmlFor="attendance-parallel">
+              Parallel
+              <select
+                id="attendance-parallel"
+                value={parallel}
+                onChange={(event) => setParallel(event.target.value)}
               >
-                Mark visible students present
-              </button>
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                disabled={attendanceBusy}
-                onClick={() =>
-                  updateAttendance({
-                    ...attendanceRef.current,
-                    ...Object.fromEntries(filtered.map((student) => [student.username, false])),
-                  })
-                }
-              >
-                Mark visible students absent
-              </button>
-            </div>
+                <option value="all">All parallels</option>
+                {parallels.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
+          {failedSave ? (
+            <p className={styles.error} role="alert">
+              {failedSave.message}{' '}
+              <button
+                className={styles.secondaryButton}
+                onClick={retryAttendanceSave}
+                type="button"
+              >
+                Retry lecture {failedSave.lecture}
+              </button>
+            </p>
+          ) : null}
         </section>
 
-        {saveError ? (
-          <p className={styles.error} role="alert">
-            {saveError.message}
-            {saveError.action ? (
-              <button type="button" className={styles.secondaryButton} onClick={retrySave}>
-                {saveError.action === 'reload' ? 'Reload latest' : 'Retry'}
-              </button>
-            ) : null}
-          </p>
-        ) : null}
+        <LectureAttendanceMatrix
+          disabledLectures={savingLectures}
+          onToggle={updateAttendance}
+          overview={overview}
+          students={filtered}
+        />
 
-        <section className={styles.panel} aria-labelledby="visible-roster-title">
+        <section className={styles.panel} aria-labelledby="roster-import-title">
           <div className={styles.recordHeaderPlain}>
             <div>
               <p className={styles.sectionLabel}>Student roster</p>
-              <h2 id="visible-roster-title">Visible students</h2>
+              <h2 id="roster-import-title">Replace active roster</h2>
+              <p className={styles.muted}>Upload the course CSV to replace the active roster.</p>
             </div>
-            <p className={styles.muted}>
-              {filtered.length} of {students.length} students shown
-            </p>
-          </div>
-          <ul className={styles.studentList} aria-label="Visible students">
-            {filtered.map((student) => (
-              <AttendanceStudentRow
-                key={student.username}
-                student={student}
-                present={Boolean(attendance[student.username])}
-                saving={attendanceBusy}
-                progress={progress[student.username]}
-                onToggle={(username, present) =>
-                  updateAttendance({ ...attendanceRef.current, [username]: present })
-                }
-                onSaveProgress={saveProgressPatch}
-              />
-            ))}
-          </ul>
-        </section>
-
-        <section className={styles.panel} aria-labelledby="attendance-actions-title">
-          <div>
-            <p className={styles.sectionLabel}>Data exchange</p>
-            <h2 id="attendance-actions-title">Attendance CSV</h2>
-            <p className={styles.muted}>
-              Export the current date or import a reviewed CSV before confirming persistence.
-            </p>
-          </div>
-          <div className={styles.buttonRow}>
-            <button
-              type="button"
-              className={styles.primaryButton}
-              disabled={attendanceBusy || verifiedAttendanceDateRef.current !== date}
-              onClick={() => {
-                if (attendanceBusy || verifiedAttendanceDateRef.current !== date) return;
-                const blob = new Blob(
-                  [
-                    serializeAttendanceCsv(
-                      students.map((student) => ({
-                        username: student.username,
-                        present: Boolean(attendance[student.username]),
-                        date,
-                      })),
-                    ),
-                  ],
-                  { type: 'text/csv;charset=utf-8' },
-                );
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `attendance_${date}.csv`;
-                link.click();
-                URL.revokeObjectURL(url);
-              }}
-            >
-              Export CSV
-            </button>
             <label className={styles.secondaryButton}>
-              Import CSV
+              Upload roster CSV
               <input
-                type="file"
+                aria-label="Student roster CSV"
                 accept=".csv,text/csv"
                 className="sr-only"
-                disabled={attendanceBusy}
-                onChange={handleFile}
+                disabled={rosterBusy}
+                onChange={handleRosterFile}
+                type="file"
               />
             </label>
           </div>
+          {rosterStatus ? (
+            <p className={styles.statusLine} role="status" aria-live="polite">
+              {rosterStatus}
+            </p>
+          ) : null}
+          {rosterDraft ? (
+            <section
+              aria-labelledby="roster-import-preview-title"
+              className={styles.importPreview}
+              role="region"
+            >
+              <div>
+                <p className={styles.sectionLabel}>Review before replacement</p>
+                <h3 id="roster-import-preview-title">Roster import preview</h3>
+                <p className={styles.muted}>
+                  {rosterDraft.students.length} students · Parallels:{' '}
+                  {[...new Set(rosterDraft.students.map((student) => student.parallel))]
+                    .filter(Boolean)
+                    .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }))
+                    .join(', ') || 'none'}
+                </p>
+              </div>
+              {rosterDraft.diagnostics.length ? (
+                <ul className={styles.diagnosticList}>
+                  {rosterDraft.diagnostics.map((diagnostic, index) => (
+                    <li key={`${diagnostic.line}-${index}`}>
+                      Line {diagnostic.line}: {diagnostic.message}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <div className={styles.buttonRow}>
+                <button
+                  className={styles.primaryButton}
+                  disabled={
+                    rosterBusy ||
+                    !rosterDraft.students.length ||
+                    rosterDraft.diagnostics.some(({ severity }) => severity === 'error')
+                  }
+                  onClick={confirmRosterImport}
+                  type="button"
+                >
+                  Replace active roster
+                </button>
+                <button
+                  className={styles.secondaryButton}
+                  disabled={rosterBusy}
+                  onClick={() => setRosterDraft(null)}
+                  type="button"
+                >
+                  Cancel
+                </button>
+              </div>
+            </section>
+          ) : null}
+        </section>
+
+        <section className={styles.panel} aria-labelledby="attendance-actions-title">
+          <div className={styles.recordHeaderPlain}>
+            <div>
+              <p className={styles.sectionLabel}>Data exchange</p>
+              <h2 id="attendance-actions-title">Attendance CSV</h2>
+              <p className={styles.muted}>Export or import attendance by lecture number.</p>
+            </div>
+            <div className={styles.buttonRow}>
+              <button
+                className={styles.primaryButton}
+                disabled={attendanceBusy}
+                onClick={() => {
+                  const rows = students.flatMap((student) =>
+                    LECTURES.map((lecture) => ({
+                      username: student.username,
+                      present: Boolean(overview[lecture]?.[student.username]),
+                      lecture,
+                    })),
+                  );
+                  const blob = new Blob([serializeAttendanceCsv(rows)], {
+                    type: 'text/csv;charset=utf-8',
+                  });
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = 'attendance_by_lecture.csv';
+                  link.click();
+                  URL.revokeObjectURL(url);
+                }}
+                type="button"
+              >
+                Export CSV
+              </button>
+              <label className={styles.secondaryButton}>
+                Import CSV
+                <input
+                  accept=".csv,text/csv"
+                  className="sr-only"
+                  disabled={attendanceBusy}
+                  onChange={handleAttendanceFile}
+                  type="file"
+                />
+              </label>
+            </div>
+          </div>
+          {importError ? (
+            <p className={styles.error} role="alert">
+              {importError}
+            </p>
+          ) : null}
         </section>
 
         <AttendanceImportPreview
@@ -795,53 +686,26 @@ export default function AttendanceWorkspace() {
           onConfirm={confirmImport}
         />
 
-        <section className={styles.panel} aria-labelledby="overall-attendance-title">
-          <div>
-            <p className={styles.sectionLabel}>Historical view</p>
-            <h2 id="overall-attendance-title">Overall attendance</h2>
+        <section className={styles.panel} aria-labelledby="student-records-title">
+          <div className={styles.recordHeaderPlain}>
+            <div>
+              <p className={styles.sectionLabel}>Assignments</p>
+              <h2 id="student-records-title">Student records</h2>
+            </div>
+            <p className={styles.muted}>
+              {filtered.length} of {students.length} students shown
+            </p>
           </div>
-          <div className={styles.tableScroll}>
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col" className="whitespace-nowrap px-3 py-3 text-left">
-                    Username
-                  </th>
-                  {dates.map((item) => (
-                    <th scope="col" key={item} className="whitespace-nowrap px-3 py-3 text-center">
-                      {item}
-                    </th>
-                  ))}
-                  <th scope="col" className="whitespace-nowrap px-3 py-3 text-center">
-                    Total
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student) => {
-                  const total = dates.filter((item) => overview[item]?.[student.username]).length;
-                  return (
-                    <tr key={student.username}>
-                      <th
-                        scope="row"
-                        className="whitespace-nowrap px-3 py-3 text-left font-semibold"
-                      >
-                        {student.username}
-                      </th>
-                      {dates.map((item) => (
-                        <td key={item} className="whitespace-nowrap px-3 py-3 text-center">
-                          {overview[item]?.[student.username] ? '✓' : '–'}
-                        </td>
-                      ))}
-                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold">
-                        {total}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <ul className={styles.studentList} aria-label="Student records">
+            {filtered.map((student) => (
+              <AttendanceStudentRow
+                key={student.username}
+                onSaveProgress={saveProgressPatch}
+                progress={progress[student.username]}
+                student={student}
+              />
+            ))}
+          </ul>
         </section>
       </div>
     </TeacherWorkspace>

@@ -12,7 +12,8 @@ export default function AttendanceImportPreview({ draft, disabled, onConfirm, on
       <p className={styles.sectionLabel}>Kontrola před zápisem</p>
       <h2 id="import-preview-title">Import preview</h2>
       <p>
-        Import for {draft.date || 'an invalid date'}: {draft.entries.length} valid rows,{' '}
+        {draft.entries.length} valid attendance cells across{' '}
+        {new Set(draft.entries.map((entry) => entry.lecture)).size} lectures,{' '}
         {draft.rejected.length} rejected rows.
       </p>
       {draft.rejected.length > 0 ? (
@@ -27,7 +28,7 @@ export default function AttendanceImportPreview({ draft, disabled, onConfirm, on
       <div className={styles.buttonRow}>
         <button
           className={styles.primaryButton}
-          disabled={disabled || !draft.date || !draft.entries.length}
+          disabled={disabled || !draft.entries.length}
           onClick={onConfirm}
           type="button"
         >
